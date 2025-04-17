@@ -1,61 +1,106 @@
 // js/main.js
 
-// Main application logic starts here
+// Simple state object to hold shared data like latest results
+const appState = {
+    structuredData: null,
+    latestResults: null
+};
 
-// 1. Initialize UI Controls
-initializeUI(); // Set up sliders, buttons etc.
-
-// 2. Initialize empty charts
-initializeCharts(); // Create chart instances
-
-// 3. Load Data and Run Initial Calculation on page load
+/**
+ * Main initialization function for the application.
+ * Loads data, sets up UI, runs initial model calculation, and sets up event listeners.
+ */
 async function initializeApp() {
+    console.log("Application starting initialization...");
+    const runButton = document.getElementById('runModelBtn'); // Get button early for error handling
+
     try {
-        // Load all data first
-        const data = await loadAllData(); // from dataLoader.js
+        // Disable button during init
+        if (runButton) {
+            runButton.disabled = true;
+            runButton.textContent = 'Loading Data...';
+        }
+
+        // 1. Load and structure data
+        // Assumes loadAndStructureData is globally accessible from dataLoader.js
+        appState.structuredData = await loadAndStructureData();
 
         // Check if essential data loaded
-        if (!data || !data.activityLevels) {
-             throw new Error("Essential data failed to load. Cannot proceed.");
+        if (!appState.structuredData || !appState.structuredData.sectors || appState.structuredData.sectors.length === 0) {
+            throw new Error("Essential data (sectors) failed to load or is empty. Cannot initialize UI.");
         }
+        console.log("Data loaded and structured successfully.");
 
-        // Get initial inputs (e.g., default year)
-        const initialInputs = getUserInputs(); // from uiController.js
-
-        // Perform initial calculation
-        const initialResults = calculateEnergyModel(data, initialInputs); // from modelLogic.js
-
-        // Display initial results and charts
-        displayResults(initialResults); // from uiController.js
-
-        console.log("Application initialized successfully.");
-
-        // Add event listeners to controls (e.g., button click)
-        // to trigger recalculations via handleCalculationRequest in uiController.js
-        // Example (assuming a button with id='calculateButton'):
-        const calcButton = document.getElementById('calculateButton'); // Define button in HTML
-        if (calcButton) {
-            // Need to make handleCalculationRequest globally accessible or import/export
-            // calcButton.addEventListener('click', handleCalculationRequest);
-            calcButton.addEventListener('click', () => {
-                 console.log("Calculate button clicked - Placeholder - Hook up handleCalculationRequest");
-                 alert("Calculation logic needs to be fully connected!");
-                 // Ideally call handleCalculationRequest here after ensuring it's accessible
-            });
-        } else {
-            console.warn("Calculate button not found. Add it to index.html and controls section.");
+        // 2. Initialize UI elements (sidebar inputs, dropdown)
+        // Assumes functions are globally accessible from uiController.js
+        if (typeof initializeSidebarInputs !== 'function' || typeof populateSubsectorDropdown !== 'function') {
+             throw new Error("UI initialization functions (initializeSidebarInputs or populateSubsectorDropdown) are not defined.");
         }
+        initializeSidebarInputs(appState.structuredData);
+        populateSubsectorDropdown(appState.structuredData);
+        console.log("UI inputs and dropdown initialized.");
 
+        // 3. Setup event listeners (run button, dropdown change)
+        // Assumes setupEventListeners is globally accessible from uiController.js
+         if (typeof setupEventListeners !== 'function') {
+              throw new Error("UI event listener setup function (setupEventListeners) is not defined.");
+         }
+        // Pass appState so event listeners can update/read latestResults
+        setupEventListeners(appState);
+        console.log("UI event listeners configured.");
+
+
+        // 4. Perform initial model run on load
+        console.log("Performing initial model run...");
+         if (runButton) {
+             runButton.textContent = 'Calculating Initial...';
+         }
+         // Get initial inputs (default values set during UI init)
+         // Assumes getUserInputsAndParams is globally accessible from uiController.js
+          if (typeof getUserInputsAndParams !== 'function') {
+               throw new Error("UI input gathering function (getUserInputsAndParams) is not defined.");
+          }
+         const initialUserInputs = getUserInputsAndParams(appState.structuredData);
+
+         // Run calculation
+         // Assumes runModelCalculation is globally accessible from modelLogic.js
+          if (typeof runModelCalculation !== 'function') {
+               throw new Error("Model calculation function (runModelCalculation) is not defined.");
+          }
+         appState.latestResults = await runModelCalculation(appState.structuredData, initialUserInputs);
+         console.log("Initial calculation complete.");
+
+         // Display initial charts
+         // Assumes updateCharts is globally accessible from charting.js
+          if (typeof updateCharts !== 'function') {
+               throw new Error("Chart update function (updateCharts) is not defined.");
+          }
+         updateCharts(appState.latestResults, appState.structuredData);
+         console.log("Initial charts displayed.");
+
+        // 5. Re-enable run button
+        if (runButton) {
+            runButton.disabled = false;
+            runButton.textContent = 'Run Model & Update Charts';
+        }
+        console.log("Application initialization successful.");
 
     } catch (error) {
         console.error("Error during application initialization:", error);
-        // Display an error message to the user in the UI
-        const resultsSection = document.getElementById('results');
-        if (resultsSection) {
-            resultsSection.innerHTML = `<p style="color: red;">Error initializing the model: ${error.message}</p>`;
+        alert(`A critical error occurred during initialization: ${error.message}. Check the console for details.`);
+        // Keep button disabled or show error state
+        if (runButton) {
+             runButton.textContent = 'Initialization Failed';
+             runButton.disabled = true; // Keep disabled on critical error
         }
+         // Display error message in content area
+         const contentDiv = document.getElementById('content');
+         if (contentDiv) {
+             contentDiv.innerHTML = `<h2 style='color: red;'>Initialization Error</h2><p style='color: red;'>${error.message}. Please check the console (F12) for more details.</p>`;
+         }
     }
 }
 
-// Start the application initialization process
-initializeApp();
+// --- Start the application ---
+// Use DOMContentLoaded which fires after the HTML is parsed but before images/css load
+document.addEventListener('DOMContentLoaded', initializeApp);
