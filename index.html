@@ -32,35 +32,57 @@
 
         <div id="content">
             <h2>Results Projection (2023 - 2050)</h2>
+
+            <div id="chartViewSelectorContainer">
+                 <label for="selectChartView">Select Chart View:</label>
+                 <select id="selectChartView">
+                     <option value="subsector" selected>Subsector Details</option>
+                     <option value="balance">Overall Energy Balance</option>
+                     <option value="supply">Supply & Transformations</option>
+                 </select>
+            </div>
+
             <div id="subsectorSelector">
                 <label for="selectSubsector">View Detailed Charts for Subsector:</label>
                 <select id="selectSubsector">
                     </select>
             </div>
 
-            <h3 class="chart-section-heading">Subsector Details: <span id="selectedSubsectorName">Loading...</span></h3>
-            <div id="subsectorCharts" class="chart-grid">
-                 <div class="chart-box"><h3>Activity by Technology</h3><canvas id="subsectorActivityChart"></canvas></div>
-                 <div class="chart-box"><h3>Final Energy (FEC) by Fuel</h3><canvas id="subsectorFecChart"></canvas></div>
-                 <div class="chart-box"><h3>Useful Energy (UE) by Fuel</h3><canvas id="subsectorUeChart"></canvas></div>
-            </div>
+            <section id="subsectorChartsSection">
+                <h3 class="chart-section-heading">Subsector Details: <span id="selectedSubsectorName">Loading...</span></h3>
+                <div id="subsectorCharts" class="chart-grid">
+                     <div class="chart-box"><h3>Activity by Technology</h3><canvas id="subsectorActivityChart"></canvas></div>
+                     <div class="chart-box"><h3>Final Energy (FEC) by Fuel</h3><canvas id="subsectorFecChart"></canvas></div>
+                     <div class="chart-box"><h3>Useful Energy (UE) by Fuel</h3><canvas id="subsectorUeChart"></canvas></div>
+                </div>
+            </section>
 
-            <h3 class="chart-section-heading">Overall Energy Balance</h3>
-            <div id="balanceCharts" class="chart-grid">
-                <div class="chart-box"><h3>Total Final Energy (FEC) by Fuel</h3><canvas id="fecFuelChart"></canvas></div>
-                <div class="chart-box"><h3>Total Primary Energy (PED) by Fuel</h3><canvas id="pedFuelChart"></canvas></div>
-                <div class="chart-box"><h3>Total Useful Energy (UE) by Fuel</h3><canvas id="ueFuelChart"></canvas></div>
-            </div>
+            <section id="balanceChartsSection" class="hidden">
+                <h3 class="chart-section-heading">Overall Energy Balance</h3>
+                <div id="balanceCharts" class="chart-grid">
+                    <div class="chart-box"><h3>Total Final Energy (FEC) by Fuel</h3><canvas id="fecFuelChart"></canvas></div>
+                    <div class="chart-box"><h3>Total Primary Energy (PED) by Fuel</h3><canvas id="pedFuelChart"></canvas></div>
+                    <div class="chart-box"><h3>Total Useful Energy (UE) by Fuel</h3><canvas id="ueFuelChart"></canvas></div>
+                </div>
+            </section>
 
-            <h3 class="chart-section-heading">Energy Supply & Transformations</h3>
-            <div id="supplyCharts" class="chart-grid">
-                <div class="chart-box"><h3>Power Generation by Technology</h3><canvas id="powerMixChart"></canvas></div>
-                <div class="chart-box"><h3>Hydrogen Production by Technology</h3><canvas id="hydrogenMixChart"></canvas></div>
-            </div>
+            <section id="supplyChartsSection" class="hidden">
+                <h3 class="chart-section-heading">Energy Supply & Transformations</h3>
+                <div id="supplyCharts" class="chart-grid">
+                    <div class="chart-box"><h3>Power Generation by Technology</h3><canvas id="powerMixChart"></canvas></div>
+                    <div class="chart-box"><h3>Hydrogen Production by Technology</h3><canvas id="hydrogenMixChart"></canvas></div>
+                    </div>
+            </section>
 
         </div> </div> <footer>
         S-Curve Energy Model | Projections: 2023-2050 | Data Source: User Provided CSVs
     </footer>
 
-    <script src="js/charting.js"></script>       <script src="js/dataLoader.js"></script>     <script src="js/modelLogic.js"></script>     <script src="js/uiController.js"></script>   <script src="js/main.js"></script>           </body>
+    <script src="js/charting.js"></script>
+    <script src="js/dataLoader.js"></script>
+    <script src="js/modelLogic.js"></script>
+    <script src="js/uiController.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
 </html>
