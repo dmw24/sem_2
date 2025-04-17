@@ -160,8 +160,10 @@ header.container p.disclaimer {
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     overflow: hidden; /* Prevent content spillover */
     position: relative; /* For potential absolute elements inside */
-    /* You could also set height on the box instead of the canvas */
-    /* height: 400px; */ /* Example if setting height on container */
+    /* *** ADDED FIXED HEIGHT TO CONTAINER *** */
+    height: 380px; /* Adjust as needed - allows space for title+padding+320px canvas */
+    display: flex; /* Use flexbox to manage content */
+    flex-direction: column; /* Stack title above canvas */
 }
 
 .chart-box h3 {
@@ -172,15 +174,16 @@ header.container p.disclaimer {
     border-bottom: 1px solid #eee;
     padding-bottom: 0.6rem;
     color: var(--slate-blue);
+    flex-shrink: 0; /* Prevent title from shrinking */
 }
 
 .chart-box canvas {
     max-width: 100%;
     display: block;
-    /* *** ADDED FIXED HEIGHT *** */
-    height: 320px;
-    /* min-height: 300px; */ /* Alternative: use min/max */
-    /* max-height: 350px; */
+    /* *** REMOVED FIXED HEIGHT FROM CANVAS *** */
+    /* height: 320px; */
+    flex-grow: 1; /* Allow canvas to take remaining space in flex container */
+    min-height: 0; /* Important for flex-grow in some browsers */
 }
 
 #sidebar h2 {
@@ -235,6 +238,8 @@ small { display: block; font-size: 0.8em; color: var(--dark-grey); margin-top: 3
     .sim-container { flex-direction: column; height: auto; }
     #sidebar { width: 100%; max-height: 50vh; margin-bottom: 20px; }
     .chart-grid { grid-template-columns: 1fr; }
+    /* Adjust chart box height for smaller screens if needed */
+    .chart-box { height: 350px; }
 }
 @media screen and (max-width: 768px) {
     #sidebar { max-height: 60vh; }
@@ -244,6 +249,8 @@ small { display: block; font-size: 0.8em; color: var(--dark-grey); margin-top: 3
     .chart-grid { grid-template-columns: 1fr; }
     #content h2 { font-size: 1.3em; }
     #content h3.chart-section-heading { font-size: 1.1em; }
+     /* Adjust chart box height for smaller screens if needed */
+     .chart-box { height: 320px; }
 }
 
 footer { width: 100%; background: var(--white); border-top: 1px solid var(--grey-blue); text-align: center; padding: 12px; font-size: 0.85em; color: var(--dark-grey); margin-top: 2rem; }
