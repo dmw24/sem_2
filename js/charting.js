@@ -1,12 +1,61 @@
 // js/charting.js
+// Version: Electricity Color Updated
 
 // --- Chart Instances Storage ---
 const chartInstances = {};
 
-// --- Color Palette & Mapping ---
-const emberColors = { green_ember: '#13CE74', green_pine: '#06371F', green_forest: '#0B6638', green_grass: '#0F9A56', green_mint: '#89E7BA', blue_navy: '#204172', blue_azure: '#1E6DA9', blue_sky: '#37A6E6', blue_arctic: '#C4D9E9', fossil_fire: '#E04B00', fossil_clay: '#891B05', fossil_rust: '#BF3100', fossil_tangerine: '#EE7309', fossil_sunrise: '#FCA311', grey_smoke: '#999999', grey_fog: '#F7F7F7', grey_dark: '#718096', black: '#000000' };
-const techColorMapping = { 'Solar PV': emberColors.green_ember, 'Wind': emberColors.green_grass, 'Hydro': emberColors.blue_sky, 'Nuclear power': emberColors.blue_azure, 'Biomass power': emberColors.green_forest, 'Gas power': emberColors.fossil_tangerine, 'Coal power': emberColors.fossil_clay, 'Oil power': emberColors.fossil_rust, 'Other power': emberColors.grey_smoke, 'Green': emberColors.green_ember, 'Blue': emberColors.blue_sky, 'Electricity': emberColors.blue_azure, 'Oil': emberColors.fossil_rust, 'Hydrogen': '#8b5cf6', 'Coal': emberColors.fossil_clay, 'Gas': emberColors.fossil_tangerine, 'Biomass': emberColors.green_forest, 'Solar': emberColors.fossil_sunrise, 'Uranium': emberColors.blue_azure, 'EV': emberColors.blue_sky, 'ICE': emberColors.fossil_rust, 'Ammonia ship': '#8b5cf6', 'Electric ship': emberColors.blue_sky, 'Conventional ship': emberColors.fossil_rust, 'Electric plane': emberColors.blue_sky, 'Conventional plane': emberColors.fossil_rust, 'Electric train': emberColors.blue_sky, 'Diesel train': emberColors.fossil_rust, 'BF-BOF': emberColors.fossil_clay, 'EAF': emberColors.blue_sky, 'DRI-EAF (H2)': '#8b5cf6', 'Conventional kiln': emberColors.fossil_clay, 'Electric kiln': emberColors.blue_sky, 'Conventional': emberColors.fossil_tangerine, 'Electrified': emberColors.blue_sky, 'Fossil boiler': emberColors.fossil_tangerine, 'Biomass boiler': emberColors.green_forest, 'Heat pump': emberColors.green_ember, 'Fossil furnace': emberColors.fossil_tangerine, 'Biomass furnace': emberColors.green_forest, 'Electric furnace': emberColors.blue_sky, 'Biomass heating': emberColors.green_forest, 'Electric heating': emberColors.blue_sky, 'Conventional fossil': emberColors.fossil_tangerine, 'Biomass cooking': emberColors.green_forest, 'Full LED': emberColors.green_ember, 'Low efficiency airco': emberColors.grey_smoke, 'High efficiency airco': emberColors.blue_sky, '_DEFAULT': emberColors.grey_smoke };
-function getTechColor(techName, index = 0) { return techColorMapping[techName] || emberColors[techName.toLowerCase().replace(/ /g, '_')] || techColorMapping['_DEFAULT']; }
+// --- Color Palette & Mapping --- (Copied from reference)
+const emberColors = {
+    green_ember: '#13CE74', green_pine: '#06371F', green_forest: '#0B6638',
+    green_grass: '#0F9A56', green_mint: '#89E7BA', blue_navy: '#204172',
+    blue_azure: '#1E6DA9', blue_sky: '#37A6E6', blue_arctic: '#C4D9E9', // Medium blue
+    fossil_fire: '#E04B00', fossil_clay: '#891B05', fossil_rust: '#BF3100',
+    fossil_tangerine: '#EE7309', fossil_sunrise: '#FCA311', grey_smoke: '#999999',
+    grey_fog: '#F7F7F7', grey_dark: '#718096', black: '#000000'
+};
+
+// Mapping for specific technologies/fuels to colors
+const techColorMapping = {
+    'Solar PV': emberColors.green_ember, 'Wind': emberColors.green_grass,
+    'Hydro': emberColors.blue_sky, 'Nuclear power': emberColors.blue_azure,
+    'Biomass power': emberColors.green_forest, 'Gas power': emberColors.fossil_tangerine,
+    'Coal power': emberColors.fossil_clay, 'Oil power': emberColors.fossil_rust,
+    'Other power': emberColors.grey_smoke,
+    'Green': emberColors.green_ember, // Hydrogen
+    'Blue': emberColors.blue_sky,      // Hydrogen (Changed from reference for consistency?) - Keep as sky blue
+    // *** UPDATED ELECTRICITY COLOR HERE ***
+    'Electricity': emberColors.blue_sky, // Changed from blue_azure
+    'Oil': emberColors.fossil_rust,
+    'Hydrogen': '#8b5cf6', // Specific purple for Hydrogen fuel
+    'Coal': emberColors.fossil_clay, 'Gas': emberColors.fossil_tangerine,
+    'Biomass': emberColors.green_forest, 'Solar': emberColors.fossil_sunrise, // Primary
+    'Uranium': emberColors.blue_azure, // Primary
+    'EV': emberColors.blue_sky, 'ICE': emberColors.fossil_rust,
+    'Ammonia ship': '#8b5cf6', // Hydrogen based
+    'Electric ship': emberColors.blue_sky, 'Conventional ship': emberColors.fossil_rust,
+    'Electric plane': emberColors.blue_sky, 'Conventional plane': emberColors.fossil_rust,
+    'Electric train': emberColors.blue_sky, 'Diesel train': emberColors.fossil_rust,
+    'BF-BOF': emberColors.fossil_clay, 'EAF': emberColors.blue_sky,
+    'DRI-EAF (H2)': '#8b5cf6', // Hydrogen based
+    'Conventional kiln': emberColors.fossil_clay, 'Electric kiln': emberColors.blue_sky,
+    'Conventional': emberColors.fossil_tangerine, // Generic conventional
+    'Electrified': emberColors.blue_sky, // Generic electrified
+    'Fossil boiler': emberColors.fossil_tangerine, 'Biomass boiler': emberColors.green_forest,
+    'Heat pump': emberColors.green_ember,
+    'Fossil furnace': emberColors.fossil_tangerine, 'Biomass furnace': emberColors.green_forest,
+    'Electric furnace': emberColors.blue_sky, 'Biomass heating': emberColors.green_forest,
+    'Electric heating': emberColors.blue_sky,
+    'Conventional fossil': emberColors.fossil_tangerine, // Cooking/heating
+    'Biomass cooking': emberColors.green_forest,
+    'Full LED': emberColors.green_ember, // Lighting
+    'Low efficiency airco': emberColors.grey_smoke, 'High efficiency airco': emberColors.blue_sky,
+    '_DEFAULT': emberColors.grey_smoke // Default fallback color
+};
+
+// Helper to get color, falling back through mappings
+function getTechColor(techName, index = 0) {
+    return techColorMapping[techName] || emberColors[techName.toLowerCase().replace(/ /g, '_')] || techColorMapping['_DEFAULT'];
+}
 
 // --- getValue Helper ---
 function getValue(obj, keys, defaultValue = 0) { let current = obj; for (const key of keys) { if (current && typeof current === 'object' && key in current) { current = current[key]; } else { return defaultValue; } } return (current === null || current === undefined) ? defaultValue : current; }
@@ -30,27 +79,12 @@ function createChart(canvasId, type, data, options = {}) {
  * @param {object} chartConfigData - Object containing lists needed for charts.
  */
 function updateCharts(yearlyResults, chartConfigData) {
-    // *** DEBUG LOGS ADDED HERE ***
-    console.log("updateCharts received chartConfigData:", JSON.stringify(chartConfigData, null, 2));
-
+    // console.log("updateCharts received chartConfigData:", JSON.stringify(chartConfigData, null, 2)); // DEBUG
     if (!yearlyResults || Object.keys(yearlyResults).length === 0) { console.log("No model results available to update charts."); return; }
     if (!chartConfigData) { console.error("Chart configuration data is missing. Cannot update charts."); return; }
-
-    // Destructure needed config data - including 'years' now provided by dataLoader
-    const {
-        years: chartLabels, // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< HERE
-        endUseFuels, primaryFuels, powerTechs, hydrogenTechs,
-        technologies, activityUnits
-    } = chartConfigData;
-
-    // *** DEBUG LOG ADDED HERE ***
-    console.log("Destructured years as chartLabels:", chartLabels);
-
-    // Check if years array is valid after destructuring
-    if (!chartLabels || !Array.isArray(chartLabels) || chartLabels.length === 0) {
-         console.error("Years array ('chartLabels') is missing or invalid after destructuring from chartConfigData.", chartConfigData);
-         return; // Prevent further errors
-    }
+    const { years: chartLabels, endUseFuels, primaryFuels, powerTechs, hydrogenTechs, technologies, activityUnits } = chartConfigData;
+    // console.log("Destructured years as chartLabels:", chartLabels); // DEBUG
+    if (!chartLabels || !Array.isArray(chartLabels) || chartLabels.length === 0) { console.error("Years array ('chartLabels') is missing or invalid after destructuring from chartConfigData.", chartConfigData); return; }
 
     const GJ_PER_EJ = 1e9;
     const subsectorSelect = document.getElementById('selectSubsector');
@@ -65,14 +99,14 @@ function updateCharts(yearlyResults, chartConfigData) {
     // --- Subsector Charts ---
     if (selectedSector && selectedSubsector) {
         const subsectorTechs = getValue(technologies, [selectedSector, selectedSubsector], []);
-        // 1. Subsector Activity
-        const activityByTechDatasets = subsectorTechs.map((tech, techIndex) => ({ label: tech, data: chartLabels.map(y => getValue(yearlyResults, [y, 'demandTechActivity', selectedSector, selectedSubsector, tech], 0)), backgroundColor: getTechColor(tech, techIndex), })).filter(ds => ds.data.some(v => Math.abs(v) > 1e-3));
         const activityUnit = getValue(activityUnits, [selectedSector, selectedSubsector], 'Units');
+        // 1. Activity
+        const activityByTechDatasets = subsectorTechs.map((tech, techIndex) => ({ label: tech, data: chartLabels.map(y => getValue(yearlyResults, [y, 'demandTechActivity', selectedSector, selectedSubsector, tech], 0)), backgroundColor: getTechColor(tech, techIndex), })).filter(ds => ds.data.some(v => Math.abs(v) > 1e-3));
         createChart('subsectorActivityChart', 'bar', { labels: chartLabels, datasets: activityByTechDatasets }, { plugins: { tooltip: { mode: 'index' } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: `Activity (${activityUnit})`, font: {size: 12} } } } });
-        // 2. Subsector FEC
+        // 2. FEC
         const subsectorFecDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => { let totalFuel = 0; subsectorTechs.forEach(tech => { totalFuel += getValue(yearlyResults, [y, 'fecDetailed', selectedSector, selectedSubsector, tech, fuel], 0); }); return totalFuel / GJ_PER_EJ; }), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
         createChart('subsectorFecChart', 'bar', { labels: chartLabels, datasets: subsectorFecDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'FEC (EJ)', font: {size: 12} } } } });
-        // 3. Subsector UE
+        // 3. UE
         const subsectorUeDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => { let totalFuel = 0; subsectorTechs.forEach(tech => { totalFuel += getValue(yearlyResults, [y, 'ueDetailed', selectedSector, selectedSubsector, tech, fuel], 0); }); return totalFuel / GJ_PER_EJ; }), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
         createChart('subsectorUeChart', 'bar', { labels: chartLabels, datasets: subsectorUeDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Useful Energy (EJ)', font: {size: 12} } } } });
     } else {
@@ -83,13 +117,8 @@ function updateCharts(yearlyResults, chartConfigData) {
     // 4. Total FEC
     const totalFecDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => getValue(yearlyResults, [y, 'fecByFuel', fuel], 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
     createChart('fecFuelChart', 'bar', { labels: chartLabels, datasets: totalFecDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Total FEC (EJ)', font: {size: 12} } } } });
-    // 5. Total PED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ERROR OCCURS AROUND HERE
-    const totalPedDatasets = primaryFuels.map((fuel, fuelIndex) => ({
-        label: fuel,
-        // Line 247: Error occurs if chartLabels is undefined here
-        data: chartLabels.map(y => getValue(yearlyResults, [y, 'pedByFuel', fuel], 0) / GJ_PER_EJ),
-        backgroundColor: getTechColor(fuel, fuelIndex),
-    })).filter(ds => ds.data.some(v => v > 1e-9));
+    // 5. Total PED
+    const totalPedDatasets = primaryFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => getValue(yearlyResults, [y, 'pedByFuel', fuel], 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
     createChart('pedFuelChart', 'bar', { labels: chartLabels, datasets: totalPedDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Total PED (EJ)', font: {size: 12} } } } });
     // 6. Total UE
     const totalUeDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => getValue(yearlyResults, [y, 'ueByFuel', fuel], 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
