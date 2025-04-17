@@ -67,14 +67,16 @@ function toggleSCurveInputs(selectElement, paramKey) {
 // --- Dynamic Input Creation Helpers --- (Adapted from reference)
 
 // Default behavior mappings (needed for setting initial UI state)
-// Duplicated from modelLogic.js for encapsulation - consider passing from main.js if needed elsewhere
+// Defined here for uiController's use.
 const defaultDeclineDemandTechsUI = { 'Transport|Passenger cars': 'ICE', 'Transport|Trucks': 'ICE', 'Transport|Buses': 'ICE', 'Transport|2/3 wheelers': 'ICE', 'Transport|Ships': 'Conventional ship', 'Transport|Planes': 'Conventional plane', 'Transport|Trains': 'Diesel train', 'Industry|Steel': 'BF-BOF', 'Industry|Cement': 'Conventional kiln', 'Industry|Chemicals': 'Conventional', 'Industry|Low temp. heating': 'Fossil boiler', 'Industry|High temp. heating': 'Fossil furnace', 'Industry|Other industry - energy': 'Conventional', 'Buildings|Residential heating': 'Fossil boiler', 'Buildings|Residential cooking': 'Conventional fossil', 'Buildings|Residential lighting': 'Conventional', 'Buildings|Other residential': 'Conventional', 'Buildings|Building cooling': 'Low efficiency airco', 'Buildings|Commercial heating': 'Fossil boiler', 'Buildings|Commercial lighting': 'Conventional', 'Buildings|Other commercial': 'Conventional', 'Transport|Other transport': 'Conventional' };
 const defaultSCurveDemandTechsUI = { 'Transport|Passenger cars': 'EV', 'Transport|Trucks': 'EV', 'Transport|Buses': 'EV', 'Transport|2/3 wheelers': 'EV', 'Transport|Ships': 'Ammonia ship', 'Transport|Planes': 'Electric plane', 'Transport|Trains': 'Electric train', 'Industry|Steel': 'DRI-EAF (H2)', 'Industry|Cement': 'Electric kiln', 'Industry|Chemicals': 'Electrified', 'Industry|Low temp. heating': 'Heat pump', 'Industry|High temp. heating': 'Electric furnace', 'Industry|Other industry - energy': 'Electrified', 'Buildings|Residential heating': 'Heat pump', 'Buildings|Residential cooking': 'Electrified', 'Buildings|Residential lighting': 'Full LED', 'Buildings|Other residential': 'Electrified', 'Buildings|Building cooling': 'High efficiency airco', 'Buildings|Commercial heating': 'Heat pump', 'Buildings|Commercial lighting': 'Full LED', 'Buildings|Other commercial': 'Electrified', 'Transport|Other transport': 'Electrified' };
 const defaultDeclinePowerTechsUI = ['Gas power', 'Coal power', 'Oil power'];
 const defaultSCurvePowerTechsUI = ['Solar PV', 'Wind'];
 const defaultDeclineHydrogenTechsUI = ['Blue'];
 const defaultSCurveHydrogenTechsUI = ['Green'];
-
+// Need startYear and endYear for defaults (consider passing these in or defining globally if needed elsewhere)
+const uiStartYear = 2023;
+const uiEndYear = 2050;
 
 /**
  * Creates the HTML elements for S-curve parameters (Target Share, Target Year, Steepness).
@@ -114,10 +116,10 @@ const createSCurveParamInputs = (paramKey, baseValue) => {
     const targetYearInput = document.createElement('input');
     targetYearInput.type = 'number';
     targetYearInput.id = targetYearInputId;
-    targetYearInput.min = String(startYear + 1); // Use global startYear
-    targetYearInput.max = String(endYear + 10); // Allow target beyond model endYear
+    targetYearInput.min = String(uiStartYear + 1); // Use locally defined year
+    targetYearInput.max = String(uiEndYear + 10); // Allow target beyond model endYear
     targetYearInput.step = '1';
-    targetYearInput.value = String(endYear); // Default target is endYear
+    targetYearInput.value = String(uiEndYear); // Default target is endYear
     div.appendChild(targetYearLabel);
     div.appendChild(targetYearInput);
 
@@ -156,7 +158,9 @@ const createTechInput = (categoryType, categoryKey, tech, baseMixObject) => {
 
     const paramKey = `${categoryType}|${categoryKey}|${tech}`;
     const sanitizedParamKey = sanitizeForId(paramKey);
-    const baseValue = getValue(baseMixObject, [tech], 0); // Get base mix share %
+    // Use the getValue helper function from modelLogic.js (assuming it's globally accessible)
+    const baseValue = (typeof getValue === 'function') ? getValue(baseMixObject, [tech], 0) : (baseMixObject?.[tech] || 0);
+
 
     // Behavior Selector (Fixed, S-Curve, Decline)
     const behaviorDiv = document.createElement('div');
@@ -230,6 +234,9 @@ function initializeSidebarInputs(structuredData) {
         powerTechs, hydrogenTechs // Tech lists
     } = structuredData;
 
+     // Use getValue helper function from modelLogic.js (assuming it's globally accessible)
+     const safeGetValue = (typeof getValue === 'function') ? getValue : (obj, keys, def) => (obj?.[keys[0]]?.[keys[1]] ?? def); // Basic fallback
+
     // Create End-Use Sector Groups
     sectors.forEach(s => {
         // Skip supply sectors for these input groups
@@ -278,7 +285,7 @@ function initializeSidebarInputs(structuredData) {
 
             // Technology Behavior Inputs
             const techs = technologies[s]?.[b] || [];
-            const baseMix = getValue(baseDemandTechMix, [s, b], {});
+            const baseMix = safeGetValue(baseDemandTechMix, [s, b], {});
             techs.forEach(t => {
                 subContent.appendChild(createTechInput('Demand', `${s}|${b}`, t, baseMix));
             });
@@ -388,7 +395,8 @@ function populateSubsectorDropdown(structuredData) {
 function getUserInputsAndParams(structuredData) {
     const {
         sectors, subsectors, technologies,
-        powerTechs, hydrogenTechs, allEndUseSubsectors
+        powerTechs, hydrogenTechs, allEndUseSubsectors,
+        endYear // Need endYear for default S-curve target year
     } = structuredData;
 
     const userInputParameters = {
@@ -397,10 +405,11 @@ function getUserInputsAndParams(structuredData) {
     };
 
     // Read Activity Growth Rates
-    allEndUseSubsectors.forEach(({ sector, subsector }) => {
+    (allEndUseSubsectors || []).forEach(({ sector, subsector }) => {
         const inputId = `growth_${sanitizeForId(sector)}_${sanitizeForId(subsector)}`;
         const inputElement = document.getElementById(inputId);
         const growthPercent = inputElement ? parseFloat(inputElement.value) : 0;
+        // Convert % growth per year to a multiplication factor
         const growthFactor = isNaN(growthPercent) ? 1.0 : 1 + (growthPercent / 100);
         userInputParameters.activityGrowthFactors[`${sector}|${subsector}`] = growthFactor;
     });
@@ -421,13 +430,16 @@ function getUserInputsAndParams(structuredData) {
                 const targetYearEl = document.getElementById(`sCurveTargetYear_${sanitizedParamKey}`);
                 const steepnessEl = document.getElementById(`sCurveSteepness_${sanitizedParamKey}`);
 
+                // Use uiEndYear if structuredData.endYear is somehow unavailable
+                const defaultTargetYear = structuredData.endYear || uiEndYear;
+
                 techParams.targetShare = targetEl ? parseFloat(targetEl.value) : 0;
-                techParams.targetYear = targetYearEl ? parseInt(targetYearEl.value) : endYear;
+                techParams.targetYear = targetYearEl ? parseInt(targetYearEl.value) : defaultTargetYear;
                 techParams.steepness = steepnessEl ? parseInt(steepnessEl.value) : 5;
 
                 // Basic validation/defaults for S-curve params
                 if (isNaN(techParams.targetShare)) techParams.targetShare = 0;
-                if (isNaN(techParams.targetYear)) techParams.targetYear = endYear;
+                if (isNaN(techParams.targetYear)) techParams.targetYear = defaultTargetYear;
                 if (isNaN(techParams.steepness) || techParams.steepness < 1 || techParams.steepness > 10) techParams.steepness = 5;
             }
             userInputParameters.techBehaviorsAndParams[paramKey] = techParams;
@@ -447,22 +459,28 @@ function getUserInputsAndParams(structuredData) {
     // Read Hydrogen Techs
     readTechInputs('Hydrogen', 'Hydrogen', hydrogenTechs);
 
-    // console.log("User Inputs & Params:", userInputParameters); // DEBUG
+    // console.log("User Inputs & Params Gathered:", userInputParameters); // DEBUG
     return userInputParameters;
 }
 
 
 // --- Event Listener Setup ---
-// Keep track of the latest results for dropdown updates
-let latestModelResults = null;
 
 /**
  * Sets up event listeners for the Run button and Subsector dropdown.
- * @param {object} structuredData - The data object from dataLoader.js.
+ * @param {object} appState - The shared application state object from main.js
+ * Contains { structuredData, latestResults }.
  */
-function setupEventListeners(structuredData) {
+function setupEventListeners(appState) { // Accepts appState
     const runButton = document.getElementById('runModelBtn');
     const subsectorSelect = document.getElementById('selectSubsector');
+
+    // Destructure structuredData from appState for convenience
+    const { structuredData } = appState;
+     if (!structuredData) {
+         console.error("Cannot setup event listeners: structuredData is missing from appState.");
+         return;
+     }
 
     if (!runButton) {
         console.error("Run Model button (#runModelBtn) not found!");
@@ -481,25 +499,30 @@ function setupEventListeners(structuredData) {
 
         try {
             // 1. Get current user inputs from UI
-            const userInputs = getUserInputsAndParams(structuredData);
+            const userInputs = getUserInputsAndParams(structuredData); // Still needs structuredData
 
-            // 2. Run the model calculation (function from modelLogic.js)
-            // Ensure modelLogic.runModelCalculation is accessible (e.g., global or imported)
+            // 2. Run the model calculation
+            // Ensure modelLogic.runModelCalculation is globally accessible
             if (typeof runModelCalculation !== 'function') {
                  throw new Error("runModelCalculation function is not defined or accessible.");
             }
-            latestModelResults = await runModelCalculation(structuredData, userInputs); // Store results
+            // Store result directly into appState.latestResults
+            const modelResults = await runModelCalculation(structuredData, userInputs); // Calculate results
+            appState.latestResults = modelResults; // Update shared state << MODIFIED
 
-            // 3. Update the charts (function from charting.js)
-            // Ensure charting.updateCharts is accessible
+            // 3. Update the charts
+            // Ensure charting.updateCharts is globally accessible
             if (typeof updateCharts !== 'function') {
                 throw new Error("updateCharts function is not defined or accessible.");
             }
-            updateCharts(latestModelResults, structuredData); // Pass results and config
+            // Pass the newly calculated results and config data
+            updateCharts(appState.latestResults, structuredData); // Pass updated state << MODIFIED
 
         } catch (error) {
             console.error("Error during model execution or chart update:", error);
             alert(`An error occurred: ${error.message}. Check console for details.`);
+            // Clear results state on error? Optional.
+            // appState.latestResults = null;
         } finally {
             // 4. Re-enable button
             runButton.disabled = false;
@@ -510,14 +533,14 @@ function setupEventListeners(structuredData) {
      // Subsector Dropdown Change Handler
      subsectorSelect.onchange = () => {
          console.log("Subsector selection changed.");
-          // Ensure charting.updateCharts is accessible
+          // Ensure charting.updateCharts is globally accessible
           if (typeof updateCharts !== 'function') {
               console.error("updateCharts function is not defined or accessible.");
               return;
           }
-          // Update charts using the *latest* stored results and the config data
-         if (latestModelResults) {
-              updateCharts(latestModelResults, structuredData);
+          // Update charts using the *latest* results from appState
+         if (appState.latestResults) { // Read from appState << MODIFIED
+              updateCharts(appState.latestResults, structuredData); // Pass latest results and config << MODIFIED
          } else {
               console.warn("No model results available to update charts for subsector change.");
                // Optionally clear charts or show a message if no results exist yet
@@ -526,3 +549,6 @@ function setupEventListeners(structuredData) {
 
       console.log("UI Event listeners set up.");
 }
+
+// Ensure functions intended to be called by event handlers or main.js are accessible.
+// In a simple setup without modules, they are globally accessible by default.
