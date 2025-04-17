@@ -1,11 +1,11 @@
 // js/modelLogic.js
-// Version: S-Curve uses Midpoint Year input
+// Version: S-Curve uses user's 4-step logic (input k, t0 -> calc asymptotes) + capping
 
 const GJ_PER_EJ = 1e9;
 
-// Default behavior mappings (from reference)
-const defaultDeclineDemandTechs = { 'Transport|Passenger cars': 'ICE', 'Transport|Trucks': 'ICE', 'Transport|Buses': 'ICE', 'Transport|2/3 wheelers': 'ICE', 'Transport|Ships': 'Conventional ship', 'Transport|Planes': 'Conventional plane', 'Transport|Trains': 'Diesel train', 'Industry|Steel': 'BF-BOF', 'Industry|Cement': 'Conventional kiln', 'Industry|Chemicals': 'Conventional', 'Industry|Low temp. heating': 'Fossil boiler', 'Industry|High temp. heating': 'Fossil furnace', 'Industry|Other industry - energy': 'Conventional', 'Buildings|Residential heating': 'Fossil boiler', 'Buildings|Residential cooking': 'Conventional fossil', 'Buildings|Residential lighting': 'Conventional', 'Buildings|Other residential': 'Conventional', 'Buildings|Building cooling': 'Low efficiency airco', 'Buildings|Commercial heating': 'Fossil boiler', 'Buildings|Commercial lighting': 'Conventional', 'Buildings|Other commercial': 'Conventional', 'Transport|Other transport': 'Conventional' };
-const defaultSCurveDemandTechs = { 'Transport|Passenger cars': 'EV', 'Transport|Trucks': 'EV', 'Transport|Buses': 'EV', 'Transport|2/3 wheelers': 'EV', 'Transport|Ships': 'Ammonia ship', 'Transport|Planes': 'Electric plane', 'Transport|Trains': 'Electric train', 'Industry|Steel': 'DRI-EAF (H2)', 'Industry|Cement': 'Electric kiln', 'Industry|Chemicals': 'Electrified', 'Industry|Low temp. heating': 'Heat pump', 'Industry|High temp. heating': 'Electric furnace', 'Industry|Other industry - energy': 'Electrified', 'Buildings|Residential heating': 'Heat pump', 'Buildings|Residential cooking': 'Electrified', 'Buildings|Residential lighting': 'Full LED', 'Buildings|Other residential': 'Electrified', 'Buildings|Building cooling': 'High efficiency airco', 'Buildings|Commercial heating': 'Heat pump', 'Buildings|Commercial lighting': 'Full LED', 'Buildings|Other commercial': 'Electrified', 'Transport|Other transport': 'Electrified' };
+// Default behavior mappings (from reference) - Used if behavior is 'fixed' or 'decline'
+const defaultDeclineDemandTechs = { /* ... (unchanged) ... */ 'Transport|Passenger cars': 'ICE', 'Transport|Trucks': 'ICE', 'Transport|Buses': 'ICE', 'Transport|2/3 wheelers': 'ICE', 'Transport|Ships': 'Conventional ship', 'Transport|Planes': 'Conventional plane', 'Transport|Trains': 'Diesel train', 'Industry|Steel': 'BF-BOF', 'Industry|Cement': 'Conventional kiln', 'Industry|Chemicals': 'Conventional', 'Industry|Low temp. heating': 'Fossil boiler', 'Industry|High temp. heating': 'Fossil furnace', 'Industry|Other industry - energy': 'Conventional', 'Buildings|Residential heating': 'Fossil boiler', 'Buildings|Residential cooking': 'Conventional fossil', 'Buildings|Residential lighting': 'Conventional', 'Buildings|Other residential': 'Conventional', 'Buildings|Building cooling': 'Low efficiency airco', 'Buildings|Commercial heating': 'Fossil boiler', 'Buildings|Commercial lighting': 'Conventional', 'Buildings|Other commercial': 'Conventional', 'Transport|Other transport': 'Conventional' };
+const defaultSCurveDemandTechs = { /* ... (unchanged) ... */ 'Transport|Passenger cars': 'EV', 'Transport|Trucks': 'EV', 'Transport|Buses': 'EV', 'Transport|2/3 wheelers': 'EV', 'Transport|Ships': 'Ammonia ship', 'Transport|Planes': 'Electric plane', 'Transport|Trains': 'Electric train', 'Industry|Steel': 'DRI-EAF (H2)', 'Industry|Cement': 'Electric kiln', 'Industry|Chemicals': 'Electrified', 'Industry|Low temp. heating': 'Heat pump', 'Industry|High temp. heating': 'Electric furnace', 'Industry|Other industry - energy': 'Electrified', 'Buildings|Residential heating': 'Heat pump', 'Buildings|Residential cooking': 'Electrified', 'Buildings|Residential lighting': 'Full LED', 'Buildings|Other residential': 'Electrified', 'Buildings|Building cooling': 'High efficiency airco', 'Buildings|Commercial heating': 'Heat pump', 'Buildings|Commercial lighting': 'Full LED', 'Buildings|Other commercial': 'Electrified', 'Transport|Other transport': 'Electrified' };
 const defaultDeclinePowerTechs = ['Gas power', 'Coal power', 'Oil power'];
 const defaultSCurvePowerTechs = ['Solar PV', 'Wind'];
 const defaultDeclineHydrogenTechs = ['Blue'];
@@ -16,68 +16,110 @@ const defaultSCurveHydrogenTechs = ['Green'];
 function getValue(obj, keys, defaultValue = 0) { /* ... (unchanged) ... */
     let current = obj; for (const key of keys) { if (current && typeof current === 'object' && key in current) { current = current[key]; } else { return defaultValue; } } return (current === null || current === undefined) ? defaultValue : current; }
 
+// Basic sigmoid function (Step 1)
+function sigma(t, k, t0) {
+    // Handle k=0 case explicitly to avoid issues later
+    if (Math.abs(k) < 1e-9) {
+        return (t < t0) ? 0 : (t > t0) ? 1 : 0.5; // Step function at t0 if k is zero
+    }
+    const exponent = -k * (t - t0);
+    // Prevent overflow
+    if (exponent > 700) return 0;
+    if (exponent < -700) return 1;
+    return 1 / (1 + Math.exp(exponent));
+}
+
 /**
- * Calculates the share based on an S-curve trajectory using Midpoint Year.
- * @param {number} year - Current year.
- * @param {number} startYearCurve - Year the curve calculation starts (usually baseYear).
- * @param {number} targetYear - Year the target share should be approached.
- * @param {number} midpointYearInput - The user-defined year for the curve's midpoint (t_0).
- * @param {number} startVal - Share at startYearCurve.
- * @param {number} endVal - Target share.
- * @param {number} baseYear - The model's base year.
- * @param {number} endYear - The model's end year (used for defaults).
+ * Calculates the S-curve share using the 4-step logic provided by the user,
+ * forcing the curve through start and end points given k and t0,
+ * and capping the result after the target year.
+ *
+ * @param {number} year - Current year (t)
+ * @param {number} kUserInput - User-defined steepness (k)
+ * @param {number} t0UserInput - User-defined midpoint year (t0)
+ * @param {number} baseYear - Start year (t_start)
+ * @param {number} startVal - Share at baseYear (InitialValue)
+ * @param {number} targetYear - Target year (t_target)
+ * @param {number} targetVal - Share at targetYear (TargetValue)
  * @returns {number} Calculated share for the given year.
  */
-function calculateSCurveShare(year, startYearCurve, targetYear, midpointYearInput, startVal, endVal, baseYear, endYear) { // Changed signature
-    // Ensure inputs are numbers
-    year = Number(year);
-    startYearCurve = Number(startYearCurve || baseYear);
-    targetYear = Number(targetYear || endYear);
-    // Use midpoint year input, default halfway if invalid
-    const t_0 = Number(midpointYearInput || startYearCurve + Math.round((targetYear - startYearCurve)/2));
-    startVal = Number(startVal || 0);
-    endVal = Number(endVal || 0);
+function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, startVal, targetYear, targetVal) {
 
-    // Handle edge cases
-    if (year >= targetYear) return endVal; // Already at or past target year
-    if (year <= startYearCurve) return startVal; // Before curve starts
-    if (targetYear <= startYearCurve) return endVal; // Target year must be after start
-    if (Math.abs(startVal - endVal) < 0.01) return startVal; // No change needed
+    const t = year;
+    const k = Number(kUserInput); // Use user k directly
+    const t0 = Number(t0UserInput);
+    const t_start = baseYear;
+    const InitialValue = Number(startVal); // Share % (0-100)
+    const t_target = targetYear;
+    const TargetValue = Number(targetVal); // Share % (0-100)
 
-    // Calculate growth rate 'k' based on reaching 99% of transition by targetYear
-    let k = 0.15; // Default k if calculation fails
-    const P = 0.99; // Proportion of transition to complete by targetYear
-    const k_numerator = -Math.log((1 / P) - 1); // Approx 4.595
-    const k_denominator = targetYear - t_0;
+    // --- Input Validation and Edge Cases ---
+    if (isNaN(k) || isNaN(t0) || isNaN(InitialValue) || isNaN(TargetValue)) {
+        console.warn("Invalid input to calculateForcedLogisticShare (NaN). Returning startVal.", {year, kUserInput, t0UserInput, baseYear, startVal, targetYear, targetVal});
+        return startVal;
+    }
+     // If k is effectively zero, return start value (no change)
+     if (Math.abs(k) < 1e-9) {
+        return InitialValue;
+     }
+     // If start and target values are the same, return that value
+     if (Math.abs(TargetValue - InitialValue) < 0.01) {
+         return InitialValue;
+     }
+     // If start and target times are the same, invalid input
+     if (Math.abs(t_target - t_start) < 0.1) {
+          console.warn("Start year and target year are the same. Returning startVal.", {t_start, t_target});
+          return InitialValue;
+     }
 
-    if (Math.abs(k_denominator) < 0.1) {
-        // Avoid division by zero/very small number if midpoint is very close to target year
-        // Use a large k to simulate a sharp step if midpoint IS target year
-        // Sign depends on whether endVal > startVal
-        k = (endVal > startVal) ? 10 : -10; // Large k for steep transition
-        console.warn(`Midpoint year ${t_0} is very close to target year ${targetYear}. Using large k=${k}.`);
+    // --- Step 2: Compute σ at start and target points ---
+    // Adjust sign of k based on growth/decline for internal sigma calculation consistency if needed
+    // Although sigma function handles signed k. Let's use the user's k directly.
+    const sigma_s = sigma(t_start, k, t0);
+    const sigma_t = sigma(t_target, k, t0);
+
+    // --- Step 3: Solve for implied asymptotes L_start (A) and L_end (B) ---
+    let L_start_asymptote, L_end_asymptote;
+    const sigma_diff = sigma_t - sigma_s;
+
+    if (Math.abs(sigma_diff) < 1e-9) {
+        // This happens if k=0 (handled above) or if t_start/t_target are placed
+        // symmetrically around t0 with the same k, or if t_start=t_target (handled above).
+        // Indicates parameters might be inconsistent or curve is flat between points.
+        console.warn("Sigma values at start and target are too close; cannot determine asymptotes reliably. Returning linear interpolation or startVal.", {sigma_s, sigma_t, k, t0, t_start, t_target});
+        // Fallback: linear interpolation or just return start/end value
+        if (t <= t_start) return InitialValue;
+        if (t >= t_target) return TargetValue;
+        // Linear interpolation between start and target
+        return InitialValue + (TargetValue - InitialValue) * (t - t_start) / (t_target - t_start);
     } else {
-        k = k_numerator / k_denominator;
+        // Calculate asymptotes using user's formulas
+        L_start_asymptote = (InitialValue * sigma_t - TargetValue * sigma_s) / sigma_diff;
+        L_end_asymptote = (TargetValue * (1 - sigma_s) - InitialValue * (1 - sigma_t)) / sigma_diff;
     }
 
-     // Ensure k has the correct sign (logistic function expects positive k for growth)
-     // The formula structure handles this automatically based on denominator sign
-     // However, if L_end < L_start, the range (L_end - L_start) is negative,
-     // and the standard logistic formula still works correctly with the calculated k.
+    // --- Step 4: Define the full logistic curve value for the current year t ---
+    const sigma_current = sigma(t, k, t0);
+    const logisticValue = L_start_asymptote + (L_end_asymptote - L_start_asymptote) * sigma_current;
 
-    // Calculate the exponent
-    const exponent = -k * (year - t_0);
-
-    // Handle potential overflow/underflow
-    if (exponent > 700) return startVal;
-    if (exponent < -700) return endVal;
-
-    // Logistic function calculation
-    const share = startVal + (endVal - startVal) / (1 + Math.exp(exponent));
-
-    // Clamp result between startVal and endVal
-    return Math.max(Math.min(startVal, endVal), Math.min(Math.max(startVal, endVal), share));
+    // --- Apply Capping Logic ---
+    if (year > targetYear) {
+        // If past the target year, hold the target value
+        return TargetValue;
+    } else {
+        // Otherwise, return the calculated logistic value
+        // This inherently ensures S(t_start) = InitialValue and S(t_target) = TargetValue
+        // Clamp results to avoid potential over/undershoot due to calculated asymptotes
+        // especially if inputs were inconsistent. Clamp between the initial and target values.
+        const minVal = Math.min(InitialValue, TargetValue);
+        const maxVal = Math.max(InitialValue, TargetValue);
+        return Math.max(minVal, Math.min(maxVal, logisticValue));
+        // Alternatively, could clamp between calculated asymptotes if they are trusted:
+        // return Math.max(L_start_asymptote, Math.min(L_end_asymptote, logisticValue));
+        // Let's clamp between Initial/Target values for robustness against weird asymptotes.
+    }
 }
+
 
 function normalizeShares(sharesObject, force100Tech = null) { /* ... (unchanged) ... */
     let total = Object.values(sharesObject).reduce((sum, val) => sum + Number(val || 0), 0); const normalized = {}; if (force100Tech && force100Tech in sharesObject && Math.abs(sharesObject[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } return normalized; } if (total <= 0.001) { return sharesObject; } const scaleFactor = 100 / total; for (const key in sharesObject) { normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor; } if (force100Tech && normalized[force100Tech] && Math.abs(normalized[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } } return normalized; }
@@ -104,38 +146,43 @@ function runModelCalculation(structuredData, userInputParameters) {
 
     for (const year of years) {
         yearlyResults[year] = {};
-        // 1. Activity Levels
-        const currentActivity = {};
-        if (year === baseYear) { Object.assign(currentActivity, baseActivity); }
-        else { /* ... (activity calculation unchanged) ... */
-            const prevResults = yearlyResults[year - 1]; if (!prevResults || !prevResults.activity) { throw new Error(`Cannot calculate activity for ${year}: Previous year (${year-1}) data missing.`); } const prevActivity = prevResults.activity; sectors.forEach(s => { if(subsectors[s]){ currentActivity[s] = {}; subsectors[s].forEach(b => { const growthInputKey = `${s}|${b}`; const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0; currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor; }); } });
-        }
-        yearlyResults[year].activity = currentActivity;
+        // 1. Activity Levels (Unchanged)
+        const currentActivity = {}; if (year === baseYear) { Object.assign(currentActivity, baseActivity); } else { const prevResults = yearlyResults[year - 1]; if (!prevResults || !prevResults.activity) { throw new Error(`Cannot calculate activity for ${year}: Previous year (${year-1}) data missing.`); } const prevActivity = prevResults.activity; sectors.forEach(s => { if(subsectors[s]){ currentActivity[s] = {}; subsectors[s].forEach(b => { const growthInputKey = `${s}|${b}`; const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0; currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor; }); } }); } yearlyResults[year].activity = currentActivity;
 
         // 2. Technology Mixes
         const calculateMixWithBehavior = (categoryType, categoryKey, techList, baseMixObject) => {
             const currentShares = {}; let sCurveTotalShare = 0; let fixedBaseTotal = 0; let declineBaseTotal = 0; const sCurveTechs = []; const fixedTechs = []; const declineTechs = []; const baseMix = baseMixObject || {}; let techTargeting100 = null;
+
             (techList || []).forEach(t => {
                 const paramKey = `${categoryType}|${categoryKey}|${t}`;
                 const behaviorInfo = techBehaviorsAndParams[paramKey] || { behavior: 'fixed' };
-                const baseValue = getValue(baseMix, [t], 0);
+                const baseValue = getValue(baseMix, [t], 0); // Base share % (0-100)
+
                 if (behaviorInfo.behavior === 's-curve') {
-                    // *** UPDATED CALL to calculateSCurveShare ***
-                    const share = calculateSCurveShare(
+                    // *** UPDATED CALL to use new S-curve function ***
+                    const share = calculateForcedLogisticShare(
                         year,
-                        baseYear, // startYearCurve
-                        behaviorInfo.targetYear,
-                        behaviorInfo.midpointYear, // Pass midpoint year instead of steepness
-                        baseValue,
-                        behaviorInfo.targetShare,
-                        baseYear, // Pass baseYear for defaults inside S-curve func
-                        endYear   // Pass endYear for defaults inside S-curve func
+                        behaviorInfo.kValue,      // User k
+                        behaviorInfo.midpointYear, // User t0
+                        baseYear,                 // t_start
+                        baseValue,                // InitialValue (as %)
+                        behaviorInfo.targetYear,  // t_target
+                        behaviorInfo.targetShare  // TargetValue (as %)
                     );
-                    currentShares[t] = share; sCurveTotalShare += share; sCurveTechs.push(t);
-                    if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) { techTargeting100 = t; }
+                    currentShares[t] = share;
+                    sCurveTotalShare += share; // Note: this sum might exceed 100 initially before normalization if asymptotes are weird
+                    sCurveTechs.push(t);
+                    // Check if target is 100 - needed for normalization override
+                    if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) {
+                         techTargeting100 = t;
+                    }
+
                 } else if (behaviorInfo.behavior === 'fixed') {
                     currentShares[t] = baseValue; fixedBaseTotal += baseValue; fixedTechs.push(t);
                 } else { // decline
+                    // Simple decline logic: Treat as S-curve aiming for 0?
+                    // Or keep previous logic? Let's keep previous logic for now:
+                    // It gets scaled down proportionally by normalizeShares if S-curves grow.
                     currentShares[t] = baseValue; declineBaseTotal += baseValue; declineTechs.push(t);
                  }
             });
@@ -178,3 +225,4 @@ function runModelCalculation(structuredData, userInputParameters) {
     console.log("Model calculation complete.");
     return yearlyResults;
 }
+
