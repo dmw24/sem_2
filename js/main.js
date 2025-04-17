@@ -75,6 +75,12 @@ async function initializeApp() {
           if (typeof updateCharts !== 'function') {
                throw new Error("Chart update function (updateCharts) is not defined.");
           }
+
+         // *** DEBUG LOG ADDED HERE ***
+         // Log the data right before it's passed to the initial chart update
+         console.log("Data being passed to initial updateCharts:", JSON.stringify(appState.structuredData, null, 2));
+
+         // Call updateCharts (This is the call related to the error trace line main.js:78)
          updateCharts(appState.latestResults, appState.structuredData);
          console.log("Initial charts displayed.");
 
@@ -86,7 +92,8 @@ async function initializeApp() {
         console.log("Application initialization successful.");
 
     } catch (error) {
-        console.error("Error during application initialization:", error);
+        // Log the specific error during initialization
+        console.error("Error during application initialization:", error); // Error logged here
         alert(`A critical error occurred during initialization: ${error.message}. Check the console for details.`);
         // Keep button disabled or show error state
         if (runButton) {
