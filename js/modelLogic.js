@@ -28,13 +28,15 @@ const defaultSCurveHydrogenTechs = ['Green'];
 function getValue(obj, keys, defaultValue = 0) {
     let current = obj;
     for (const key of keys) {
+        // Check if current level is an object and has the key
         if (current && typeof current === 'object' && key in current) {
             current = current[key];
         } else {
+            // Path not found, return default value
             return defaultValue;
         }
     }
-    // Handle cases where the final value is null or undefined
+    // Handle cases where the final value exists but is null or undefined
     return (current === null || current === undefined) ? defaultValue : current;
 }
 
@@ -62,18 +64,21 @@ function calculateSCurveShare(year, startYearCurve, targetYear, steepnessInput, 
     const midpointYear = startYearCurve + (targetYear - startYearCurve) * midpointFraction;
 
     // Logistic function parameter k calculation (simplified from reference)
-    let k = 0.15;
+    let k = 0.15; // Base steepness factor
+    // Adjust steepness based on duration - shorter duration = steeper curve
     if (Math.abs(targetYear - midpointYear) > 0.1) {
-         k = 4 / Math.abs(targetYear - midpointYear);
+         k = 4 / Math.abs(targetYear - midpointYear); // Heuristic adjustment
     }
+    // Ensure k has the correct sign for growth vs decline
     if (endVal < startVal && k > 0) k = -k;
     if (endVal > startVal && k < 0) k = -k;
+    // Prevent k from being too close to zero
     if (Math.abs(k) < 0.01) k = (endVal > startVal) ? 0.05 : -0.05;
 
     // Calculate the exponent, handling potential overflow/underflow
     const exponent = -k * (year - midpointYear);
-    if (exponent > 700) return startVal;
-    if (exponent < -700) return endVal;
+    if (exponent > 700) return startVal; // Prevents Math.exp overflow -> Infinity
+    if (exponent < -700) return endVal;  // Prevents Math.exp underflow -> 0
 
     // Logistic function calculation
     const share = startVal + (endVal - startVal) / (1 + Math.exp(exponent));
@@ -89,15 +94,31 @@ function calculateSCurveShare(year, startYearCurve, targetYear, steepnessInput, 
 function normalizeShares(sharesObject, force100Tech = null) {
     let total = Object.values(sharesObject).reduce((sum, val) => sum + Number(val || 0), 0);
     const normalized = {};
+
+    // Handle case where one technology should dominate entirely
     if (force100Tech && force100Tech in sharesObject && Math.abs(sharesObject[force100Tech] - 100) < 0.1) {
-        for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; }
+        for (const key in sharesObject) {
+            normalized[key] = (key === force100Tech) ? 100 : 0;
+        }
         return normalized;
     }
-    if (total <= 0.001) { return sharesObject; }
+
+    // Avoid division by zero or normalizing an empty/zero object
+    if (total <= 0.001) {
+        // Return original object (all zeros or empty)
+        return sharesObject;
+    }
+
     const scaleFactor = 100 / total;
-    for (const key in sharesObject) { normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor; }
+    for (const key in sharesObject) {
+        normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor;
+    }
+
+    // Re-check force100Tech case after normalization (can happen if S-curve reaches target)
     if (force100Tech && normalized[force100Tech] && Math.abs(normalized[force100Tech] - 100) < 0.1) {
-         for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; }
+         for (const key in sharesObject) {
+             normalized[key] = (key === force100Tech) ? 100 : 0;
+         }
     }
     return normalized;
 }
@@ -114,18 +135,30 @@ function normalizeShares(sharesObject, force100Tech = null) {
 function runModelCalculation(structuredData, userInputParameters) {
 
     // Destructure needed data and parameters from arguments
+    // Ensure all expected properties exist in structuredData
     const {
-        baseActivity, baseDemandTechMix, unitEnergyConsumption, placeholderUsefulEfficiency,
-        basePowerProdMix, baseHydrogenProdMix, powerTechUnitEnergyCons, hydrogenTechUnitEnergyCons,
-        otherTechUnitEnergyCons, baseOtherProdMix,
+        baseActivity = {}, baseDemandTechMix = {}, unitEnergyConsumption = {}, placeholderUsefulEfficiency = {'_default': 0.65},
+        basePowerProdMix = {}, baseHydrogenProdMix = {}, powerTechUnitEnergyCons = {}, hydrogenTechUnitEnergyCons = {},
+        otherTechUnitEnergyCons = {}, baseOtherProdMix = {},
         // Derived structures:
-        sectors, subsectors, technologies, endUseFuels, primaryFuels,
-        hydrogenTechs, powerTechs, otherConvTechs,
+        sectors = [], subsectors = {}, technologies = {}, endUseFuels = [], primaryFuels = [],
+        hydrogenTechs = [], powerTechs = [], otherConvTechs = {},
         // Years needed for calculations
         startYear, endYear, years // <<<< Get years from structuredData
-    } = structuredData;
+    } = structuredData || {}; // Add default empty object to prevent destructuring errors if structuredData is null/undefined
 
-    const { activityGrowthFactors, techBehaviorsAndParams } = userInputParameters;
+     // Check if essential data is present after destructuring
+     if (!years || !Array.isArray(years) || years.length === 0) {
+         console.error("Model Calculation Error: 'years' array is missing or invalid in structuredData.");
+         throw new Error("Model Calculation Error: 'years' array is missing or invalid.");
+     }
+      if (!startYear || !endYear) {
+          console.error("Model Calculation Error: 'startYear' or 'endYear' is missing in structuredData.");
+          throw new Error("Model Calculation Error: 'startYear' or 'endYear' is missing.");
+      }
+
+
+    const { activityGrowthFactors = {}, techBehaviorsAndParams = {} } = userInputParameters || {}; // Add defaults
 
     // Define baseYear locally based on startYear from data
     const baseYear = startYear;
@@ -141,15 +174,25 @@ function runModelCalculation(structuredData, userInputParameters) {
         // 1. Calculate Activity Levels
         const currentActivity = {};
         if (year === baseYear) {
+             // Use structured base data directly
              Object.assign(currentActivity, baseActivity);
         } else {
-            const prevActivity = yearlyResults[year - 1].activity;
+            // Ensure previous year's results exist before accessing
+            const prevResults = yearlyResults[year - 1];
+            if (!prevResults || !prevResults.activity) {
+                 console.error(`Cannot calculate activity for ${year}: Previous year (${year-1}) data missing.`);
+                 throw new Error(`Cannot calculate activity for ${year}: Previous year (${year-1}) data missing.`);
+            }
+            const prevActivity = prevResults.activity;
             sectors.forEach(s => {
                 if(subsectors[s]){
                     currentActivity[s] = {};
                     subsectors[s].forEach(b => {
                         const growthInputKey = `${s}|${b}`;
-                        const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0;
+                        // Default growth factor to 1 (0% growth) if not specified
+                        const growthFactor = activityGrowthFactors[growthInputKey] !== undefined
+                                              ? activityGrowthFactors[growthInputKey]
+                                              : 1.0;
                         currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor;
                     });
                 }
@@ -159,12 +202,11 @@ function runModelCalculation(structuredData, userInputParameters) {
 
         // 2. Calculate Technology Mixes
         const calculateMixWithBehavior = (categoryType, categoryKey, techList, baseMixObject) => {
-            // ... (rest of calculateMixWithBehavior function is unchanged,
-            //      it calls calculateSCurveShare which now uses passed endYear) ...
             const currentShares = {}; let sCurveTotalShare = 0; let fixedBaseTotal = 0; let declineBaseTotal = 0;
-            const sCurveTechs = []; const fixedTechs = []; const declineTechs = []; const baseMix = baseMixObject;
+            const sCurveTechs = []; const fixedTechs = []; const declineTechs = []; const baseMix = baseMixObject || {}; // Default to empty object
             let techTargeting100 = null;
-            techList.forEach(t => {
+
+            (techList || []).forEach(t => { // Ensure techList is iterable
                 const paramKey = `${categoryType}|${categoryKey}|${t}`;
                 const behaviorInfo = techBehaviorsAndParams[paramKey] || { behavior: 'fixed' };
                 const baseValue = getValue(baseMix, [t], 0);
@@ -175,8 +217,11 @@ function runModelCalculation(structuredData, userInputParameters) {
                     if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) { techTargeting100 = t; }
                 } else if (behaviorInfo.behavior === 'fixed') {
                     currentShares[t] = baseValue; fixedBaseTotal += baseValue; fixedTechs.push(t);
-                } else { currentShares[t] = baseValue; declineBaseTotal += baseValue; declineTechs.push(t); }
+                } else { // decline
+                    currentShares[t] = baseValue; declineBaseTotal += baseValue; declineTechs.push(t);
+                 }
             });
+            // Normalize logic remains the same...
             if (techTargeting100) { return normalizeShares(currentShares, techTargeting100); }
             const availableForFixedAndDecline = Math.max(0, 100 - sCurveTotalShare);
             const targetFixedTotal = Math.min(fixedBaseTotal, availableForFixedAndDecline);
@@ -190,28 +235,134 @@ function runModelCalculation(structuredData, userInputParameters) {
         };
 
         try {
-            const currentDemandTechMix = {}; sectors.forEach(s => { if(subsectors[s]){ currentDemandTechMix[s] = {}; subsectors[s].forEach(b => { const base = getValue(baseDemandTechMix, [s, b], {}); const techs = technologies[s]?.[b] || []; currentDemandTechMix[s][b] = calculateMixWithBehavior('Demand', `${s}|${b}`, techs, base); }); } }); yearlyResults[year].demandTechMix = currentDemandTechMix;
+            // Calculate Demand Mix
+            const currentDemandTechMix = {};
+            sectors.forEach(s => {
+                if(subsectors[s]){ // Check sector exists
+                    currentDemandTechMix[s] = {};
+                    subsectors[s].forEach(b => {
+                        const base = getValue(baseDemandTechMix, [s, b], {});
+                        const techs = technologies[s]?.[b] || [];
+                        currentDemandTechMix[s][b] = calculateMixWithBehavior('Demand', `${s}|${b}`, techs, base);
+                    });
+                }
+            });
+            yearlyResults[year].demandTechMix = currentDemandTechMix;
+
+            // Calculate Power Mix
             yearlyResults[year].powerProdMix = calculateMixWithBehavior('Power', 'Power', powerTechs, basePowerProdMix);
+
+            // Calculate Hydrogen Mix
             yearlyResults[year].hydrogenProdMix = calculateMixWithBehavior('Hydrogen', 'Hydrogen', hydrogenTechs, baseHydrogenProdMix);
-        } catch (mixError) { console.error(`Error calculating mix for year ${year}:`, mixError); throw mixError; }
+
+        } catch (mixError) {
+            console.error(`Error calculating mix for year ${year}:`, mixError);
+            throw mixError; // Stop calculation if mix fails
+        }
 
         // 3. Calculate Demand Technology Activity
-        const currentDemandTechMix_yr = yearlyResults[year].demandTechMix; const currentActivity_yr = yearlyResults[year].activity; const currentDemandTechActivity = {}; sectors.forEach(s => { if(subsectors[s]){ currentDemandTechActivity[s] = {}; subsectors[s].forEach(b => { currentDemandTechActivity[s][b] = {}; const techs = technologies[s]?.[b] || []; techs.forEach(t => { const mixPercent = getValue(currentDemandTechMix_yr, [s, b, t], 0); const mixFraction = mixPercent / 100; const activityLevel = getValue(currentActivity_yr, [s, b], 0); currentDemandTechActivity[s][b][t] = mixFraction * activityLevel; }); }); } }); yearlyResults[year].demandTechActivity = currentDemandTechActivity;
+        const currentDemandTechMix_yr = yearlyResults[year].demandTechMix;
+        const currentActivity_yr = yearlyResults[year].activity;
+        const currentDemandTechActivity = {};
+        sectors.forEach(s => {
+            if(subsectors[s]){ // Check sector exists
+                currentDemandTechActivity[s] = {};
+                subsectors[s].forEach(b => {
+                    currentDemandTechActivity[s][b] = {};
+                    const techs = technologies[s]?.[b] || [];
+                    techs.forEach(t => {
+                        const mixPercent = getValue(currentDemandTechMix_yr, [s, b, t], 0);
+                        const mixFraction = mixPercent / 100;
+                        const activityLevel = getValue(currentActivity_yr, [s, b], 0);
+                        currentDemandTechActivity[s][b][t] = mixFraction * activityLevel;
+                    });
+                });
+            }
+        });
+        yearlyResults[year].demandTechActivity = currentDemandTechActivity;
 
         // 4. Calculate FEC and UE
-        const currentFecDetailed = {}; const currentUeDetailed = {}; const currentFecByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); const currentUeByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); const currentUeBySubsector = {}; sectors.forEach(s => { if(subsectors[s]){ currentFecDetailed[s] = {}; currentUeDetailed[s] = {}; subsectors[s].forEach(b => { currentFecDetailed[s][b] = {}; currentUeDetailed[s][b] = {}; currentUeBySubsector[b] = 0; const techs = technologies[s]?.[b] || []; techs.forEach(t => { currentFecDetailed[s][b][t] = {}; currentUeDetailed[s][b][t] = {}; const techActivity = getValue(currentDemandTechActivity, [s, b, t], 0); const unitConsMap = getValue(unitEnergyConsumption, [s, b, t], {}); Object.keys(unitConsMap).forEach(f => { if (endUseFuels.includes(f)) { const unitCons = unitConsMap[f]; const energyCons = techActivity * unitCons; currentFecDetailed[s][b][t][f] = energyCons; currentFecByFuel[f] += energyCons; const efficiency = getValue(placeholderUsefulEfficiency, [s, b, t, f], getValue(placeholderUsefulEfficiency, [s, b, t], getValue(placeholderUsefulEfficiency, [s, b], getValue(placeholderUsefulEfficiency, '_default', 0.65)))); const usefulEnergy = energyCons * efficiency; currentUeDetailed[s][b][t][f] = usefulEnergy; currentUeByFuel[f] += usefulEnergy; currentUeBySubsector[b] += usefulEnergy; } }); }); }); } }); yearlyResults[year].fecDetailed = currentFecDetailed; yearlyResults[year].ueDetailed = currentUeDetailed; yearlyResults[year].fecByFuel = currentFecByFuel; yearlyResults[year].ueByFuel = currentUeByFuel; yearlyResults[year].ueBySubsector = currentUeBySubsector;
+        const currentFecDetailed = {}; const currentUeDetailed = {};
+        const currentFecByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {});
+        const currentUeByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {});
+        const currentUeBySubsector = {};
+        sectors.forEach(s => {
+            if(subsectors[s]){
+                currentFecDetailed[s] = {}; currentUeDetailed[s] = {};
+                subsectors[s].forEach(b => {
+                    currentFecDetailed[s][b] = {}; currentUeDetailed[s][b] = {};
+                    currentUeBySubsector[b] = 0; // Initialize UE for this subsector
+                    const techs = technologies[s]?.[b] || [];
+                    techs.forEach(t => {
+                        currentFecDetailed[s][b][t] = {}; currentUeDetailed[s][b][t] = {};
+                        const techActivity = getValue(currentDemandTechActivity, [s, b, t], 0);
+                        const unitConsMap = getValue(unitEnergyConsumption, [s, b, t], {});
+                        Object.keys(unitConsMap).forEach(f => {
+                            if (endUseFuels.includes(f)) {
+                                const unitCons = unitConsMap[f];
+                                const energyCons = techActivity * unitCons;
+                                currentFecDetailed[s][b][t][f] = energyCons;
+                                currentFecByFuel[f] += energyCons;
+                                const efficiency = getValue(placeholderUsefulEfficiency, [s, b, t, f], getValue(placeholderUsefulEfficiency, [s, b, t], getValue(placeholderUsefulEfficiency, [s, b], getValue(placeholderUsefulEfficiency, '_default', 0.65))));
+                                const usefulEnergy = energyCons * efficiency;
+                                currentUeDetailed[s][b][t][f] = usefulEnergy;
+                                currentUeByFuel[f] += usefulEnergy;
+                                currentUeBySubsector[b] += usefulEnergy;
+                            }
+                        });
+                    });
+                });
+            }
+        });
+        yearlyResults[year].fecDetailed = currentFecDetailed; yearlyResults[year].ueDetailed = currentUeDetailed;
+        yearlyResults[year].fecByFuel = currentFecByFuel; yearlyResults[year].ueByFuel = currentUeByFuel;
+        yearlyResults[year].ueBySubsector = currentUeBySubsector;
 
         // 5. Calculate Hydrogen Transformation
-        const currentHydrogenProdMix_yr = yearlyResults[year].hydrogenProdMix; const fecHydrogen = currentFecByFuel['Hydrogen'] || 0; let currentHydrogenInputEnergyByFuel = primaryFuels.concat(endUseFuels).reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); hydrogenTechs.forEach(ht => { const mixPercent = getValue(currentHydrogenProdMix_yr, [ht], 0); const mixFraction = mixPercent / 100; const unitConsMap = getValue(hydrogenTechUnitEnergyCons, [ht], {}); Object.keys(unitConsMap).forEach(f_input => { const unitCons = unitConsMap[f_input]; const demand = fecHydrogen * mixFraction * unitCons; currentHydrogenInputEnergyByFuel[f_input] = (currentHydrogenInputEnergyByFuel[f_input] || 0) + demand; }); }); const currentEcPostHydrogen = { ...currentFecByFuel }; delete currentEcPostHydrogen['Hydrogen']; Object.keys(currentHydrogenInputEnergyByFuel).forEach(f => { if (currentHydrogenInputEnergyByFuel[f] > 0.001) { currentEcPostHydrogen[f] = (currentEcPostHydrogen[f] || 0) + currentHydrogenInputEnergyByFuel[f]; } }); yearlyResults[year].ecPostHydrogen = currentEcPostHydrogen;
+        const currentHydrogenProdMix_yr = yearlyResults[year].hydrogenProdMix;
+        const fecHydrogen = currentFecByFuel['Hydrogen'] || 0;
+        let currentHydrogenInputEnergyByFuel = primaryFuels.concat(endUseFuels).reduce((acc, f) => ({ ...acc, [f]: 0 }), {});
+        hydrogenTechs.forEach(ht => {
+            const mixPercent = getValue(currentHydrogenProdMix_yr, [ht], 0); const mixFraction = mixPercent / 100;
+            const unitConsMap = getValue(hydrogenTechUnitEnergyCons, [ht], {});
+            Object.keys(unitConsMap).forEach(f_input => { const unitCons = unitConsMap[f_input]; const demand = fecHydrogen * mixFraction * unitCons; currentHydrogenInputEnergyByFuel[f_input] = (currentHydrogenInputEnergyByFuel[f_input] || 0) + demand; });
+        });
+        const currentEcPostHydrogen = { ...currentFecByFuel }; delete currentEcPostHydrogen['Hydrogen'];
+        Object.keys(currentHydrogenInputEnergyByFuel).forEach(f => { if (currentHydrogenInputEnergyByFuel[f] > 0.001) { currentEcPostHydrogen[f] = (currentEcPostHydrogen[f] || 0) + currentHydrogenInputEnergyByFuel[f]; } });
+        yearlyResults[year].ecPostHydrogen = currentEcPostHydrogen;
 
         // 6. Calculate Power Transformation
-        const currentPowerProdMix_yr = yearlyResults[year].powerProdMix; const ecElectricity = currentEcPostHydrogen['Electricity'] || 0; let currentPowerInputEnergyByFuel = primaryFuels.concat(endUseFuels).reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); powerTechs.forEach(pt => { const mixPercent = getValue(currentPowerProdMix_yr, [pt], 0); const mixFraction = mixPercent / 100; const unitConsMap = getValue(powerTechUnitEnergyCons, [pt], {}); Object.keys(unitConsMap).forEach(f_input => { const unitCons = unitConsMap[f_input]; const demand = ecElectricity * mixFraction * unitCons; currentPowerInputEnergyByFuel[f_input] = (currentPowerInputEnergyByFuel[f_input] || 0) + demand; }); }); const currentEcPostPower = { ...currentEcPostHydrogen }; delete currentEcPostPower['Electricity']; Object.keys(currentPowerInputEnergyByFuel).forEach(f => { if (currentPowerInputEnergyByFuel[f] > 0.001) { currentEcPostPower[f] = (currentEcPostPower[f] || 0) + currentPowerInputEnergyByFuel[f]; } }); yearlyResults[year].ecPostPower = currentEcPostPower;
+        const currentPowerProdMix_yr = yearlyResults[year].powerProdMix;
+        const ecElectricity = currentEcPostHydrogen['Electricity'] || 0;
+        let currentPowerInputEnergyByFuel = primaryFuels.concat(endUseFuels).reduce((acc, f) => ({ ...acc, [f]: 0 }), {});
+        powerTechs.forEach(pt => {
+            const mixPercent = getValue(currentPowerProdMix_yr, [pt], 0); const mixFraction = mixPercent / 100;
+            const unitConsMap = getValue(powerTechUnitEnergyCons, [pt], {});
+            Object.keys(unitConsMap).forEach(f_input => { const unitCons = unitConsMap[f_input]; const demand = ecElectricity * mixFraction * unitCons; currentPowerInputEnergyByFuel[f_input] = (currentPowerInputEnergyByFuel[f_input] || 0) + demand; });
+        });
+        const currentEcPostPower = { ...currentEcPostHydrogen }; delete currentEcPostPower['Electricity'];
+        Object.keys(currentPowerInputEnergyByFuel).forEach(f => { if (currentPowerInputEnergyByFuel[f] > 0.001) { currentEcPostPower[f] = (currentEcPostPower[f] || 0) + currentPowerInputEnergyByFuel[f]; } });
+        yearlyResults[year].ecPostPower = currentEcPostPower;
 
         // 7. Calculate Other Transformations
-        const currentOtherFuelDemand = {}; let currentOtherInputEnergyByFuel = primaryFuels.reduce((acc, p) => ({ ...acc, [p]: 0 }), {}); Object.keys(otherConvTechs).forEach(f_endUse => { if (f_endUse in currentEcPostPower && currentEcPostPower[f_endUse] > 0.001) { const fuelDemandToConvert = currentEcPostPower[f_endUse]; currentOtherFuelDemand[f_endUse] = {}; const techsForFuel = otherConvTechs[f_endUse] || []; techsForFuel.forEach(ot => { currentOtherFuelDemand[f_endUse][ot] = {}; const mixPercent = getValue(baseOtherProdMix, [f_endUse, ot], 0); const mixFraction = mixPercent / 100; const unitConsMap = getValue(otherTechUnitEnergyCons, [f_endUse, ot], {}); Object.keys(unitConsMap).forEach(p_primary => { if (primaryFuels.includes(p_primary)) { const unitCons = unitConsMap[p_primary]; const primaryDemand = fuelDemandToConvert * mixFraction * unitCons; currentOtherFuelDemand[f_endUse][ot][p_primary] = primaryDemand; currentOtherInputEnergyByFuel[p_primary] = (currentOtherInputEnergyByFuel[p_primary] || 0) + primaryDemand; } }); }); } });
+        const currentOtherFuelDemand = {}; let currentOtherInputEnergyByFuel = primaryFuels.reduce((acc, p) => ({ ...acc, [p]: 0 }), {});
+        Object.keys(otherConvTechs).forEach(f_endUse => {
+            if (f_endUse in currentEcPostPower && currentEcPostPower[f_endUse] > 0.001) {
+                const fuelDemandToConvert = currentEcPostPower[f_endUse]; currentOtherFuelDemand[f_endUse] = {};
+                const techsForFuel = otherConvTechs[f_endUse] || [];
+                techsForFuel.forEach(ot => {
+                    currentOtherFuelDemand[f_endUse][ot] = {}; const mixPercent = getValue(baseOtherProdMix, [f_endUse, ot], 0); const mixFraction = mixPercent / 100;
+                    const unitConsMap = getValue(otherTechUnitEnergyCons, [f_endUse, ot], {});
+                    Object.keys(unitConsMap).forEach(p_primary => { if (primaryFuels.includes(p_primary)) { const unitCons = unitConsMap[p_primary]; const primaryDemand = fuelDemandToConvert * mixFraction * unitCons; currentOtherFuelDemand[f_endUse][ot][p_primary] = primaryDemand; currentOtherInputEnergyByFuel[p_primary] = (currentOtherInputEnergyByFuel[p_primary] || 0) + primaryDemand; } });
+                });
+            }
+        });
 
         // 8. Calculate PED
-        const currentPedByFuel = primaryFuels.reduce((acc, p) => ({ ...acc, [p]: 0 }), {}); Object.keys(currentOtherInputEnergyByFuel).forEach(p => { if (p in currentPedByFuel) { currentPedByFuel[p] += currentOtherInputEnergyByFuel[p]; } }); Object.keys(currentEcPostPower).forEach(f => { if (primaryFuels.includes(f)) { let isInputToOther = (f in currentOtherFuelDemand); if (!isInputToOther && currentEcPostPower[f] > 0.001) { currentPedByFuel[f] = (currentPedByFuel[f] || 0) + currentEcPostPower[f]; } } }); yearlyResults[year].pedByFuel = currentPedByFuel;
+        const currentPedByFuel = primaryFuels.reduce((acc, p) => ({ ...acc, [p]: 0 }), {});
+        Object.keys(currentOtherInputEnergyByFuel).forEach(p => { if (p in currentPedByFuel) { currentPedByFuel[p] += currentOtherInputEnergyByFuel[p]; } });
+        Object.keys(currentEcPostPower).forEach(f => { if (primaryFuels.includes(f)) { let isInputToOther = (f in currentOtherFuelDemand); if (!isInputToOther && currentEcPostPower[f] > 0.001) { currentPedByFuel[f] = (currentPedByFuel[f] || 0) + currentEcPostPower[f]; } } });
+        yearlyResults[year].pedByFuel = currentPedByFuel;
 
     } // --- End of year loop ---
 
