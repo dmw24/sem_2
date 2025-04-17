@@ -32,168 +32,62 @@ header.container {
     margin-bottom: 1rem;
 }
 
-header.container h1 {
-    margin: 15px 0;
-    font-size: 2.2em;
-    font-weight: 600;
-    line-height: 1.2em;
-    position: relative;
-}
+header.container h1 { margin: 15px 0; font-size: 2.2em; font-weight: 600; line-height: 1.2em; position: relative; }
+header.container h1::before { content: ""; display: inline-block; width: 5px; height: 1em; background: var(--ember-green); margin-right: 10px; vertical-align: middle; }
+header.container p.disclaimer { font-size: 0.9em; color: var(--dark-grey); margin: 0 0 1rem 0; }
 
-header.container h1::before {
-    content: "";
-    display: inline-block;
-    width: 5px;
-    height: 1em; /* Use em for scaling with font size */
-    background: var(--ember-green);
-    margin-right: 10px;
-    vertical-align: middle;
-}
+.container { width: 100%; max-width: 1600px; margin: 0 auto; padding: 20px; position: relative; }
+.sim-container.container { background: var(--off-white); box-shadow: none; padding-top: 0; }
+.sim-container { display: flex; gap: 20px; height: auto; }
 
-header.container p.disclaimer {
-    font-size: 0.9em;
-    color: var(--dark-grey);
-    margin: 0 0 1rem 0;
-}
+#sidebar { width: 450px; flex-shrink: 0; background: var(--white); padding: 1.5rem; border: 1px solid var(--grey-blue); border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow-y: auto; }
+#content { flex-grow: 1; padding: 1.5rem; display: flex; flex-direction: column; border: 1px solid var(--grey-blue); border-radius: 8px; background: var(--white); box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; }
+#content h2 { margin-top: 0; font-size: 1.5em; font-weight: 600; border-bottom: 1px solid var(--grey-blue); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+#content h3.chart-section-heading { font-size: 1.3em; font-weight: 600; color: var(--slate-blue); margin-top: 1.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--ember-green); }
+#content h3.chart-section-heading:first-of-type { margin-top: 0; }
 
-.container {
-    width: 100%;
-    max-width: 1600px; /* Max width for large screens */
-    margin: 0 auto;
-    padding: 20px;
-    position: relative; /* Needed for absolute positioning inside if any */
-}
-
-/* Specific container styles (header already handled) */
-.sim-container.container {
-    background: var(--off-white); /* Match body background */
-    box-shadow: none; /* Remove shadow from the main layout container */
-    padding-top: 0; /* Remove extra top padding */
-}
-
-.sim-container {
-    display: flex;
-    gap: 20px;
-    /* align-items: stretch; */ /* This is the default, ensures items fill height */
-    height: auto; /* Adjust height automatically */
-}
-
-#sidebar {
-    width: 450px;
-    flex-shrink: 0; /* Prevent sidebar from shrinking */
-    background: var(--white);
-    padding: 1.5rem;
-    border: 1px solid var(--grey-blue);
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    overflow-y: auto; /* Enable scrolling if internal content overflows */
-    /* *** REMOVED max-height TO ALLOW STRETCHING *** */
-    /* max-height: calc(100vh - 180px); */
-}
-
-#content {
-    flex-grow: 1; /* Allow content to take remaining space */
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--grey-blue);
-    border-radius: 8px;
-    background: var(--white);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    overflow: hidden; /* Prevent content overflow issues */
-}
-
-#content h2 {
-    margin-top: 0;
-    font-size: 1.5em;
-    font-weight: 600;
-    border-bottom: 1px solid var(--grey-blue);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-#content h3.chart-section-heading {
-    font-size: 1.3em;
-    font-weight: 600;
-    color: var(--slate-blue);
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--ember-green);
-}
-
-#content h3.chart-section-heading:first-of-type {
-    margin-top: 0; /* Remove top margin for the first section heading */
-}
-
-#subsectorSelector {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
+/* Styles for the new view selector */
+#chartViewSelectorContainer {
+    margin-bottom: 1rem; /* Spacing below primary dropdown */
+    padding-bottom: 1rem;
     border-bottom: 1px solid var(--grey-blue);
 }
-
-#subsectorSelector label {
+#chartViewSelectorContainer label {
     font-weight: 600;
     margin-right: 10px;
     font-size: 1.1em;
 }
-
-#subsectorSelector select {
+#chartViewSelectorContainer select {
     padding: 0.5rem;
     border: 1px solid var(--grey-blue);
     border-radius: 4px;
     font-size: 1em;
-    min-width: 250px; /* Ensure dropdown is wide enough */
+    min-width: 250px;
 }
 
+/* Style for existing subsector selector */
+#subsectorSelector {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    /* border-bottom: 1px solid var(--grey-blue); */ /* Remove bottom border here */
+}
+#subsectorSelector label { font-weight: 600; margin-right: 10px; font-size: 1.1em; }
+#subsectorSelector select { padding: 0.5rem; border: 1px solid var(--grey-blue); border-radius: 4px; font-size: 1em; min-width: 250px; }
+
+/* *** UPDATED CHART GRID TO 3 COLUMNS *** */
 .chart-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* Responsive grid */
+    grid-template-columns: repeat(3, 1fr); /* Force 3 equal columns */
     gap: 20px;
     margin-bottom: 25px;
 }
 
-.chart-box {
-    background: var(--white);
-    border: 1px solid var(--grey-blue);
-    border-radius: 8px;
-    padding: 1.2rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-    overflow: hidden; /* Prevent content spillover */
-    position: relative; /* For potential absolute elements inside */
-    height: 380px; /* Keep fixed height on container */
-    display: flex;
-    flex-direction: column;
-}
+.chart-box { background: var(--white); border: 1px solid var(--grey-blue); border-radius: 8px; padding: 1.2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); overflow: hidden; position: relative; height: 380px; display: flex; flex-direction: column; }
+.chart-box h3 { margin-top: 0; margin-bottom: 1rem; font-size: 1.05em; font-weight: 600; border-bottom: 1px solid #eee; padding-bottom: 0.6rem; color: var(--slate-blue); flex-shrink: 0; }
+.chart-box canvas { max-width: 100%; display: block; flex-grow: 1; min-height: 0; }
 
-.chart-box h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.05em;
-    font-weight: 600;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.6rem;
-    color: var(--slate-blue);
-    flex-shrink: 0;
-}
-
-.chart-box canvas {
-    max-width: 100%;
-    display: block;
-    flex-grow: 1;
-    min-height: 0; /* Important for flex-grow */
-}
-
-#sidebar h2 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.5em;
-    font-weight: 600;
-    border-bottom: 1px solid var(--grey-blue);
-    padding-bottom: 0.5rem;
-}
-
-/* Collapsible Group Styling */
+/* Sidebar specific styles */
+#sidebar h2 { margin-top: 0; margin-bottom: 1rem; font-size: 1.5em; font-weight: 600; border-bottom: 1px solid var(--grey-blue); padding-bottom: 0.5rem; }
 .group { margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
 .group:last-child { border-bottom: none; }
 .group-title { margin: 12px 0 8px 0; font-size: 1.15em; font-weight: 600; cursor: pointer; position: relative; padding-left: 18px; }
@@ -210,8 +104,6 @@ header.container p.disclaimer {
 .sub-group-title.expanded::after { content: "▼"; }
 .sub-group-title.collapsed::after { content: "►"; }
 .sub-group-content { display: none; padding-left: 10px; margin-top: 6px; }
-
-/* Input Styling within Sidebar */
 .activity-growth-input { margin-bottom: 10px; padding: 6px; border: 1px solid #f3f4f6; border-radius: 4px; background: #f9fafb; }
 .activity-growth-input label { font-size: 0.85em; font-weight: 600; display: block; margin-bottom: 2px; }
 .activity-growth-input input { width: 100%; padding: 0.3rem; font-size: 0.85em; border: 1px solid #ccc; border-radius: 3px; }
@@ -225,25 +117,29 @@ header.container p.disclaimer {
 .s-curve-inputs input { display: block; width: 95%; font-size: 0.8em; padding: 0.3rem; margin-bottom: 4px; border: 1px solid #ccc; border-radius: 3px; }
 fieldset { margin-bottom: 5px; padding: 0; border: none; }
 small { display: block; font-size: 0.8em; color: var(--dark-grey); margin-top: 3px; padding-left: 5px; margin-bottom: 10px; }
-
-/* Run Model Button */
 #runModelBtn { width: 100%; padding: 12px; margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 6px; background-color: var(--ember-green); color: var(--white); cursor: pointer; transition: background-color 0.2s; }
 #runModelBtn:hover:not(:disabled) { background-color: var(--ember-forest); }
 #runModelBtn:disabled { background-color: var(--dark-grey); cursor: not-allowed; }
 
+/* Utility class for hiding elements */
+.hidden {
+    display: none !important; /* Use !important to ensure override */
+}
+
+
 /* Responsive adjustments */
 @media screen and (max-width: 1200px) {
     .sim-container { flex-direction: column; height: auto; }
-    #sidebar { width: 100%; /* Removed max-height here too for consistency */ margin-bottom: 20px; }
-    .chart-grid { grid-template-columns: 1fr; }
+    #sidebar { width: 100%; margin-bottom: 20px; }
+    /* Adjust grid for smaller screens if 3 columns are too cramped */
+    .chart-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } /* Allow 1 or 2 columns */
     .chart-box { height: 350px; }
 }
 @media screen and (max-width: 768px) {
-    #sidebar { /* Removed max-height here too */ }
     header.container h1 { font-size: 1.8em; }
     #sidebar h2 { font-size: 1.3em; }
     .group-title { font-size: 1.1em; }
-    .chart-grid { grid-template-columns: 1fr; }
+    .chart-grid { grid-template-columns: 1fr; } /* Force 1 column */
     #content h2 { font-size: 1.3em; }
     #content h3.chart-section-heading { font-size: 1.1em; }
      .chart-box { height: 320px; }
