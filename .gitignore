@@ -1,0 +1,24 @@
+# General
+*.log
+*.tmp
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Node dependencies (if you use npm)
+/node_modules
+
+# Editor directories and files
+.vscode/
+.idea/
+
+# Build output (if applicable)
+/dist
+/build
+
+# Environment variables
+.env
+*.env.*
+!.env.example
