@@ -1,46 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>S-Curve Energy Model</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="css/style.css">
-</head>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    </head>
 <body>
-    <header>
-        <h1>S-Curve Energy Model Visualization</h1>
+    <header class="container">
+        <h1>S-Curve Energy Model</h1>
+        <p class="disclaimer">
+            Energy system projection model (2023-2050). Define subsector growth and technology behavior (S-Curve, Decline, Fixed).
+        </p>
     </header>
 
-    <main>
-        <section id="controls">
-            <h2>Controls</h2>
-            <p>Model controls will be added here.</p>
-        </section>
+    <div class="container sim-container">
 
-        <section id="results">
-            <h2>Results</h2>
-            <div id="fec-display">Final Energy Consumption results...</div>
-            <div id="ped-display">Primary Energy Demand results...</div>
-             </section>
+        <div id="sidebar">
+            <h2>Model Parameters</h2>
+            <button type="button" id="runModelBtn">Run Model & Update Charts</button>
+            <div id="inputGroupsContainer">
+                </div>
+        </div>
 
-        <section id="charts">
-            <h2>Charts</h2>
-            <div class="chart-container">
-                <canvas id="fecChart"></canvas>
+        <div id="content">
+            <h2>Results Projection (2023 - 2050)</h2>
+            <div id="subsectorSelector">
+                <label for="selectSubsector">View Detailed Charts for Subsector:</label>
+                <select id="selectSubsector">
+                    </select>
             </div>
-            <div class="chart-container">
-                <canvas id="pedChart"></canvas>
-            </div>
-            </section>
-    </main>
 
-    <footer>
-        <p>Energy Model Project</p>
+            <h3 class="chart-section-heading">Subsector Details: <span id="selectedSubsectorName">Loading...</span></h3>
+            <div id="subsectorCharts" class="chart-grid">
+                 <div class="chart-box"><h3>Activity by Technology</h3><canvas id="subsectorActivityChart"></canvas></div>
+                 <div class="chart-box"><h3>Final Energy (FEC) by Fuel</h3><canvas id="subsectorFecChart"></canvas></div>
+                 <div class="chart-box"><h3>Useful Energy (UE) by Fuel</h3><canvas id="subsectorUeChart"></canvas></div>
+            </div>
+
+            <h3 class="chart-section-heading">Overall Energy Balance</h3>
+            <div id="balanceCharts" class="chart-grid">
+                <div class="chart-box"><h3>Total Final Energy (FEC) by Fuel</h3><canvas id="fecFuelChart"></canvas></div>
+                <div class="chart-box"><h3>Total Primary Energy (PED) by Fuel</h3><canvas id="pedFuelChart"></canvas></div>
+                <div class="chart-box"><h3>Total Useful Energy (UE) by Fuel</h3><canvas id="ueFuelChart"></canvas></div>
+            </div>
+
+            <h3 class="chart-section-heading">Energy Supply & Transformations</h3>
+            <div id="supplyCharts" class="chart-grid">
+                <div class="chart-box"><h3>Power Generation by Technology</h3><canvas id="powerMixChart"></canvas></div>
+                <div class="chart-box"><h3>Hydrogen Production by Technology</h3><canvas id="hydrogenMixChart"></canvas></div>
+            </div>
+
+        </div> </div> <footer>
+        S-Curve Energy Model | Projections: 2023-2050 | Data Source: User Provided CSVs
     </footer>
 
-    <script src="js/charting.js"></script>
-    <script src="js/dataLoader.js"></script>
-    <script src="js/modelLogic.js"></script>
-    <script src="js/uiController.js"></script>
-    <script src="js/main.js"></script> </body>
+    <script src="js/charting.js"></script>       <script src="js/dataLoader.js"></script>     <script src="js/modelLogic.js"></script>     <script src="js/uiController.js"></script>   <script src="js/main.js"></script>           </body>
 </html>
