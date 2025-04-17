@@ -160,6 +160,8 @@ header.container p.disclaimer {
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     overflow: hidden; /* Prevent content spillover */
     position: relative; /* For potential absolute elements inside */
+    /* You could also set height on the box instead of the canvas */
+    /* height: 400px; */ /* Example if setting height on container */
 }
 
 .chart-box h3 {
@@ -174,9 +176,11 @@ header.container p.disclaimer {
 
 .chart-box canvas {
     max-width: 100%;
-    /* height: 320px !important; */ /* Avoid !important if possible, let Chart.js handle it */
-    min-height: 300px; /* Ensure a minimum height */
     display: block;
+    /* *** ADDED FIXED HEIGHT *** */
+    height: 320px;
+    /* min-height: 300px; */ /* Alternative: use min/max */
+    /* max-height: 350px; */
 }
 
 #sidebar h2 {
@@ -189,164 +193,58 @@ header.container p.disclaimer {
 }
 
 /* Collapsible Group Styling */
-.group {
-    margin-bottom: 10px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-}
+.group { margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
 .group:last-child { border-bottom: none; }
-
-.group-title {
-    margin: 12px 0 8px 0;
-    font-size: 1.15em;
-    font-weight: 600;
-    cursor: pointer;
-    position: relative;
-    padding-left: 18px; /* Space for pseudo-element */
-}
-.group-title::before { /* Colored bar */
-    content: ""; display: inline-block; width: 5px; height: 1.1em;
-    background: var(--ember-green); margin-right: 8px; vertical-align: middle;
-    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-}
-.group-title::after { /* Arrow indicator */
-    content: "►"; float: right; font-size: 0.8em; vertical-align: middle;
-    transition: transform 0.2s ease-in-out;
-    margin-right: 5px; /* Spacing from edge */
-}
-.group-title.expanded::after { content: "▼"; } /* Unicode arrows */
+.group-title { margin: 12px 0 8px 0; font-size: 1.15em; font-weight: 600; cursor: pointer; position: relative; padding-left: 18px; }
+.group-title::before { content: ""; display: inline-block; width: 5px; height: 1.1em; background: var(--ember-green); margin-right: 8px; vertical-align: middle; position: absolute; left: 0; top: 50%; transform: translateY(-50%); }
+.group-title::after { content: "►"; float: right; font-size: 0.8em; vertical-align: middle; transition: transform 0.2s ease-in-out; margin-right: 5px; }
+.group-title.expanded::after { content: "▼"; }
 .group-title.collapsed::after { content: "►"; }
-
-.group-content {
-    display: none; /* Initially hidden */
-    margin-top: 8px;
-    margin-bottom: 10px;
-    padding-left: 5px;
-    border-left: 2px solid var(--grey-blue);
-}
-
-.sub-group {
-    margin-left: 5px;
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px dashed #eee;
-}
+.group-content { display: none; margin-top: 8px; margin-bottom: 10px; padding-left: 5px; border-left: 2px solid var(--grey-blue); }
+.sub-group { margin-left: 5px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px dashed #eee; }
 .sub-group:last-child { border-bottom: none; }
-
-.sub-group-title {
-    font-size: 1.0em; font-weight: 600; margin: 8px 0 6px 0;
-    cursor: pointer; position: relative; padding-left: 15px; color: #374151;
-}
-.sub-group-title::before { /* Sub-group bar */
-    content: ""; display: inline-block; width: 4px; height: 1em;
-    background: var(--dark-grey); margin-right: 6px; vertical-align: middle;
-    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-}
-.sub-group-title::after { /* Sub-group arrow */
-    content: "►"; float: right; font-size: 0.75em; vertical-align: middle;
-    transition: transform 0.2s ease-in-out; margin-right: 5px;
-}
+.sub-group-title { font-size: 1.0em; font-weight: 600; margin: 8px 0 6px 0; cursor: pointer; position: relative; padding-left: 15px; color: #374151; }
+.sub-group-title::before { content: ""; display: inline-block; width: 4px; height: 1em; background: var(--dark-grey); margin-right: 6px; vertical-align: middle; position: absolute; left: 0; top: 50%; transform: translateY(-50%); }
+.sub-group-title::after { content: "►"; float: right; font-size: 0.75em; vertical-align: middle; transition: transform 0.2s ease-in-out; margin-right: 5px; }
 .sub-group-title.expanded::after { content: "▼"; }
 .sub-group-title.collapsed::after { content: "►"; }
-
-.sub-group-content {
-    display: none; /* Initially hidden */
-    padding-left: 10px;
-    margin-top: 6px;
-}
+.sub-group-content { display: none; padding-left: 10px; margin-top: 6px; }
 
 /* Input Styling within Sidebar */
-.activity-growth-input {
-    margin-bottom: 10px; padding: 6px; border: 1px solid #f3f4f6;
-    border-radius: 4px; background: #f9fafb;
-}
-.activity-growth-input label {
-    font-size: 0.85em; font-weight: 600; display: block; margin-bottom: 2px;
-}
-.activity-growth-input input {
-    width: 100%; padding: 0.3rem; font-size: 0.85em; border: 1px solid #ccc; border-radius: 3px;
-}
-
-.tech-input-container {
-    border: 1px solid #f0f0f0; border-radius: 4px; padding: 8px;
-    margin-bottom: 8px; background: #fafafa;
-}
-.tech-input-container legend { /* Technology name */
-    font-weight: 600; font-size: 0.9em; margin-bottom: 6px;
-    color: var(--slate-blue); border: none; padding-left: 0;
-}
-
-.tech-behavior-selector label {
-    display: inline-block; margin-right: 8px; font-size: 0.85em;
-}
-.tech-behavior-selector select {
-    display: inline-block; width: auto; padding: 0.2rem 0.4rem;
-    font-size: 0.85em; margin-bottom: 6px; border: 1px solid #ccc; border-radius: 3px;
-}
-
-.s-curve-inputs {
-    display: none; /* Initially hidden */
-    padding-left: 8px; border-left: 2px solid var(--ember-green); margin-top: 6px;
-}
-.s-curve-inputs.visible { display: block; } /* Class to show */
-
-.s-curve-inputs label {
-    display: block; font-size: 0.8em; margin-bottom: 1px;
-}
-.s-curve-inputs input {
-    display: block; width: 95%; font-size: 0.8em; padding: 0.3rem;
-    margin-bottom: 4px; border: 1px solid #ccc; border-radius: 3px;
-}
-
-/* Removed default fieldset border */
+.activity-growth-input { margin-bottom: 10px; padding: 6px; border: 1px solid #f3f4f6; border-radius: 4px; background: #f9fafb; }
+.activity-growth-input label { font-size: 0.85em; font-weight: 600; display: block; margin-bottom: 2px; }
+.activity-growth-input input { width: 100%; padding: 0.3rem; font-size: 0.85em; border: 1px solid #ccc; border-radius: 3px; }
+.tech-input-container { border: 1px solid #f0f0f0; border-radius: 4px; padding: 8px; margin-bottom: 8px; background: #fafafa; }
+.tech-input-container legend { font-weight: 600; font-size: 0.9em; margin-bottom: 6px; color: var(--slate-blue); border: none; padding-left: 0; }
+.tech-behavior-selector label { display: inline-block; margin-right: 8px; font-size: 0.85em; }
+.tech-behavior-selector select { display: inline-block; width: auto; padding: 0.2rem 0.4rem; font-size: 0.85em; margin-bottom: 6px; border: 1px solid #ccc; border-radius: 3px; }
+.s-curve-inputs { display: none; padding-left: 8px; border-left: 2px solid var(--ember-green); margin-top: 6px; }
+.s-curve-inputs.visible { display: block; }
+.s-curve-inputs label { display: block; font-size: 0.8em; margin-bottom: 1px; }
+.s-curve-inputs input { display: block; width: 95%; font-size: 0.8em; padding: 0.3rem; margin-bottom: 4px; border: 1px solid #ccc; border-radius: 3px; }
 fieldset { margin-bottom: 5px; padding: 0; border: none; }
-
-/* Small helper text style */
-small {
-    display: block; font-size: 0.8em; color: var(--dark-grey);
-    margin-top: 3px; padding-left: 5px; margin-bottom: 10px;
-}
+small { display: block; font-size: 0.8em; color: var(--dark-grey); margin-top: 3px; padding-left: 5px; margin-bottom: 10px; }
 
 /* Run Model Button */
-#runModelBtn {
-    width: 100%; padding: 12px; margin-bottom: 1.5rem; font-size: 1.1rem;
-    font-weight: 600; border: none; border-radius: 6px;
-    background-color: var(--ember-green); color: var(--white);
-    cursor: pointer; transition: background-color 0.2s;
-}
+#runModelBtn { width: 100%; padding: 12px; margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 6px; background-color: var(--ember-green); color: var(--white); cursor: pointer; transition: background-color 0.2s; }
 #runModelBtn:hover:not(:disabled) { background-color: var(--ember-forest); }
 #runModelBtn:disabled { background-color: var(--dark-grey); cursor: not-allowed; }
 
 /* Responsive adjustments */
 @media screen and (max-width: 1200px) {
     .sim-container { flex-direction: column; height: auto; }
-    #sidebar {
-        width: 100%;
-        max-height: 50vh; /* Limit height on smaller screens */
-        margin-bottom: 20px;
-        /* border-right: 1px solid var(--grey-blue); */ /* Remove border for column layout */
-    }
-    .chart-grid { grid-template-columns: 1fr; } /* Stack charts */
+    #sidebar { width: 100%; max-height: 50vh; margin-bottom: 20px; }
+    .chart-grid { grid-template-columns: 1fr; }
 }
-
 @media screen and (max-width: 768px) {
     #sidebar { max-height: 60vh; }
     header.container h1 { font-size: 1.8em; }
     #sidebar h2 { font-size: 1.3em; }
     .group-title { font-size: 1.1em; }
-    .chart-grid { grid-template-columns: 1fr; } /* Ensure stacking */
+    .chart-grid { grid-template-columns: 1fr; }
     #content h2 { font-size: 1.3em; }
     #content h3.chart-section-heading { font-size: 1.1em; }
 }
 
-footer {
-    width: 100%;
-    background: var(--white);
-    border-top: 1px solid var(--grey-blue);
-    text-align: center;
-    padding: 12px; /* Increased padding */
-    font-size: 0.85em;
-    color: var(--dark-grey);
-    margin-top: 2rem;
-}
-footer strong { font-weight: bold; } /* Reference had bold, example didn't */
+footer { width: 100%; background: var(--white); border-top: 1px solid var(--grey-blue); text-align: center; padding: 12px; font-size: 0.85em; color: var(--dark-grey); margin-top: 2rem; }
+footer strong { font-weight: bold; }
