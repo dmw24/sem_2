@@ -30,6 +30,9 @@ function createChart(canvasId, type, data, options = {}) {
  * @param {object} chartConfigData - Object containing lists needed for charts.
  */
 function updateCharts(yearlyResults, chartConfigData) {
+    // *** DEBUG LOGS ADDED HERE ***
+    console.log("updateCharts received chartConfigData:", JSON.stringify(chartConfigData, null, 2));
+
     if (!yearlyResults || Object.keys(yearlyResults).length === 0) { console.log("No model results available to update charts."); return; }
     if (!chartConfigData) { console.error("Chart configuration data is missing. Cannot update charts."); return; }
 
@@ -40,9 +43,12 @@ function updateCharts(yearlyResults, chartConfigData) {
         technologies, activityUnits
     } = chartConfigData;
 
-    // Check if years array is valid
+    // *** DEBUG LOG ADDED HERE ***
+    console.log("Destructured years as chartLabels:", chartLabels);
+
+    // Check if years array is valid after destructuring
     if (!chartLabels || !Array.isArray(chartLabels) || chartLabels.length === 0) {
-         console.error("Years array ('chartLabels') is missing or invalid in chartConfigData.");
+         console.error("Years array ('chartLabels') is missing or invalid after destructuring from chartConfigData.", chartConfigData);
          return; // Prevent further errors
     }
 
@@ -77,8 +83,13 @@ function updateCharts(yearlyResults, chartConfigData) {
     // 4. Total FEC
     const totalFecDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => getValue(yearlyResults, [y, 'fecByFuel', fuel], 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
     createChart('fecFuelChart', 'bar', { labels: chartLabels, datasets: totalFecDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Total FEC (EJ)', font: {size: 12} } } } });
-    // 5. Total PED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ERROR WAS HERE
-    const totalPedDatasets = primaryFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => getValue(yearlyResults, [y, 'pedByFuel', fuel], 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9)); // Error occurred on chartLabels.map if chartLabels was undefined
+    // 5. Total PED <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< ERROR OCCURS AROUND HERE
+    const totalPedDatasets = primaryFuels.map((fuel, fuelIndex) => ({
+        label: fuel,
+        // Line 247: Error occurs if chartLabels is undefined here
+        data: chartLabels.map(y => getValue(yearlyResults, [y, 'pedByFuel', fuel], 0) / GJ_PER_EJ),
+        backgroundColor: getTechColor(fuel, fuelIndex),
+    })).filter(ds => ds.data.some(v => v > 1e-9));
     createChart('pedFuelChart', 'bar', { labels: chartLabels, datasets: totalPedDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Total PED (EJ)', font: {size: 12} } } } });
     // 6. Total UE
     const totalUeDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => getValue(yearlyResults, [y, 'ueByFuel', fuel], 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
@@ -94,3 +105,4 @@ function updateCharts(yearlyResults, chartConfigData) {
     const hydrogenMixDatasets = hydrogenTechs.map((tech, techIndex) => ({ label: tech, data: chartLabels.map((y, yearIndex) => { const mixPercent = getValue(yearlyResults, [y, 'hydrogenProdMix', tech], 0); return ((mixPercent / 100) * totalHydrogenProdSeries[yearIndex]) / GJ_PER_EJ; }), backgroundColor: getTechColor(tech, techIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
     createChart('hydrogenMixChart', 'bar', { labels: chartLabels, datasets: hydrogenMixDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Hydrogen Production (EJ)', font: {size: 12} } } } });
 }
+
