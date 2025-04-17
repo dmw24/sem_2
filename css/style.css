@@ -74,6 +74,7 @@ header.container p.disclaimer {
 .sim-container {
     display: flex;
     gap: 20px;
+    /* align-items: stretch; */ /* This is the default, ensures items fill height */
     height: auto; /* Adjust height automatically */
 }
 
@@ -85,9 +86,9 @@ header.container p.disclaimer {
     border: 1px solid var(--grey-blue);
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    overflow-y: auto; /* Enable scrolling if content overflows */
-    /* Adjust max-height to avoid footer overlap, consider header/padding */
-    max-height: calc(100vh - 180px); /* Approximate calculation */
+    overflow-y: auto; /* Enable scrolling if internal content overflows */
+    /* *** REMOVED max-height TO ALLOW STRETCHING *** */
+    /* max-height: calc(100vh - 180px); */
 }
 
 #content {
@@ -160,10 +161,9 @@ header.container p.disclaimer {
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     overflow: hidden; /* Prevent content spillover */
     position: relative; /* For potential absolute elements inside */
-    /* *** ADDED FIXED HEIGHT TO CONTAINER *** */
-    height: 380px; /* Adjust as needed - allows space for title+padding+320px canvas */
-    display: flex; /* Use flexbox to manage content */
-    flex-direction: column; /* Stack title above canvas */
+    height: 380px; /* Keep fixed height on container */
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-box h3 {
@@ -174,16 +174,14 @@ header.container p.disclaimer {
     border-bottom: 1px solid #eee;
     padding-bottom: 0.6rem;
     color: var(--slate-blue);
-    flex-shrink: 0; /* Prevent title from shrinking */
+    flex-shrink: 0;
 }
 
 .chart-box canvas {
     max-width: 100%;
     display: block;
-    /* *** REMOVED FIXED HEIGHT FROM CANVAS *** */
-    /* height: 320px; */
-    flex-grow: 1; /* Allow canvas to take remaining space in flex container */
-    min-height: 0; /* Important for flex-grow in some browsers */
+    flex-grow: 1;
+    min-height: 0; /* Important for flex-grow */
 }
 
 #sidebar h2 {
@@ -236,20 +234,18 @@ small { display: block; font-size: 0.8em; color: var(--dark-grey); margin-top: 3
 /* Responsive adjustments */
 @media screen and (max-width: 1200px) {
     .sim-container { flex-direction: column; height: auto; }
-    #sidebar { width: 100%; max-height: 50vh; margin-bottom: 20px; }
+    #sidebar { width: 100%; /* Removed max-height here too for consistency */ margin-bottom: 20px; }
     .chart-grid { grid-template-columns: 1fr; }
-    /* Adjust chart box height for smaller screens if needed */
     .chart-box { height: 350px; }
 }
 @media screen and (max-width: 768px) {
-    #sidebar { max-height: 60vh; }
+    #sidebar { /* Removed max-height here too */ }
     header.container h1 { font-size: 1.8em; }
     #sidebar h2 { font-size: 1.3em; }
     .group-title { font-size: 1.1em; }
     .chart-grid { grid-template-columns: 1fr; }
     #content h2 { font-size: 1.3em; }
     #content h3.chart-section-heading { font-size: 1.1em; }
-     /* Adjust chart box height for smaller screens if needed */
      .chart-box { height: 320px; }
 }
 
