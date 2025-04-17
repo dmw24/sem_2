@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Curve Energy Model</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>S-Curve Energy Model Visualization</h1>
+    </header>
+
+    <main>
+        <section id="controls">
+            <h2>Controls</h2>
+            <p>Model controls will be added here.</p>
+        </section>
+
+        <section id="results">
+            <h2>Results</h2>
+            <div id="fec-display">Final Energy Consumption results...</div>
+            <div id="ped-display">Primary Energy Demand results...</div>
+             </section>
+
+        <section id="charts">
+            <h2>Charts</h2>
+            <div class="chart-container">
+                <canvas id="fecChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="pedChart"></canvas>
+            </div>
+            </section>
+    </main>
+
+    <footer>
+        <p>Energy Model Project</p>
+    </footer>
+
+    <script src="js/charting.js"></script>
+    <script src="js/dataLoader.js"></script>
+    <script src="js/modelLogic.js"></script>
+    <script src="js/uiController.js"></script>
+    <script src="js/main.js"></script> </body>
+</html>
