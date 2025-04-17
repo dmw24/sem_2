@@ -1,0 +1,24 @@
+Sector,Subsector,Unit,2023
+Transport,Passenger cars,million vkm,12000000
+Transport,Trucks,million vkm,4205000
+Transport,Buses,million vkm,460000
+Transport,2/3 wheelers,million vkm,2000000
+Transport,Ships,billion tkm,120000
+Transport,Planes,million pkm,10231200
+Transport,Trains,billion tkm,13500
+Transport,Other transport,Unitless (2023=1),1
+Industry,Steel,mt steel,1900
+Industry,Cement,mt cement,4100
+Industry,Chemicals,mt chemicals,3000
+Industry,Low temp. heating,PJ_heat,32177
+Industry,High temp. heating,PJ_heat,14077
+Industry,Other industry - feedstock,Unitless (2023=1),1
+Industry,Other industry - energy,Unitless (2023=1),1
+Buildings,Residential heating,PJ_heat,29750
+Buildings,Residential cooking,PJ_heat,2000
+Buildings,Residential lighting,billion lumen,35000
+Buildings,Other residential,Unitless (2023=1),1
+Buildings,Building cooling,PJ_cooling,10575
+Buildings,Commercial heating,PJ_heat,10200
+Buildings,Commercial lighting,billion lumen,18000
+Buildings,Other commercial,Unitless (2023=1),1

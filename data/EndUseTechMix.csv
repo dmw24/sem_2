@@ -1,0 +1,57 @@
+Sector,Subsector,Technology,Type,Unit,2023
+Transport,Passenger cars,EV,Stock,% mix,0.03
+Transport,Passenger cars,ICE,Stock,% mix,0.97
+Transport,Trucks,EV,Stock,% mix,0.0
+Transport,Trucks,ICE,Stock,% mix,1.0
+Transport,Buses,EV,Stock,% mix,0.05
+Transport,Buses,ICE,Stock,% mix,0.95
+Transport,2/3 wheelers,EV,Stock,% mix,0.05
+Transport,2/3 wheelers,ICE,Stock,% mix,0.95
+Transport,Ships,Conventional ship,Stock,% mix,1.0
+Transport,Ships,Ammonia ship,Stock,% mix,0.0
+Transport,Ships,Electric ship,Stock,% mix,0.0
+Transport,Planes,Conventional plane,Stock,% mix,1.0
+Transport,Planes,Electric plane,Stock,% mix,0.0
+Transport,Trains,Diesel train,Stock,% mix,0.5
+Transport,Trains,Electric train,Stock,% mix,0.5
+Transport,Trains,Conventional,Stock,% mix,1.0
+Transport,Trains,Electrified,Stock,% mix,0.0
+Transport,Other transport,Conventional,Stock,% mix,1.0
+Transport,Other transport,Electrified,Stock,% mix,0.0
+Industry,Steel,BF-BOF,Stock,% mix,0.7
+Industry,Steel,EAF,Stock,% mix,0.3
+Industry,Steel,DRI-EAF (H2),Stock,% mix,0.0
+Industry,Cement,Conventional kiln,Stock,% mix,1.0
+Industry,Cement,Electric kiln,Stock,% mix,0.0
+Industry,Chemicals,Conventional,Stock,% mix,1.0
+Industry,Chemicals,Electrified,Stock,% mix,0.0
+Industry,Low temp. heating,Fossil boiler,Stock,% mix,0.7
+Industry,Low temp. heating,Biomass boiler,Stock,% mix,0.25
+Industry,Low temp. heating,Heat pump,Stock,% mix,0.05
+Industry,High temp. heating,Fossil furnace,Stock,% mix,0.85
+Industry,High temp. heating,Biomass furnace,Stock,% mix,0.15
+Industry,High temp. heating,Electric furnace,Stock,% mix,0.0
+Industry,Other industry - feedstock,Feedstock,Stock,% mix,1.0
+Industry,Other industry - energy,Conventional,Stock,% mix,1.0
+Industry,Other industry - energy,Electrified,Stock,% mix,0.0
+Buildings,Residential heating,Fossil boiler,Stock,% mix,0.8
+Buildings,Residential heating,Biomass heating,Stock,% mix,0.1
+Buildings,Residential heating,Heat pump,Stock,% mix,0.05
+Buildings,Residential heating,Electric heating,Stock,% mix,0.05
+Buildings,Residential cooking,Conventional fossil,Stock,% mix,0.4
+Buildings,Residential cooking,Biomass cooking,Stock,% mix,0.4
+Buildings,Residential cooking,Electrified,Stock,% mix,0.2
+Buildings,Residential lighting,Conventional,Stock,% mix,0.6
+Buildings,Residential lighting,Full LED,Stock,% mix,0.4
+Buildings,Other residential,Conventional,Stock,% mix,1.0
+Buildings,Other residential,Electrified,Stock,% mix,0.0
+Buildings,Building cooling,Low efficiency airco,Stock,% mix,1.0
+Buildings,Building cooling,High efficiency airco,Stock,% mix,0.0
+Buildings,Commercial heating,Fossil boiler,Stock,% mix,0.8
+Buildings,Commercial heating,Biomass heating,Stock,% mix,0.1
+Buildings,Commercial heating,Heat pump,Stock,% mix,0.0
+Buildings,Commercial heating,Electric heating,Stock,% mix,0.1
+Buildings,Commercial lighting,Conventional,Stock,% mix,1.0
+Buildings,Commercial lighting,Full LED,Stock,% mix,0.0
+Buildings,Other commercial,Conventional,Stock,% mix,1.0
+Buildings,Other commercial,Electrified,Stock,% mix,0.0

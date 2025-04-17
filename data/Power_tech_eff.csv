@@ -1,0 +1,9 @@
+Sector,Subsector,Technology,Fuel,Unit,2023
+Power,Electricity,Solar PV,Solar,% efficiency,1.0
+Power,Electricity,Wind,Wind,% efficiency,1.0
+Power,Electricity,Hydro,Hydro,% efficiency,1.0
+Power,Electricity,Gas power,Gas,% efficiency,0.35
+Power,Electricity,Coal power,Coal,% efficiency,0.3
+Power,Electricity,Oil power,Oil,% efficiency,0.3
+Power,Electricity,Nuclear power,Uranium,% efficiency,0.33
+Power,Electricity,Biomass power,Biomass,% efficiency,0.35

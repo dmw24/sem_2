@@ -1,0 +1,10 @@
+Sector,Subsector,Technology,Fuel,Unit,2023
+Energy industry,Gas processing,Gas refining,Gas,GJ_consumed/GJ_refined,0.1
+Energy industry,Gas processing,Gas refining,Coal,GJ_consumed/GJ_refined,-
+Energy industry,Gas processing,Gas refining,Oil,GJ_consumed/GJ_refined,-
+Energy industry,Oil processing,Oil refining,Oil,GJ_consumed/GJ_refined,0.05
+Energy industry,Oil processing,Oil refining,Gas,GJ_consumed/GJ_refined,0.05
+Energy industry,Oil processing,Oil refining,Coal,GJ_consumed/GJ_refined,-
+Energy industry,Coal processing,Coal refining,Coal,GJ_consumed/GJ_refined,0.1
+Energy industry,Coal processing,Coal refining,Gas,GJ_consumed/GJ_refined,-
+Energy industry,Coal processing,Coal refining,Oil,GJ_consumed/GJ_refined,-
