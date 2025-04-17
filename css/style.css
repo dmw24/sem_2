@@ -1,60 +1,352 @@
-/* Basic Reset */
-body, h1, h2, p, section, main, header, footer {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* css/style.css */
+
+/* CSS variables from reference */
+:root {
+    --slate-blue: #192238; --off-white: #f7fafc; --white: #fff; --grey-blue: #e2e8f0;
+    --dark-grey: #718096; --color_theme_accent: #13CE74; --background_pop_darken: #0B6638;
+    --ember-green: #13CE74; --ember-pine: #06371F; --ember-forest: #0B6638;
+    --ember-grass: #0F9A56; --ember-mint: #89E7BA;
+    --ember-navy: #204172; --ember-azure: #1E6DA9; --ember-sky: #37A6E6;
+    --ember-arctic: #C4D9E9;
+    --ember-fire: #E04B00; --ember-clay: #891B05; --ember-rust: #BF3100;
+    --ember-tangerine: #EE7309; --ember-sunrise: #FCA311;
+    --ember-smoke: #999999; --ember-fog: #F7F7F7;
 }
+
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
-    font-family: sans-serif;
-    line-height: 1.6;
+    background: var(--off-white);
+    color: var(--slate-blue);
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    padding-bottom: 50px; /* Ensure space for footer */
+}
+
+header.container {
+    padding-bottom: 0.5rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--grey-blue);
+    margin-bottom: 1rem;
+}
+
+header.container h1 {
+    margin: 15px 0;
+    font-size: 2.2em;
+    font-weight: 600;
+    line-height: 1.2em;
+    position: relative;
+}
+
+header.container h1::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 1em; /* Use em for scaling with font size */
+    background: var(--ember-green);
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+header.container p.disclaimer {
+    font-size: 0.9em;
+    color: var(--dark-grey);
+    margin: 0 0 1rem 0;
+}
+
+.container {
+    width: 100%;
+    max-width: 1600px; /* Max width for large screens */
+    margin: 0 auto;
     padding: 20px;
-    background-color: #f4f4f4;
-    color: #333;
+    position: relative; /* Needed for absolute positioning inside if any */
 }
 
-header {
-    background-color: #333;
-    color: #fff;
-    padding: 1rem 0;
-    text-align: center;
-    margin-bottom: 20px;
+/* Specific container styles (header already handled) */
+.sim-container.container {
+    background: var(--off-white); /* Match body background */
+    box-shadow: none; /* Remove shadow from the main layout container */
+    padding-top: 0; /* Remove extra top padding */
 }
 
-main {
-    max-width: 1200px;
-    margin: auto;
-    overflow: hidden;
+.sim-container {
+    display: flex;
+    gap: 20px;
+    height: auto; /* Adjust height automatically */
 }
 
-section {
-    background: #fff;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+#sidebar {
+    width: 450px;
+    flex-shrink: 0; /* Prevent sidebar from shrinking */
+    background: var(--white);
+    padding: 1.5rem;
+    border: 1px solid var(--grey-blue);
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    overflow-y: auto; /* Enable scrolling if content overflows */
+    /* Adjust max-height to avoid footer overlap, consider header/padding */
+    max-height: calc(100vh - 180px); /* Approximate calculation */
 }
 
-h2 {
-    color: #333;
+#content {
+    flex-grow: 1; /* Allow content to take remaining space */
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--grey-blue);
+    border-radius: 8px;
+    background: var(--white);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    overflow: hidden; /* Prevent content overflow issues */
+}
+
+#content h2 {
+    margin-top: 0;
+    font-size: 1.5em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--grey-blue);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+#content h3.chart-section-heading {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: var(--slate-blue);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--ember-green);
+}
+
+#content h3.chart-section-heading:first-of-type {
+    margin-top: 0; /* Remove top margin for the first section heading */
+}
+
+#subsectorSelector {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--grey-blue);
+}
+
+#subsectorSelector label {
+    font-weight: 600;
+    margin-right: 10px;
+    font-size: 1.1em;
+}
+
+#subsectorSelector select {
+    padding: 0.5rem;
+    border: 1px solid var(--grey-blue);
+    border-radius: 4px;
+    font-size: 1em;
+    min-width: 250px; /* Ensure dropdown is wide enough */
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); /* Responsive grid */
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.chart-box {
+    background: var(--white);
+    border: 1px solid var(--grey-blue);
+    border-radius: 8px;
+    padding: 1.2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    overflow: hidden; /* Prevent content spillover */
+    position: relative; /* For potential absolute elements inside */
+}
+
+.chart-box h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.05em;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.6rem;
+    color: var(--slate-blue);
+}
+
+.chart-box canvas {
+    max-width: 100%;
+    /* height: 320px !important; */ /* Avoid !important if possible, let Chart.js handle it */
+    min-height: 300px; /* Ensure a minimum height */
+    display: block;
+}
+
+#sidebar h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.5em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--grey-blue);
+    padding-bottom: 0.5rem;
+}
+
+/* Collapsible Group Styling */
+.group {
     margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+.group:last-child { border-bottom: none; }
+
+.group-title {
+    margin: 12px 0 8px 0;
+    font-size: 1.15em;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    padding-left: 18px; /* Space for pseudo-element */
+}
+.group-title::before { /* Colored bar */
+    content: ""; display: inline-block; width: 5px; height: 1.1em;
+    background: var(--ember-green); margin-right: 8px; vertical-align: middle;
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+}
+.group-title::after { /* Arrow indicator */
+    content: "►"; float: right; font-size: 0.8em; vertical-align: middle;
+    transition: transform 0.2s ease-in-out;
+    margin-right: 5px; /* Spacing from edge */
+}
+.group-title.expanded::after { content: "▼"; } /* Unicode arrows */
+.group-title.collapsed::after { content: "►"; }
+
+.group-content {
+    display: none; /* Initially hidden */
+    margin-top: 8px;
+    margin-bottom: 10px;
+    padding-left: 5px;
+    border-left: 2px solid var(--grey-blue);
+}
+
+.sub-group {
+    margin-left: 5px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed #eee;
+}
+.sub-group:last-child { border-bottom: none; }
+
+.sub-group-title {
+    font-size: 1.0em; font-weight: 600; margin: 8px 0 6px 0;
+    cursor: pointer; position: relative; padding-left: 15px; color: #374151;
+}
+.sub-group-title::before { /* Sub-group bar */
+    content: ""; display: inline-block; width: 4px; height: 1em;
+    background: var(--dark-grey); margin-right: 6px; vertical-align: middle;
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+}
+.sub-group-title::after { /* Sub-group arrow */
+    content: "►"; float: right; font-size: 0.75em; vertical-align: middle;
+    transition: transform 0.2s ease-in-out; margin-right: 5px;
+}
+.sub-group-title.expanded::after { content: "▼"; }
+.sub-group-title.collapsed::after { content: "►"; }
+
+.sub-group-content {
+    display: none; /* Initially hidden */
+    padding-left: 10px;
+    margin-top: 6px;
+}
+
+/* Input Styling within Sidebar */
+.activity-growth-input {
+    margin-bottom: 10px; padding: 6px; border: 1px solid #f3f4f6;
+    border-radius: 4px; background: #f9fafb;
+}
+.activity-growth-input label {
+    font-size: 0.85em; font-weight: 600; display: block; margin-bottom: 2px;
+}
+.activity-growth-input input {
+    width: 100%; padding: 0.3rem; font-size: 0.85em; border: 1px solid #ccc; border-radius: 3px;
+}
+
+.tech-input-container {
+    border: 1px solid #f0f0f0; border-radius: 4px; padding: 8px;
+    margin-bottom: 8px; background: #fafafa;
+}
+.tech-input-container legend { /* Technology name */
+    font-weight: 600; font-size: 0.9em; margin-bottom: 6px;
+    color: var(--slate-blue); border: none; padding-left: 0;
+}
+
+.tech-behavior-selector label {
+    display: inline-block; margin-right: 8px; font-size: 0.85em;
+}
+.tech-behavior-selector select {
+    display: inline-block; width: auto; padding: 0.2rem 0.4rem;
+    font-size: 0.85em; margin-bottom: 6px; border: 1px solid #ccc; border-radius: 3px;
+}
+
+.s-curve-inputs {
+    display: none; /* Initially hidden */
+    padding-left: 8px; border-left: 2px solid var(--ember-green); margin-top: 6px;
+}
+.s-curve-inputs.visible { display: block; } /* Class to show */
+
+.s-curve-inputs label {
+    display: block; font-size: 0.8em; margin-bottom: 1px;
+}
+.s-curve-inputs input {
+    display: block; width: 95%; font-size: 0.8em; padding: 0.3rem;
+    margin-bottom: 4px; border: 1px solid #ccc; border-radius: 3px;
+}
+
+/* Removed default fieldset border */
+fieldset { margin-bottom: 5px; padding: 0; border: none; }
+
+/* Small helper text style */
+small {
+    display: block; font-size: 0.8em; color: var(--dark-grey);
+    margin-top: 3px; padding-left: 5px; margin-bottom: 10px;
+}
+
+/* Run Model Button */
+#runModelBtn {
+    width: 100%; padding: 12px; margin-bottom: 1.5rem; font-size: 1.1rem;
+    font-weight: 600; border: none; border-radius: 6px;
+    background-color: var(--ember-green); color: var(--white);
+    cursor: pointer; transition: background-color 0.2s;
+}
+#runModelBtn:hover:not(:disabled) { background-color: var(--ember-forest); }
+#runModelBtn:disabled { background-color: var(--dark-grey); cursor: not-allowed; }
+
+/* Responsive adjustments */
+@media screen and (max-width: 1200px) {
+    .sim-container { flex-direction: column; height: auto; }
+    #sidebar {
+        width: 100%;
+        max-height: 50vh; /* Limit height on smaller screens */
+        margin-bottom: 20px;
+        /* border-right: 1px solid var(--grey-blue); */ /* Remove border for column layout */
+    }
+    .chart-grid { grid-template-columns: 1fr; } /* Stack charts */
+}
+
+@media screen and (max-width: 768px) {
+    #sidebar { max-height: 60vh; }
+    header.container h1 { font-size: 1.8em; }
+    #sidebar h2 { font-size: 1.3em; }
+    .group-title { font-size: 1.1em; }
+    .chart-grid { grid-template-columns: 1fr; } /* Ensure stacking */
+    #content h2 { font-size: 1.3em; }
+    #content h3.chart-section-heading { font-size: 1.1em; }
 }
 
 footer {
+    width: 100%;
+    background: var(--white);
+    border-top: 1px solid var(--grey-blue);
     text-align: center;
-    margin-top: 20px;
-    padding: 10px;
-    color: #666;
+    padding: 12px; /* Increased padding */
+    font-size: 0.85em;
+    color: var(--dark-grey);
+    margin-top: 2rem;
 }
-
-/* Basic Chart Container Styling */
-.chart-container {
-    width: 90%; /* Adjust as needed */
-    max-width: 600px; /* Prevent charts from becoming too large */
-    margin: 20px auto; /* Center charts */
-    border: 1px solid #ccc;
-    padding: 10px;
-    background-color: #fff;
-}
-
-/* Add more specific styles as needed */
+footer strong { font-weight: bold; } /* Reference had bold, example didn't */
