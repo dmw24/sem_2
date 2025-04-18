@@ -112,11 +112,6 @@ function transformEndUseMixData(parsedData) {
             // *** Store as percentage number (0-100) for modelLogic compatibility ***
             const valuePercent = isNaN(valueFraction) ? 0 : valueFraction * 100;
             baseDemandTechMix[sector][subsector][tech] = valuePercent;
-
-            // Debug log from previous step (now shows fraction -> percent)
-            // if (sector === 'Industry' && subsector === 'Steel' && tech === 'EAF') {
-            //     console.log(`DEBUG (dataLoader - transformEndUseMixData): Parsed Steel EAF 2023 fraction = ${valueFraction}, Stored as % = ${valuePercent}`);
-            // }
         }
     });
     return { baseDemandTechMix };
@@ -300,9 +295,6 @@ async function loadAndStructureData() {
         const { powerTechUnitEnergyCons } = transformPowerEffData(rawData.powerTechEff || []);
         const { hydrogenTechUnitEnergyCons } = transformHydrogenEffData(rawData.hydrogenTechEff || []);
         const { otherTechUnitEnergyCons, baseOtherProdMix } = transformOtherTransformData(rawData.otherTransform || []);
-
-        // Debug log
-        // console.log("DEBUG (dataLoader - loadAndStructureData): Final baseDemandTechMix for Steel:", JSON.stringify(baseDemandTechMix?.Industry?.Steel));
 
         // Derive secondary structures
         let allSectors = new Set(); let allSubsectors = {}; let allTechnologies = {};
