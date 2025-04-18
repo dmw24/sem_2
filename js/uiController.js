@@ -2,7 +2,6 @@
 // Version: Complete - Added Steepness k AND Midpoint Year t0 Inputs, Balance Chart Filters
 
 // --- UI Helper Functions ---
-
 /**
  * Toggles the display of collapsible group content.
  * @param {HTMLElement} el - The title element (h3 or h4) that was clicked.
@@ -65,7 +64,6 @@ function toggleSCurveInputs(selectElement, paramKey) {
 }
 
 // --- Dynamic Input Creation Helpers ---
-
 // Default behavior mappings (needed for setting initial UI state)
 const defaultDeclineDemandTechsUI = { 'Transport|Passenger cars': 'ICE', 'Transport|Trucks': 'ICE', 'Transport|Buses': 'ICE', 'Transport|2/3 wheelers': 'ICE', 'Transport|Ships': 'Conventional ship', 'Transport|Planes': 'Conventional plane', 'Transport|Trains': 'Diesel train', 'Industry|Steel': 'BF-BOF', 'Industry|Cement': 'Conventional kiln', 'Industry|Chemicals': 'Conventional', 'Industry|Low temp. heating': 'Fossil boiler', 'Industry|High temp. heating': 'Fossil furnace', 'Industry|Other industry - energy': 'Conventional', 'Buildings|Residential heating': 'Fossil boiler', 'Buildings|Residential cooking': 'Conventional fossil', 'Buildings|Residential lighting': 'Conventional', 'Buildings|Other residential': 'Conventional', 'Buildings|Building cooling': 'Low efficiency airco', 'Buildings|Commercial heating': 'Fossil boiler', 'Buildings|Commercial lighting': 'Conventional', 'Buildings|Other commercial': 'Conventional', 'Transport|Other transport': 'Conventional' };
 const defaultSCurveDemandTechsUI = { 'Transport|Passenger cars': 'EV', 'Transport|Trucks': 'EV', 'Transport|Buses': 'EV', 'Transport|2/3 wheelers': 'EV', 'Transport|Ships': 'Ammonia ship', 'Transport|Planes': 'Electric plane', 'Transport|Trains': 'Electric train', 'Industry|Steel': 'DRI-EAF (H2)', 'Industry|Cement': 'Electric kiln', 'Industry|Chemicals': 'Electrified', 'Industry|Low temp. heating': 'Heat pump', 'Industry|High temp. heating': 'Electric furnace', 'Industry|Other industry - energy': 'Electrified', 'Buildings|Residential heating': 'Heat pump', 'Buildings|Residential cooking': 'Electrified', 'Buildings|Residential lighting': 'Full LED', 'Buildings|Other residential': 'Electrified', 'Buildings|Building cooling': 'High efficiency airco', 'Buildings|Commercial heating': 'Heat pump', 'Buildings|Commercial lighting': 'Full LED', 'Buildings|Other commercial': 'Electrified', 'Transport|Other transport': 'Electrified' };
@@ -95,45 +93,31 @@ const createSCurveParamInputs = (paramKey, baseValue) => {
     const midpointYearInputId = `sCurveMidpointYear_${sanitizedParamKey}`; // t0 input ID
 
     // Target Share Input
-    const targetLabel = document.createElement('label');
-    targetLabel.htmlFor = targetInputId;
-    targetLabel.textContent = `Target Share (%):`;
-    const targetInput = document.createElement('input');
-    targetInput.type = 'number'; targetInput.id = targetInputId; targetInput.min = '0'; targetInput.max = '100'; targetInput.step = '1'; targetInput.value = Math.min(100, Math.max(0, baseValue + 5)).toFixed(1);
+    const targetLabel = document.createElement('label'); targetLabel.htmlFor = targetInputId; targetLabel.textContent = `Target Share (%):`;
+    const targetInput = document.createElement('input'); targetInput.type = 'number'; targetInput.id = targetInputId; targetInput.min = '0'; targetInput.max = '100'; targetInput.step = '1'; targetInput.value = Math.min(100, Math.max(0, baseValue + 5)).toFixed(1);
     div.appendChild(targetLabel); div.appendChild(targetInput);
 
     // Target Year Input
-    const targetYearLabel = document.createElement('label');
-    targetYearLabel.htmlFor = targetYearInputId;
-    targetYearLabel.textContent = `Target Year:`;
-    const targetYearInput = document.createElement('input');
-    targetYearInput.type = 'number'; targetYearInput.id = targetYearInputId; targetYearInput.min = String(uiStartYear + 1); targetYearInput.max = String(uiEndYear + 10); targetYearInput.step = '1'; targetYearInput.value = String(uiEndYear);
+    const targetYearLabel = document.createElement('label'); targetYearLabel.htmlFor = targetYearInputId; targetYearLabel.textContent = `Target Year:`;
+    const targetYearInput = document.createElement('input'); targetYearInput.type = 'number'; targetYearInput.id = targetYearInputId; targetYearInput.min = String(uiStartYear + 1); targetYearInput.max = String(uiEndYear + 10); targetYearInput.step = '1'; targetYearInput.value = String(uiEndYear);
     div.appendChild(targetYearLabel); div.appendChild(targetYearInput);
 
     // Steepness (k) Input
-    const kValueLabel = document.createElement('label');
-    kValueLabel.htmlFor = kValueInputId;
-    kValueLabel.textContent = `Steepness (k):`;
-    const kValueInput = document.createElement('input');
-    kValueInput.type = 'number'; kValueInput.id = kValueInputId; kValueInput.min = '0.01'; kValueInput.max = '1.0'; kValueInput.step = '0.01'; kValueInput.value = '0.15'; // Default k
+    const kValueLabel = document.createElement('label'); kValueLabel.htmlFor = kValueInputId; kValueLabel.textContent = `Steepness (k):`;
+    const kValueInput = document.createElement('input'); kValueInput.type = 'number'; kValueInput.id = kValueInputId; kValueInput.min = '0.01'; kValueInput.max = '1.0'; kValueInput.step = '0.01'; kValueInput.value = '0.15'; // Default k
     div.appendChild(kValueLabel); div.appendChild(kValueInput);
-    const kValueHelp = document.createElement('small');
-    kValueHelp.textContent = "Controls growth rate (e.g., 0.1 ≈ 10%/yr initial relative growth).";
+    const kValueHelp = document.createElement('small'); kValueHelp.textContent = "Controls growth rate (e.g., 0.1 ≈ 10%/yr initial relative growth).";
     div.appendChild(kValueHelp);
 
     // Midpoint Year (t0) Input
-    const midpointYearLabel = document.createElement('label');
-    midpointYearLabel.htmlFor = midpointYearInputId;
-    midpointYearLabel.textContent = `Midpoint Year (t0):`;
-    const midpointYearInput = document.createElement('input');
-    midpointYearInput.type = 'number'; midpointYearInput.id = midpointYearInputId; midpointYearInput.min = String(uiStartYear - 10); // Allow midpoint before start year
+    const midpointYearLabel = document.createElement('label'); midpointYearLabel.htmlFor = midpointYearInputId; midpointYearLabel.textContent = `Midpoint Year (t0):`;
+    const midpointYearInput = document.createElement('input'); midpointYearInput.type = 'number'; midpointYearInput.id = midpointYearInputId; midpointYearInput.min = String(uiStartYear - 10); // Allow midpoint before start year
     midpointYearInput.max = String(uiEndYear + 10); // Allow midpoint after target year
     midpointYearInput.step = '1';
     const defaultMidpoint = Math.round(uiStartYear + (parseInt(targetYearInput.value, 10) - uiStartYear) / 2); // Default halfway
     midpointYearInput.value = String(defaultMidpoint);
     div.appendChild(midpointYearLabel); div.appendChild(midpointYearInput);
-    const midpointHelp = document.createElement('small');
-    midpointHelp.textContent = "Year when growth is fastest.";
+    const midpointHelp = document.createElement('small'); midpointHelp.textContent = "Year when growth is fastest.";
     div.appendChild(midpointHelp);
 
     return div;
@@ -199,7 +183,6 @@ const createTechInput = (categoryType, categoryKey, tech, baseMixObject) => {
 // --- UI Initialization ---
 /**
  * Dynamically creates the input groups in the sidebar based on loaded data.
- * @param {object} structuredData - The data object from dataLoader.js.
  */
 function initializeSidebarInputs(structuredData) {
     console.log("Initializing sidebar inputs...");
@@ -208,21 +191,11 @@ function initializeSidebarInputs(structuredData) {
     sidebarInputContainer.innerHTML = ''; // Clear previous inputs
 
     // Log data used for UI generation
-    console.log("DEBUG (uiController - initializeSidebarInputs): Data received:", {
-        sectors: structuredData?.sectors,
-        subsectors: structuredData?.subsectors,
-        technologies: structuredData?.technologies,
-        baseDemandTechMix: structuredData?.baseDemandTechMix
-    });
+    console.log("DEBUG (uiController - initializeSidebarInputs): Data received:", { sectors: structuredData?.sectors, subsectors: structuredData?.subsectors, technologies: structuredData?.technologies, baseDemandTechMix: structuredData?.baseDemandTechMix });
 
     const { sectors, subsectors, technologies, baseDemandTechMix, basePowerProdMix, baseHydrogenProdMix, powerTechs, hydrogenTechs } = structuredData || {};
 
-    // Check if essential structures are present
-     if (!sectors || !subsectors || !technologies || !baseDemandTechMix || !basePowerProdMix || !baseHydrogenProdMix || !powerTechs || !hydrogenTechs) {
-         console.error("DEBUG (uiController - initializeSidebarInputs): Missing essential data structures for building inputs!");
-         sidebarInputContainer.innerHTML = '<p style="color: red;">Error: Could not load data needed to build parameter inputs.</p>';
-         return;
-     }
+     if (!sectors || !subsectors || !technologies || !baseDemandTechMix || !basePowerProdMix || !baseHydrogenProdMix || !powerTechs || !hydrogenTechs) { console.error("DEBUG (uiController - initializeSidebarInputs): Missing essential data structures for building inputs!"); sidebarInputContainer.innerHTML = '<p style="color: red;">Error: Could not load data needed to build parameter inputs.</p>'; return; }
      let groupsAddedCount = 0;
 
     // Create End-Use Sector Groups
@@ -264,39 +237,46 @@ function initializeSidebarInputs(structuredData) {
     hydrogenGroup.appendChild(hydrogenTitle); hydrogenGroup.appendChild(hydrogenContent); sidebarInputContainer.appendChild(hydrogenGroup); groupsAddedCount++;
 
     console.log(`DEBUG (uiController - initializeSidebarInputs): Finished adding ${groupsAddedCount} groups to sidebar.`);
-    if(groupsAddedCount === 0) { sidebarInputContainer.innerHTML = '<p style="color: orange;">Warning: No input groups generated.</p>'; }
+    if(groupsAddedCount === 0) { sidebarInputContainer.innerHTML = '<p style="color: orange;">Warning: No input groups were generated.</p>'; }
 
     console.log("Sidebar inputs initialized.");
 }
 
 /**
  * Populates the subsector selection dropdown.
- * @param {object} structuredData - The data object from dataLoader.js.
  */
 function populateSubsectorDropdown(structuredData) {
     const subsectorSelect = document.getElementById('selectSubsector'); if (!subsectorSelect) { console.error("Subsector select dropdown not found!"); return; } subsectorSelect.innerHTML = ''; const { allEndUseSubsectors } = structuredData; let firstSubsectorKey = null; if (!allEndUseSubsectors || allEndUseSubsectors.length === 0) { console.warn("No end-use subsectors found in data to populate dropdown."); const option = document.createElement('option'); option.value = ""; option.textContent = "No subsectors available"; subsectorSelect.appendChild(option); return; } allEndUseSubsectors.forEach(({ sector, subsector }) => { const option = document.createElement('option'); const key = `${sector}|${subsector}`; option.value = key; option.textContent = `${sector} - ${subsector}`; subsectorSelect.appendChild(option); if (!firstSubsectorKey) firstSubsectorKey = key; }); if (firstSubsectorKey) { subsectorSelect.value = firstSubsectorKey; const subsectorNameSpan = document.getElementById('selectedSubsectorName'); if (subsectorNameSpan) { const [selSector, selSubsector] = firstSubsectorKey.split('|'); subsectorNameSpan.textContent = `${selSector} - ${selSubsector}`; } } console.log("Subsector dropdown populated."); }
 
 /**
  * Populates the sector filter dropdown for the balance charts.
- * @param {object} structuredData - The data object from dataLoader.js.
  */
 function populateBalanceFilters(structuredData) {
-    const sectorSelect = document.getElementById('selectBalanceSector'); if (!sectorSelect) { console.error("Balance chart sector filter not found!"); return; } sectorSelect.innerHTML = '<option value="all" selected>All Sectors</option>'; const endUseSectors = structuredData.sectors?.filter(s => s !== 'Power' && s !== 'Energy industry') || []; endUseSectors.forEach(sector => { const option = document.createElement('option'); option.value = sector; option.textContent = sector; sectorSelect.appendChild(option); }); const subsectorContainer = document.getElementById('balanceSubsectorFilterContainer'); if (subsectorContainer) { subsectorContainer.classList.add('hidden'); } console.log("Balance chart filters populated."); }
+    const sectorSelect = document.getElementById('selectBalanceSector'); if (!sectorSelect) { console.error("Balance chart sector filter not found!"); return; } sectorSelect.innerHTML = '<option value="all" selected>All Sectors</option>';
+    (structuredData.sectors || []).forEach(sector => { const option = document.createElement('option'); option.value = sector; option.textContent = (sector === 'Energy industry') ? 'Hydrogen Supply' : sector; sectorSelect.appendChild(option); });
+    const subsectorContainer = document.getElementById('balanceSubsectorFilterContainer'); if (subsectorContainer) { subsectorContainer.classList.add('hidden'); } console.log("Balance chart filters populated."); }
 
 /**
  * Updates the subsector filter dropdown based on the selected sector.
- * @param {string} selectedSector - The currently selected sector ('all' or a specific sector).
- * @param {object} structuredData - The data object from dataLoader.js.
  */
 function updateBalanceSubsectorFilter(selectedSector, structuredData) {
-    const subsectorContainer = document.getElementById('balanceSubsectorFilterContainer'); const subsectorSelect = document.getElementById('selectBalanceSubsector'); if (!subsectorContainer || !subsectorSelect) { console.error("Balance subsector filter elements not found!"); return; } subsectorSelect.innerHTML = '<option value="all" selected>All Subsectors</option>'; if (selectedSector === 'all' || !structuredData.subsectors || !structuredData.subsectors[selectedSector]) { subsectorContainer.classList.add('hidden'); } else { (structuredData.subsectors[selectedSector] || []).forEach(subsector => { const option = document.createElement('option'); option.value = subsector; option.textContent = subsector; subsectorSelect.appendChild(option); }); subsectorContainer.classList.remove('hidden'); } }
+    const subsectorContainer = document.getElementById('balanceSubsectorFilterContainer'); const subsectorSelect = document.getElementById('selectBalanceSubsector'); if (!subsectorContainer || !subsectorSelect) { console.error("Balance subsector filter elements not found!"); return; } subsectorSelect.innerHTML = '<option value="all" selected>All Subsectors</option>'; const isEndUseSector = selectedSector && selectedSector !== 'all' && selectedSector !== 'Power' && selectedSector !== 'Energy industry'; if (isEndUseSector && structuredData.subsectors && structuredData.subsectors[selectedSector]) { (structuredData.subsectors[selectedSector] || []).forEach(subsector => { const option = document.createElement('option'); option.value = subsector; option.textContent = subsector; subsectorSelect.appendChild(option); }); subsectorContainer.classList.remove('hidden'); } else { subsectorContainer.classList.add('hidden'); } }
+
+/**
+ * Updates visibility of FEC and UE charts based on selected sector filter.
+ */
+function updateBalanceChartVisibility(selectedSector) {
+    const fecChartBox = document.getElementById('fecChartBox');
+    const ueChartBox = document.getElementById('ueChartBox');
+    const hideFecUe = (selectedSector === 'Power' || selectedSector === 'Energy industry');
+    if (fecChartBox) fecChartBox.classList.toggle('hidden', hideFecUe);
+    if (ueChartBox) ueChartBox.classList.toggle('hidden', hideFecUe);
+}
 
 
 // --- Input Gathering ---
 /**
  * Reads the current values from all sidebar inputs.
- * @param {object} structuredData - The data object from dataLoader.js.
- * @returns {object} userInputParameters object for modelLogic.runModelCalculation.
  */
 function getUserInputsAndParams(structuredData) {
     const { sectors, subsectors, technologies, powerTechs, hydrogenTechs, allEndUseSubsectors, startYear, endYear } = structuredData;
@@ -358,18 +338,20 @@ function getCurrentFilters() { const balanceSectorSelect = document.getElementBy
 
 /**
  * Sets up event listeners for the Run button and all dropdowns/filters.
- * @param {object} appState - The shared application state object from main.js
  */
 function setupEventListeners(appState) {
     const runButton = document.getElementById('runModelBtn'); const subsectorSelect = document.getElementById('selectSubsector'); const chartViewSelect = document.getElementById('selectChartView'); const balanceSectorSelect = document.getElementById('selectBalanceSector'); const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector'); const ueDisplayModeRadios = document.querySelectorAll('input[name="ueDisplayMode"]');
-    const { structuredData } = appState; if (!structuredData) { console.error("Cannot setup event listeners: structuredData is missing."); return; }
+    const { structuredData } = appState; if (!structuredData) { console.error("Cannot setup event listeners: structuredData missing."); return; }
     const triggerChartUpdate = () => { if (typeof updateCharts !== 'function') { console.error("updateCharts function is not defined."); return; } if (appState.latestResults) { const filters = getCurrentFilters(); console.log("Triggering chart update with filters:", filters); updateCharts(appState.latestResults, structuredData, filters); } else { console.warn("No model results available to update charts."); } };
     if (!runButton || !subsectorSelect || !chartViewSelect || !balanceSectorSelect || !balanceSubsectorSelect || !ueDisplayModeRadios) { console.error("One or more UI elements for event listeners not found!"); return; }
     runButton.onclick = async () => { runButton.disabled = true; runButton.textContent = 'Calculating...'; console.log("Run button clicked..."); try { const userInputs = getUserInputsAndParams(structuredData); if (typeof runModelCalculation !== 'function') { throw new Error("runModelCalculation function is not defined."); } const modelResults = await runModelCalculation(structuredData, userInputs); appState.latestResults = modelResults; triggerChartUpdate(); } catch (error) { console.error("Error during model execution or chart update:", error); alert(`An error occurred: ${error.message}.`); } finally { runButton.disabled = false; runButton.textContent = 'Run Model & Update Charts'; } };
     subsectorSelect.onchange = () => { console.log("Subsector selection changed."); triggerChartUpdate(); };
-    chartViewSelect.onchange = () => { handleChartViewChange(); };
-    balanceSectorSelect.onchange = () => { console.log("Balance sector filter changed."); const selectedSector = balanceSectorSelect.value; updateBalanceSubsectorFilter(selectedSector, structuredData); triggerChartUpdate(); };
+    chartViewSelect.onchange = () => { handleChartViewChange(); const currentBalanceSector = balanceSectorSelect ? balanceSectorSelect.value : 'all'; updateBalanceChartVisibility(currentBalanceSector); /* Optional: trigger chart update if needed */ };
+    balanceSectorSelect.onchange = () => { console.log("Balance sector filter changed."); const selectedSector = balanceSectorSelect.value; updateBalanceSubsectorFilter(selectedSector, structuredData); updateBalanceChartVisibility(selectedSector); triggerChartUpdate(); };
     balanceSubsectorSelect.onchange = () => { console.log("Balance subsector filter changed."); triggerChartUpdate(); };
     ueDisplayModeRadios.forEach(radio => { radio.onchange = () => { if (radio.checked) { console.log(`UE display mode changed to: ${radio.value}`); triggerChartUpdate(); } }; });
-    handleChartViewChange(); console.log("UI Event listeners set up.");
+    handleChartViewChange(); // Set initial view section visibility
+    updateBalanceChartVisibility(balanceSectorSelect.value); // Set initial balance chart visibility
+    console.log("UI Event listeners set up.");
 }
+
