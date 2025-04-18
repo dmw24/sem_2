@@ -1,4 +1,5 @@
 // js/main.js
+// Version: Complete - Final Initialization
 
 // Simple state object to hold shared data like latest results
 const appState = {
@@ -8,74 +9,114 @@ const appState = {
 
 /**
  * Main initialization function for the application.
+ * Loads data, sets up UI, runs initial model calculation, and sets up event listeners.
  */
 async function initializeApp() {
     console.log("Application starting initialization...");
-    const runButton = document.getElementById('runModelBtn');
+    const runButton = document.getElementById('runModelBtn'); // Get button early for error handling
 
     try {
-        if (runButton) { runButton.disabled = true; runButton.textContent = 'Loading Data...'; }
+        // Disable button during init
+        if (runButton) {
+            runButton.disabled = true;
+            runButton.textContent = 'Loading Data...';
+        }
 
         // 1. Load and structure data
+        // Assumes loadAndStructureData is globally accessible from dataLoader.js
         appState.structuredData = await loadAndStructureData();
-        if (!appState.structuredData || !appState.structuredData.sectors || appState.structuredData.sectors.length === 0) { throw new Error("Essential data (sectors) failed to load or is empty."); }
+
+        // Check if essential data loaded
+        if (!appState.structuredData || !appState.structuredData.sectors || appState.structuredData.sectors.length === 0) {
+            throw new Error("Essential data (sectors) failed to load or is empty. Cannot initialize UI.");
+        }
         console.log("Data loaded and structured successfully.");
 
-        // 2. Initialize UI elements
-        if (typeof initializeSidebarInputs !== 'function' || typeof populateSubsectorDropdown !== 'function') { throw new Error("UI sidebar/dropdown init functions not defined."); }
+        // 2. Initialize UI elements (sidebar inputs, dropdowns)
+        // Assumes functions are globally accessible from uiController.js
+        if (typeof initializeSidebarInputs !== 'function' || typeof populateSubsectorDropdown !== 'function') {
+             throw new Error("UI initialization functions (initializeSidebarInputs or populateSubsectorDropdown) are not defined.");
+        }
         initializeSidebarInputs(appState.structuredData);
         populateSubsectorDropdown(appState.structuredData);
-        if (typeof populateBalanceFilters !== 'function') { console.warn("populateBalanceFilters function not defined."); } else { populateBalanceFilters(appState.structuredData); }
-        console.log("UI inputs and dropdown initialized."); // Moved log
 
-        // 3. Setup event listeners
-         if (typeof setupEventListeners !== 'function') { throw new Error("setupEventListeners function not defined."); }
+        // *** ADDED CALL TO POPULATE NEW BALANCE FILTERS ***
+        if (typeof populateBalanceFilters !== 'function') {
+            console.warn("UI initialization function (populateBalanceFilters) is not defined."); // Warn instead of error?
+        } else {
+            populateBalanceFilters(appState.structuredData);
+            // Log moved inside function
+        }
+        // *** END OF ADDED CALL ***
+
+        console.log("UI inputs and dropdowns initialized."); // General log
+
+
+        // 3. Setup event listeners (run button, dropdown change)
+        // Assumes setupEventListeners is globally accessible from uiController.js
+         if (typeof setupEventListeners !== 'function') {
+              throw new Error("UI event listener setup function (setupEventListeners) is not defined.");
+         }
+        // Pass appState so event listeners can update/read latestResults
         setupEventListeners(appState);
-        console.log("UI event listeners configured.");
+        // Log moved inside function
+
 
         // 4. Perform initial model run on load
         console.log("Performing initial model run...");
-         if (runButton) { runButton.textContent = 'Calculating Initial...'; }
-         if (typeof getUserInputsAndParams !== 'function') { throw new Error("getUserInputsAndParams function not defined."); }
+         if (runButton) {
+             runButton.textContent = 'Calculating Initial...';
+         }
+         // Get initial inputs (default values set during UI init)
+         // Assumes getUserInputsAndParams is globally accessible from uiController.js
+          if (typeof getUserInputsAndParams !== 'function') {
+               throw new Error("UI input gathering function (getUserInputsAndParams) is not defined.");
+          }
          const initialUserInputs = getUserInputsAndParams(appState.structuredData);
-         if (typeof runModelCalculation !== 'function') { throw new Error("runModelCalculation function not defined."); }
+
+         // Run calculation
+         // Assumes runModelCalculation is globally accessible from modelLogic.js
+          if (typeof runModelCalculation !== 'function') {
+               throw new Error("Model calculation function (runModelCalculation) is not defined.");
+          }
          appState.latestResults = await runModelCalculation(appState.structuredData, initialUserInputs);
          console.log("Initial calculation complete.");
 
-         // *** ADDED LOGS before charting ***
-         console.log("DEBUG (main.js): latestResults before initial chart update:", appState.latestResults ? "Exists" : "null/undefined");
-         // Optional: Log a small part for structure check, avoid logging huge object
-         if(appState.latestResults && appState.latestResults[2023]){
-             console.log("DEBUG (main.js): Sample results for 2023:", {
-                 fec: appState.latestResults[2023].fecByFuel,
-                 ped: appState.latestResults[2023].pedByFuel,
-                 mix: appState.latestResults[2023].demandTechMix?.Industry?.Steel // Example detail
-             });
-         }
-         console.log("DEBUG (main.js): structuredData before initial chart update:", appState.structuredData ? "Exists" : "null/undefined");
-         if(appState.structuredData){
-             console.log("DEBUG (main.js): Config keys passed:", Object.keys(appState.structuredData));
-         }
-         // *** END OF ADDED LOGS ***
-
-
          // Display initial charts
-         if (typeof updateCharts !== 'function') { throw new Error("updateCharts function not defined."); }
+         // Assumes updateCharts is globally accessible from charting.js
+          if (typeof updateCharts !== 'function') {
+               throw new Error("Chart update function (updateCharts) is not defined.");
+          }
+
+         // Call updateCharts, passing current filters
          const initialFilters = (typeof getCurrentFilters === 'function') ? getCurrentFilters() : {};
          updateCharts(appState.latestResults, appState.structuredData, initialFilters);
          console.log("Initial charts displayed.");
 
         // 5. Re-enable run button
-        if (runButton) { runButton.disabled = false; runButton.textContent = 'Run Model & Update Charts'; }
+        if (runButton) {
+            runButton.disabled = false;
+            runButton.textContent = 'Run Model & Update Charts';
+        }
         console.log("Application initialization successful.");
 
     } catch (error) {
-        console.error("Error during application initialization:", error);
-        alert(`A critical error occurred during initialization: ${error.message}. Check console.`);
-        if (runButton) { runButton.textContent = 'Initialization Failed'; runButton.disabled = true; }
-        const contentDiv = document.getElementById('content'); if (contentDiv) { contentDiv.innerHTML = `<h2 style='color: red;'>Initialization Error</h2><p style='color: red;'>${error.message}. Check console (F12).</p>`; }
+        // Log the specific error during initialization
+        console.error("Error during application initialization:", error); // Error logged here
+        alert(`A critical error occurred during initialization: ${error.message}. Check the console for details.`);
+        // Keep button disabled or show error state
+        if (runButton) {
+             runButton.textContent = 'Initialization Failed';
+             runButton.disabled = true; // Keep disabled on critical error
+        }
+         // Display error message in content area
+         const contentDiv = document.getElementById('content');
+         if (contentDiv) {
+             contentDiv.innerHTML = `<h2 style='color: red;'>Initialization Error</h2><p style='color: red;'>${error.message}. Please check the console (F12) for more details.</p>`;
+         }
     }
 }
 
 // --- Start the application ---
+// Use DOMContentLoaded which fires after the HTML is parsed but before images/css load
 document.addEventListener('DOMContentLoaded', initializeApp);
