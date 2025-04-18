@@ -1,5 +1,5 @@
 // js/modelLogic.js
-// Version: S-Curve uses user's 4-step logic (input k, t0 -> calc asymptotes) + capping
+// Version: Complete - S-Curve uses user's 4-step logic (input k, t0 -> calc asymptotes) + capping
 
 const GJ_PER_EJ = 1e9;
 
@@ -103,6 +103,7 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
         // Fallback: linear interpolation
         if (t <= t_start) return InitialValue;
         if (t >= t_target) return TargetValue;
+        // Linear interpolation between start and target
         return InitialValue + (TargetValue - InitialValue) * (t - t_start) / (t_target - t_start);
     } else {
         // Calculate asymptotes using user's formulas
@@ -124,9 +125,12 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
         // in case calculated asymptotes are non-physical due to input combination.
         const minVal = Math.min(InitialValue, TargetValue);
         const maxVal = Math.max(InitialValue, TargetValue);
-        return Math.max(minVal, Math.min(maxVal, logisticValue));
+        // Ensure we don't return NaN if logisticValue calculation failed somehow
+        const clampedValue = Math.max(minVal, Math.min(maxVal, logisticValue));
+        return isNaN(clampedValue) ? InitialValue : clampedValue; // Fallback to InitialValue if NaN
     }
 }
+
 
 /**
  * Normalizes shares within an object to sum to 100%.
@@ -139,25 +143,20 @@ function normalizeShares(sharesObject, force100Tech = null) {
         return normalized;
     }
     if (total <= 0.001) { // Handle sum being zero or very close
-        // If sum is zero, return object with zeros (or distribute 100% if only one tech?)
-        // Let's return zeros for now.
         for (const key in sharesObject) { normalized[key] = 0; }
-        return normalized; // Return object with zeros
+        return normalized;
     }
     const scaleFactor = 100 / total;
     for (const key in sharesObject) {
         normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor;
     }
-    // Re-check force100Tech case after normalization
     if (force100Tech && normalized[force100Tech] && Math.abs(normalized[force100Tech] - 100) < 0.1) {
          for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; }
     }
     // Final check for sum due to potential floating point issues
     let finalSum = Object.values(normalized).reduce((sum, val) => sum + val, 0);
-    if (Math.abs(finalSum - 100) > 0.1) {
-        // If sum is still off significantly, adjust the largest share slightly
-        // This is a simple fix, more robust methods exist
-        let maxShare = -1;
+    if (Math.abs(finalSum - 100) > 0.1 && finalSum > 0) { // Avoid adjusting if sum is zero
+        let maxShare = -Infinity;
         let maxKey = null;
         for(const key in normalized){
             if(normalized[key] > maxShare){
@@ -168,9 +167,7 @@ function normalizeShares(sharesObject, force100Tech = null) {
         if(maxKey){
             normalized[maxKey] += (100 - finalSum);
         }
-        // console.warn("Normalization adjustment applied", normalized);
     }
-
     return normalized;
 }
 
@@ -199,12 +196,38 @@ function runModelCalculation(structuredData, userInputParameters) {
 
     for (const year of years) {
         yearlyResults[year] = {};
-        // 1. Activity Levels (Unchanged)
-        const currentActivity = {}; if (year === baseYear) { Object.assign(currentActivity, baseActivity); } else { const prevResults = yearlyResults[year - 1]; if (!prevResults || !prevResults.activity) { throw new Error(`Cannot calculate activity for ${year}: Previous year (${year-1}) data missing.`); } const prevActivity = prevResults.activity; sectors.forEach(s => { if(subsectors[s]){ currentActivity[s] = {}; subsectors[s].forEach(b => { const growthInputKey = `${s}|${b}`; const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0; currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor; }); } }); } yearlyResults[year].activity = currentActivity;
+        // 1. Activity Levels
+        const currentActivity = {};
+        if (year === baseYear) {
+            Object.assign(currentActivity, baseActivity);
+        } else {
+            const prevResults = yearlyResults[year - 1];
+            if (!prevResults || !prevResults.activity) { throw new Error(`Cannot calculate activity for ${year}: Previous year (${year-1}) data missing.`); }
+            const prevActivity = prevResults.activity;
+            sectors.forEach(s => {
+                if(subsectors[s]){
+                    currentActivity[s] = {};
+                    subsectors[s].forEach(b => {
+                        const growthInputKey = `${s}|${b}`;
+                        const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0;
+                        currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor;
+                    });
+                }
+            });
+        }
+        yearlyResults[year].activity = currentActivity;
 
         // 2. Technology Mixes
         const calculateMixWithBehavior = (categoryType, categoryKey, techList, baseMixObject) => {
-            const currentShares = {}; let sCurveTotalShare = 0; let fixedBaseTotal = 0; let declineBaseTotal = 0; const sCurveTechs = []; const fixedTechs = []; const declineTechs = []; const baseMix = baseMixObject || {}; let techTargeting100 = null;
+            const currentShares = {};
+            let sCurveTotalShare = 0; // Used for normalization logic
+            let fixedBaseTotal = 0;
+            let declineBaseTotal = 0;
+            const sCurveTechs = [];
+            const fixedTechs = [];
+            const declineTechs = [];
+            const baseMix = baseMixObject || {};
+            let techTargeting100 = null; // For normalization override
 
             (techList || []).forEach(t => {
                 const paramKey = `${categoryType}|${categoryKey}|${t}`;
@@ -212,7 +235,7 @@ function runModelCalculation(structuredData, userInputParameters) {
                 const baseValue = getValue(baseMix, [t], 0); // Base share % (0-100)
 
                 if (behaviorInfo.behavior === 's-curve') {
-                    // *** UPDATED CALL to use calculateForcedLogisticShare ***
+                    // *** Use the new forced logistic function ***
                     const share = calculateForcedLogisticShare(
                         year,
                         behaviorInfo.kValue,      // User k
@@ -223,28 +246,45 @@ function runModelCalculation(structuredData, userInputParameters) {
                         behaviorInfo.targetShare  // TargetValue (as %)
                     );
                     currentShares[t] = share;
-                    sCurveTotalShare += share;
+                    sCurveTotalShare += share; // Keep track for normalization logic
                     sCurveTechs.push(t);
-                    if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) { techTargeting100 = t; }
-
+                    // Check if target is 100 - needed for normalization override
+                    if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) {
+                         techTargeting100 = t;
+                    }
                 } else if (behaviorInfo.behavior === 'fixed') {
-                    currentShares[t] = baseValue; fixedBaseTotal += baseValue; fixedTechs.push(t);
+                    currentShares[t] = baseValue;
+                    fixedBaseTotal += baseValue;
+                    fixedTechs.push(t);
                 } else { // decline
-                    currentShares[t] = baseValue; declineBaseTotal += baseValue; declineTechs.push(t);
+                    // Keep previous decline logic (gets scaled by normalization)
+                    currentShares[t] = baseValue;
+                    declineBaseTotal += baseValue;
+                    declineTechs.push(t);
                  }
             });
-            // Normalization logic remains the same, applied AFTER individual shares calculated
-            if (techTargeting100) { return normalizeShares(currentShares, techTargeting100); } const availableForFixedAndDecline = Math.max(0, 100 - sCurveTotalShare); const targetFixedTotal = Math.min(fixedBaseTotal, availableForFixedAndDecline); const fixedScaleFactor = (fixedBaseTotal > 0.01) ? targetFixedTotal / fixedBaseTotal : 0; let fixedAllocatedTotal = 0; fixedTechs.forEach(t => { const scaledShare = currentShares[t] * fixedScaleFactor; currentShares[t] = scaledShare; fixedAllocatedTotal += scaledShare; }); const availableForDecline = Math.max(0, availableForFixedAndDecline - fixedAllocatedTotal); const declineScaleFactor = (declineBaseTotal > 0.01) ? availableForDecline / declineBaseTotal : 0; declineTechs.forEach(t => { currentShares[t] *= declineScaleFactor; }); return normalizeShares(currentShares, null);
+
+            // Normalization logic (unchanged, applied after individual calcs)
+            if (techTargeting100) { return normalizeShares(currentShares, techTargeting100); }
+            const availableForFixedAndDecline = Math.max(0, 100 - sCurveTotalShare);
+            const targetFixedTotal = Math.min(fixedBaseTotal, availableForFixedAndDecline);
+            const fixedScaleFactor = (fixedBaseTotal > 0.01) ? targetFixedTotal / fixedBaseTotal : 0;
+            let fixedAllocatedTotal = 0;
+            fixedTechs.forEach(t => { const scaledShare = currentShares[t] * fixedScaleFactor; currentShares[t] = scaledShare; fixedAllocatedTotal += scaledShare; });
+            const availableForDecline = Math.max(0, availableForFixedAndDecline - fixedAllocatedTotal);
+            const declineScaleFactor = (declineBaseTotal > 0.01) ? availableForDecline / declineBaseTotal : 0;
+            declineTechs.forEach(t => { currentShares[t] *= declineScaleFactor; });
+            return normalizeShares(currentShares, null);
         };
 
         try {
-            // DEBUG Logs can likely be removed now
-            // if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Received baseDemandTechMix for Steel:`, JSON.stringify(getValue(baseDemandTechMix, ['Industry', 'Steel'], {}))); }
-
+            // Calculate mixes using the updated behavior logic
             const currentDemandTechMix = {}; sectors.forEach(s => { if(subsectors[s]){ currentDemandTechMix[s] = {}; subsectors[s].forEach(b => { const base = getValue(baseDemandTechMix, [s, b], {}); const techs = technologies[s]?.[b] || []; currentDemandTechMix[s][b] = calculateMixWithBehavior('Demand', `${s}|${b}`, techs, base); }); } }); yearlyResults[year].demandTechMix = currentDemandTechMix;
             yearlyResults[year].powerProdMix = calculateMixWithBehavior('Power', 'Power', powerTechs, basePowerProdMix);
             yearlyResults[year].hydrogenProdMix = calculateMixWithBehavior('Hydrogen', 'Hydrogen', hydrogenTechs, baseHydrogenProdMix);
 
+            // DEBUG Logs (can be removed)
+            // if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Received baseDemandTechMix for Steel:`, JSON.stringify(getValue(baseDemandTechMix, ['Industry', 'Steel'], {}))); }
             // if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Calculated demandTechMix for Steel:`, JSON.stringify(yearlyResults[year].demandTechMix?.Industry?.Steel)); }
 
         } catch (mixError) { console.error(`Error calculating mix for year ${year}:`, mixError); throw mixError; }
@@ -272,4 +312,3 @@ function runModelCalculation(structuredData, userInputParameters) {
     console.log("Model calculation complete.");
     return yearlyResults;
 }
-
