@@ -4,15 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>S-Curve Energy Model</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="css/style.css">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    </head>
+</head>
 <body>
     <header class="container">
         <h1>S-Curve Energy Model</h1>
@@ -22,7 +19,6 @@
     </header>
 
     <div class="container sim-container">
-
         <div id="sidebar">
             <h2>Model Parameters</h2>
             <button type="button" id="runModelBtn">Run Model & Update Charts</button>
@@ -59,10 +55,29 @@
 
             <section id="balanceChartsSection" class="hidden">
                 <h3 class="chart-section-heading">Overall Energy Balance</h3>
+                <div class="chart-filters">
+                    <div class="filter-group">
+                        <label for="selectBalanceSector">Sector:</label>
+                        <select id="selectBalanceSector">
+                            <option value="all" selected>All Sectors</option>
+                            </select>
+                    </div>
+                    <div id="balanceSubsectorFilterContainer" class="filter-group hidden">
+                        <label for="selectBalanceSubsector">Subsector:</label>
+                        <select id="selectBalanceSubsector">
+                            <option value="all" selected>All Subsectors</option>
+                            </select>
+                    </div>
+                    <div id="ueDisplayModeFilter" class="filter-group">
+                        <span>UE Display:</span>
+                        <label><input type="radio" name="ueDisplayMode" value="fuel" checked> By Fuel</label>
+                        <label><input type="radio" name="ueDisplayMode" value="type"> By Type</label>
+                    </div>
+                </div>
                 <div id="balanceCharts" class="chart-grid">
-                    <div class="chart-box"><h3>Total Final Energy (FEC) by Fuel</h3><canvas id="fecFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Total Primary Energy (PED) by Fuel</h3><canvas id="pedFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Total Useful Energy (UE) by Fuel</h3><canvas id="ueFuelChart"></canvas></div>
+                    <div class="chart-box"><h3>Final Energy (FEC)</h3><canvas id="fecFuelChart"></canvas></div>
+                    <div class="chart-box"><h3>Primary Energy (PED)</h3><canvas id="pedFuelChart"></canvas></div>
+                    <div class="chart-box"><h3>Useful Energy (UE)</h3><canvas id="ueFuelChart"></canvas></div>
                 </div>
             </section>
 
@@ -71,7 +86,7 @@
                 <div id="supplyCharts" class="chart-grid">
                     <div class="chart-box"><h3>Power Generation by Technology</h3><canvas id="powerMixChart"></canvas></div>
                     <div class="chart-box"><h3>Hydrogen Production by Technology</h3><canvas id="hydrogenMixChart"></canvas></div>
-                    </div>
+                </div>
             </section>
 
         </div> </div> <footer>
