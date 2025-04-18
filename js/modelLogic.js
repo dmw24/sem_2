@@ -4,8 +4,8 @@
 const GJ_PER_EJ = 1e9;
 
 // Default behavior mappings (from reference) - Used if behavior is 'fixed' or 'decline'
-const defaultDeclineDemandTechs = { /* ... (unchanged) ... */ 'Transport|Passenger cars': 'ICE', 'Transport|Trucks': 'ICE', 'Transport|Buses': 'ICE', 'Transport|2/3 wheelers': 'ICE', 'Transport|Ships': 'Conventional ship', 'Transport|Planes': 'Conventional plane', 'Transport|Trains': 'Diesel train', 'Industry|Steel': 'BF-BOF', 'Industry|Cement': 'Conventional kiln', 'Industry|Chemicals': 'Conventional', 'Industry|Low temp. heating': 'Fossil boiler', 'Industry|High temp. heating': 'Fossil furnace', 'Industry|Other industry - energy': 'Conventional', 'Buildings|Residential heating': 'Fossil boiler', 'Buildings|Residential cooking': 'Conventional fossil', 'Buildings|Residential lighting': 'Conventional', 'Buildings|Other residential': 'Conventional', 'Buildings|Building cooling': 'Low efficiency airco', 'Buildings|Commercial heating': 'Fossil boiler', 'Buildings|Commercial lighting': 'Conventional', 'Buildings|Other commercial': 'Conventional', 'Transport|Other transport': 'Conventional' };
-const defaultSCurveDemandTechs = { /* ... (unchanged) ... */ 'Transport|Passenger cars': 'EV', 'Transport|Trucks': 'EV', 'Transport|Buses': 'EV', 'Transport|2/3 wheelers': 'EV', 'Transport|Ships': 'Ammonia ship', 'Transport|Planes': 'Electric plane', 'Transport|Trains': 'Electric train', 'Industry|Steel': 'DRI-EAF (H2)', 'Industry|Cement': 'Electric kiln', 'Industry|Chemicals': 'Electrified', 'Industry|Low temp. heating': 'Heat pump', 'Industry|High temp. heating': 'Electric furnace', 'Industry|Other industry - energy': 'Electrified', 'Buildings|Residential heating': 'Heat pump', 'Buildings|Residential cooking': 'Electrified', 'Buildings|Residential lighting': 'Full LED', 'Buildings|Other residential': 'Electrified', 'Buildings|Building cooling': 'High efficiency airco', 'Buildings|Commercial heating': 'Heat pump', 'Buildings|Commercial lighting': 'Full LED', 'Buildings|Other commercial': 'Electrified', 'Transport|Other transport': 'Electrified' };
+const defaultDeclineDemandTechs = { 'Transport|Passenger cars': 'ICE', 'Transport|Trucks': 'ICE', 'Transport|Buses': 'ICE', 'Transport|2/3 wheelers': 'ICE', 'Transport|Ships': 'Conventional ship', 'Transport|Planes': 'Conventional plane', 'Transport|Trains': 'Diesel train', 'Industry|Steel': 'BF-BOF', 'Industry|Cement': 'Conventional kiln', 'Industry|Chemicals': 'Conventional', 'Industry|Low temp. heating': 'Fossil boiler', 'Industry|High temp. heating': 'Fossil furnace', 'Industry|Other industry - energy': 'Conventional', 'Buildings|Residential heating': 'Fossil boiler', 'Buildings|Residential cooking': 'Conventional fossil', 'Buildings|Residential lighting': 'Conventional', 'Buildings|Other residential': 'Conventional', 'Buildings|Building cooling': 'Low efficiency airco', 'Buildings|Commercial heating': 'Fossil boiler', 'Buildings|Commercial lighting': 'Conventional', 'Buildings|Other commercial': 'Conventional', 'Transport|Other transport': 'Conventional' };
+const defaultSCurveDemandTechs = { 'Transport|Passenger cars': 'EV', 'Transport|Trucks': 'EV', 'Transport|Buses': 'EV', 'Transport|2/3 wheelers': 'EV', 'Transport|Ships': 'Ammonia ship', 'Transport|Planes': 'Electric plane', 'Transport|Trains': 'Electric train', 'Industry|Steel': 'DRI-EAF (H2)', 'Industry|Cement': 'Electric kiln', 'Industry|Chemicals': 'Electrified', 'Industry|Low temp. heating': 'Heat pump', 'Industry|High temp. heating': 'Electric furnace', 'Industry|Other industry - energy': 'Electrified', 'Buildings|Residential heating': 'Heat pump', 'Buildings|Residential cooking': 'Electrified', 'Buildings|Residential lighting': 'Full LED', 'Buildings|Other residential': 'Electrified', 'Buildings|Building cooling': 'High efficiency airco', 'Buildings|Commercial heating': 'Heat pump', 'Buildings|Commercial lighting': 'Full LED', 'Buildings|Other commercial': 'Electrified', 'Transport|Other transport': 'Electrified' };
 const defaultDeclinePowerTechs = ['Gas power', 'Coal power', 'Oil power'];
 const defaultSCurvePowerTechs = ['Solar PV', 'Wind'];
 const defaultDeclineHydrogenTechs = ['Blue'];
@@ -13,10 +13,22 @@ const defaultSCurveHydrogenTechs = ['Green'];
 
 
 // --- Helper Functions ---
-function getValue(obj, keys, defaultValue = 0) { /* ... (unchanged) ... */
-    let current = obj; for (const key of keys) { if (current && typeof current === 'object' && key in current) { current = current[key]; } else { return defaultValue; } } return (current === null || current === undefined) ? defaultValue : current; }
+/**
+ * Safely gets a nested value from an object.
+ */
+function getValue(obj, keys, defaultValue = 0) {
+    let current = obj;
+    for (const key of keys) {
+        if (current && typeof current === 'object' && key in current) {
+            current = current[key];
+        } else {
+            return defaultValue;
+        }
+    }
+    return (current === null || current === undefined) ? defaultValue : current;
+}
 
-// Basic sigmoid function (Step 1)
+// Basic sigmoid function (Step 1 of user logic)
 function sigma(t, k, t0) {
     // Handle k=0 case explicitly to avoid issues later
     if (Math.abs(k) < 1e-9) {
@@ -38,15 +50,15 @@ function sigma(t, k, t0) {
  * @param {number} kUserInput - User-defined steepness (k)
  * @param {number} t0UserInput - User-defined midpoint year (t0)
  * @param {number} baseYear - Start year (t_start)
- * @param {number} startVal - Share at baseYear (InitialValue)
+ * @param {number} startVal - Share at baseYear (InitialValue, 0-100 scale)
  * @param {number} targetYear - Target year (t_target)
- * @param {number} targetVal - Share at targetYear (TargetValue)
- * @returns {number} Calculated share for the given year.
+ * @param {number} targetVal - Share at targetYear (TargetValue, 0-100 scale)
+ * @returns {number} Calculated share for the given year (0-100 scale).
  */
 function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, startVal, targetYear, targetVal) {
 
     const t = year;
-    const k = Number(kUserInput); // Use user k directly
+    const k_input = Number(kUserInput); // User k (magnitude)
     const t0 = Number(t0UserInput);
     const t_start = baseYear;
     const InitialValue = Number(startVal); // Share % (0-100)
@@ -54,12 +66,12 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
     const TargetValue = Number(targetVal); // Share % (0-100)
 
     // --- Input Validation and Edge Cases ---
-    if (isNaN(k) || isNaN(t0) || isNaN(InitialValue) || isNaN(TargetValue)) {
+    if (isNaN(k_input) || isNaN(t0) || isNaN(InitialValue) || isNaN(TargetValue)) {
         console.warn("Invalid input to calculateForcedLogisticShare (NaN). Returning startVal.", {year, kUserInput, t0UserInput, baseYear, startVal, targetYear, targetVal});
         return startVal;
     }
      // If k is effectively zero, return start value (no change)
-     if (Math.abs(k) < 1e-9) {
+     if (Math.abs(k_input) < 1e-9) {
         return InitialValue;
      }
      // If start and target values are the same, return that value
@@ -72,11 +84,12 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
           return InitialValue;
      }
 
+    // Determine sign of k based on growth/decline
+    const k_signed = (TargetValue > InitialValue) ? Math.abs(k_input) : -Math.abs(k_input);
+
     // --- Step 2: Compute σ at start and target points ---
-    // Adjust sign of k based on growth/decline for internal sigma calculation consistency if needed
-    // Although sigma function handles signed k. Let's use the user's k directly.
-    const sigma_s = sigma(t_start, k, t0);
-    const sigma_t = sigma(t_target, k, t0);
+    const sigma_s = sigma(t_start, k_signed, t0);
+    const sigma_t = sigma(t_target, k_signed, t0);
 
     // --- Step 3: Solve for implied asymptotes L_start (A) and L_end (B) ---
     let L_start_asymptote, L_end_asymptote;
@@ -86,11 +99,10 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
         // This happens if k=0 (handled above) or if t_start/t_target are placed
         // symmetrically around t0 with the same k, or if t_start=t_target (handled above).
         // Indicates parameters might be inconsistent or curve is flat between points.
-        console.warn("Sigma values at start and target are too close; cannot determine asymptotes reliably. Returning linear interpolation or startVal.", {sigma_s, sigma_t, k, t0, t_start, t_target});
-        // Fallback: linear interpolation or just return start/end value
+        console.warn("Sigma values at start and target are too close; cannot determine asymptotes reliably. Using linear interpolation.", {sigma_s, sigma_t, k_signed, t0, t_start, t_target});
+        // Fallback: linear interpolation
         if (t <= t_start) return InitialValue;
         if (t >= t_target) return TargetValue;
-        // Linear interpolation between start and target
         return InitialValue + (TargetValue - InitialValue) * (t - t_start) / (t_target - t_start);
     } else {
         // Calculate asymptotes using user's formulas
@@ -99,33 +111,74 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
     }
 
     // --- Step 4: Define the full logistic curve value for the current year t ---
-    const sigma_current = sigma(t, k, t0);
+    const sigma_current = sigma(t, k_signed, t0);
     const logisticValue = L_start_asymptote + (L_end_asymptote - L_start_asymptote) * sigma_current;
 
-    // --- Apply Capping Logic ---
+    // --- Apply Capping Logic & Clamping ---
     if (year > targetYear) {
         // If past the target year, hold the target value
         return TargetValue;
     } else {
         // Otherwise, return the calculated logistic value
-        // This inherently ensures S(t_start) = InitialValue and S(t_target) = TargetValue
-        // Clamp results to avoid potential over/undershoot due to calculated asymptotes
-        // especially if inputs were inconsistent. Clamp between the initial and target values.
+        // Clamp results between the initial and target values for robustness,
+        // in case calculated asymptotes are non-physical due to input combination.
         const minVal = Math.min(InitialValue, TargetValue);
         const maxVal = Math.max(InitialValue, TargetValue);
         return Math.max(minVal, Math.min(maxVal, logisticValue));
-        // Alternatively, could clamp between calculated asymptotes if they are trusted:
-        // return Math.max(L_start_asymptote, Math.min(L_end_asymptote, logisticValue));
-        // Let's clamp between Initial/Target values for robustness against weird asymptotes.
     }
 }
 
+/**
+ * Normalizes shares within an object to sum to 100%.
+ */
+function normalizeShares(sharesObject, force100Tech = null) {
+    let total = Object.values(sharesObject).reduce((sum, val) => sum + Number(val || 0), 0);
+    const normalized = {};
+    if (force100Tech && force100Tech in sharesObject && Math.abs(sharesObject[force100Tech] - 100) < 0.1) {
+        for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; }
+        return normalized;
+    }
+    if (total <= 0.001) { // Handle sum being zero or very close
+        // If sum is zero, return object with zeros (or distribute 100% if only one tech?)
+        // Let's return zeros for now.
+        for (const key in sharesObject) { normalized[key] = 0; }
+        return normalized; // Return object with zeros
+    }
+    const scaleFactor = 100 / total;
+    for (const key in sharesObject) {
+        normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor;
+    }
+    // Re-check force100Tech case after normalization
+    if (force100Tech && normalized[force100Tech] && Math.abs(normalized[force100Tech] - 100) < 0.1) {
+         for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; }
+    }
+    // Final check for sum due to potential floating point issues
+    let finalSum = Object.values(normalized).reduce((sum, val) => sum + val, 0);
+    if (Math.abs(finalSum - 100) > 0.1) {
+        // If sum is still off significantly, adjust the largest share slightly
+        // This is a simple fix, more robust methods exist
+        let maxShare = -1;
+        let maxKey = null;
+        for(const key in normalized){
+            if(normalized[key] > maxShare){
+                maxShare = normalized[key];
+                maxKey = key;
+            }
+        }
+        if(maxKey){
+            normalized[maxKey] += (100 - finalSum);
+        }
+        // console.warn("Normalization adjustment applied", normalized);
+    }
 
-function normalizeShares(sharesObject, force100Tech = null) { /* ... (unchanged) ... */
-    let total = Object.values(sharesObject).reduce((sum, val) => sum + Number(val || 0), 0); const normalized = {}; if (force100Tech && force100Tech in sharesObject && Math.abs(sharesObject[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } return normalized; } if (total <= 0.001) { return sharesObject; } const scaleFactor = 100 / total; for (const key in sharesObject) { normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor; } if (force100Tech && normalized[force100Tech] && Math.abs(normalized[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } } return normalized; }
+    return normalized;
+}
 
 
 // --- CORE MODEL CALCULATION FUNCTION ---
+/**
+ * Runs the full energy model projection calculation.
+ */
 function runModelCalculation(structuredData, userInputParameters) {
     const {
         baseActivity = {}, baseDemandTechMix = {}, unitEnergyConsumption = {}, placeholderUsefulEfficiency = {'_default': 0.65},
@@ -159,7 +212,7 @@ function runModelCalculation(structuredData, userInputParameters) {
                 const baseValue = getValue(baseMix, [t], 0); // Base share % (0-100)
 
                 if (behaviorInfo.behavior === 's-curve') {
-                    // *** UPDATED CALL to use new S-curve function ***
+                    // *** UPDATED CALL to use calculateForcedLogisticShare ***
                     const share = calculateForcedLogisticShare(
                         year,
                         behaviorInfo.kValue,      // User k
@@ -170,35 +223,29 @@ function runModelCalculation(structuredData, userInputParameters) {
                         behaviorInfo.targetShare  // TargetValue (as %)
                     );
                     currentShares[t] = share;
-                    sCurveTotalShare += share; // Note: this sum might exceed 100 initially before normalization if asymptotes are weird
+                    sCurveTotalShare += share;
                     sCurveTechs.push(t);
-                    // Check if target is 100 - needed for normalization override
-                    if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) {
-                         techTargeting100 = t;
-                    }
+                    if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) { techTargeting100 = t; }
 
                 } else if (behaviorInfo.behavior === 'fixed') {
                     currentShares[t] = baseValue; fixedBaseTotal += baseValue; fixedTechs.push(t);
                 } else { // decline
-                    // Simple decline logic: Treat as S-curve aiming for 0?
-                    // Or keep previous logic? Let's keep previous logic for now:
-                    // It gets scaled down proportionally by normalizeShares if S-curves grow.
                     currentShares[t] = baseValue; declineBaseTotal += baseValue; declineTechs.push(t);
                  }
             });
-            // Normalize logic remains the same...
+            // Normalization logic remains the same, applied AFTER individual shares calculated
             if (techTargeting100) { return normalizeShares(currentShares, techTargeting100); } const availableForFixedAndDecline = Math.max(0, 100 - sCurveTotalShare); const targetFixedTotal = Math.min(fixedBaseTotal, availableForFixedAndDecline); const fixedScaleFactor = (fixedBaseTotal > 0.01) ? targetFixedTotal / fixedBaseTotal : 0; let fixedAllocatedTotal = 0; fixedTechs.forEach(t => { const scaledShare = currentShares[t] * fixedScaleFactor; currentShares[t] = scaledShare; fixedAllocatedTotal += scaledShare; }); const availableForDecline = Math.max(0, availableForFixedAndDecline - fixedAllocatedTotal); const declineScaleFactor = (declineBaseTotal > 0.01) ? availableForDecline / declineBaseTotal : 0; declineTechs.forEach(t => { currentShares[t] *= declineScaleFactor; }); return normalizeShares(currentShares, null);
         };
 
         try {
-            // *** DEBUG LOGS from previous step (can be removed if stable) ***
-            if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Received baseDemandTechMix for Steel:`, JSON.stringify(getValue(baseDemandTechMix, ['Industry', 'Steel'], {}))); }
+            // DEBUG Logs can likely be removed now
+            // if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Received baseDemandTechMix for Steel:`, JSON.stringify(getValue(baseDemandTechMix, ['Industry', 'Steel'], {}))); }
 
             const currentDemandTechMix = {}; sectors.forEach(s => { if(subsectors[s]){ currentDemandTechMix[s] = {}; subsectors[s].forEach(b => { const base = getValue(baseDemandTechMix, [s, b], {}); const techs = technologies[s]?.[b] || []; currentDemandTechMix[s][b] = calculateMixWithBehavior('Demand', `${s}|${b}`, techs, base); }); } }); yearlyResults[year].demandTechMix = currentDemandTechMix;
             yearlyResults[year].powerProdMix = calculateMixWithBehavior('Power', 'Power', powerTechs, basePowerProdMix);
             yearlyResults[year].hydrogenProdMix = calculateMixWithBehavior('Hydrogen', 'Hydrogen', hydrogenTechs, baseHydrogenProdMix);
 
-            if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Calculated demandTechMix for Steel:`, JSON.stringify(yearlyResults[year].demandTechMix?.Industry?.Steel)); }
+            // if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Calculated demandTechMix for Steel:`, JSON.stringify(yearlyResults[year].demandTechMix?.Industry?.Steel)); }
 
         } catch (mixError) { console.error(`Error calculating mix for year ${year}:`, mixError); throw mixError; }
 
