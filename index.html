@@ -4,12 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>S-Curve Energy Model</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="css/style.css">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-</head>
+    </head>
 <body>
     <header class="container">
         <h1>S-Curve Energy Model</h1>
@@ -19,10 +22,12 @@
     </header>
 
     <div class="container sim-container">
+
         <div id="sidebar">
             <h2>Model Parameters</h2>
             <button type="button" id="runModelBtn">Run Model & Update Charts</button>
-            <div id="inputGroupsContainer"></div>
+            <div id="inputGroupsContainer">
+                </div>
         </div>
 
         <div id="content">
@@ -39,7 +44,8 @@
 
             <div id="subsectorSelector">
                 <label for="selectSubsector">View Detailed Charts for Subsector:</label>
-                <select id="selectSubsector"></select>
+                <select id="selectSubsector">
+                    </select>
             </div>
 
             <section id="subsectorChartsSection">
@@ -90,7 +96,7 @@
                 <div id="supplyCharts" class="chart-grid">
                     <div class="chart-box"><h3>Power Generation by Technology</h3><canvas id="powerMixChart"></canvas></div>
                     <div class="chart-box"><h3>Hydrogen Production by Technology</h3><canvas id="hydrogenMixChart"></canvas></div>
-                </div>
+                    </div>
             </section>
 
         </div> </div> <footer>
