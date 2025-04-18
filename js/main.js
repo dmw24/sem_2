@@ -31,14 +31,25 @@ async function initializeApp() {
         }
         console.log("Data loaded and structured successfully.");
 
-        // 2. Initialize UI elements (sidebar inputs, dropdown)
+        // 2. Initialize UI elements (sidebar inputs, dropdowns)
         // Assumes functions are globally accessible from uiController.js
         if (typeof initializeSidebarInputs !== 'function' || typeof populateSubsectorDropdown !== 'function') {
              throw new Error("UI initialization functions (initializeSidebarInputs or populateSubsectorDropdown) are not defined.");
         }
         initializeSidebarInputs(appState.structuredData);
         populateSubsectorDropdown(appState.structuredData);
+
+        // *** ADDED CALL TO POPULATE NEW BALANCE FILTERS ***
+        if (typeof populateBalanceFilters !== 'function') {
+            console.warn("UI initialization function (populateBalanceFilters) is not defined."); // Warn instead of error?
+        } else {
+            populateBalanceFilters(appState.structuredData);
+            console.log("Balance chart filters populated.");
+        }
+        // *** END OF ADDED CALL ***
+
         console.log("UI inputs and dropdown initialized.");
+
 
         // 3. Setup event listeners (run button, dropdown change)
         // Assumes setupEventListeners is globally accessible from uiController.js
@@ -76,12 +87,12 @@ async function initializeApp() {
                throw new Error("Chart update function (updateCharts) is not defined.");
           }
 
-         // *** DEBUG LOG ADDED HERE ***
-         // Log the data right before it's passed to the initial chart update
-         console.log("Data being passed to initial updateCharts:", JSON.stringify(appState.structuredData, null, 2));
+         // Log the data right before it's passed to the initial chart update (DEBUG - can remove later)
+         // console.log("Data being passed to initial updateCharts:", JSON.stringify(appState.structuredData, null, 2));
 
-         // Call updateCharts (This is the call related to the error trace line main.js:78)
-         updateCharts(appState.latestResults, appState.structuredData);
+         // Call updateCharts, passing current filters
+         const initialFilters = (typeof getCurrentFilters === 'function') ? getCurrentFilters() : {};
+         updateCharts(appState.latestResults, appState.structuredData, initialFilters);
          console.log("Initial charts displayed.");
 
         // 5. Re-enable run button
