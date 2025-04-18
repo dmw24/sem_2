@@ -22,8 +22,7 @@
         <div id="sidebar">
             <h2>Model Parameters</h2>
             <button type="button" id="runModelBtn">Run Model & Update Charts</button>
-            <div id="inputGroupsContainer">
-                </div>
+            <div id="inputGroupsContainer"></div>
         </div>
 
         <div id="content">
@@ -40,8 +39,7 @@
 
             <div id="subsectorSelector">
                 <label for="selectSubsector">View Detailed Charts for Subsector:</label>
-                <select id="selectSubsector">
-                    </select>
+                <select id="selectSubsector"></select>
             </div>
 
             <section id="subsectorChartsSection">
@@ -68,16 +66,22 @@
                             <option value="all" selected>All Subsectors</option>
                             </select>
                     </div>
-                    <div id="ueDisplayModeFilter" class="filter-group">
-                        <span>UE Display:</span>
-                        <label><input type="radio" name="ueDisplayMode" value="fuel" checked> By Fuel</label>
-                        <label><input type="radio" name="ueDisplayMode" value="type"> By Type</label>
                     </div>
-                </div>
                 <div id="balanceCharts" class="chart-grid">
-                    <div class="chart-box"><h3>Final Energy (FEC)</h3><canvas id="fecFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Primary Energy (PED)</h3><canvas id="pedFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Useful Energy (UE)</h3><canvas id="ueFuelChart"></canvas></div>
+                    <div class="chart-box" id="pedChartBox"> <h3>Primary Energy (PED)</h3>
+                        <canvas id="pedFuelChart"></canvas>
+                    </div>
+                    <div class="chart-box" id="fecChartBox"> <h3>Final Energy (FEC)</h3>
+                        <canvas id="fecFuelChart"></canvas>
+                    </div>
+                    <div class="chart-box" id="ueChartBox"> <h3>Useful Energy (UE)</h3>
+                        <div id="ueDisplayModeFilter" class="filter-group ue-filter-inline">
+                            <span>Display:</span>
+                            <label><input type="radio" name="ueDisplayMode" value="fuel" checked> By Fuel</label>
+                            <label><input type="radio" name="ueDisplayMode" value="type"> By Type</label>
+                        </div>
+                        <canvas id="ueFuelChart"></canvas>
+                    </div>
                 </div>
             </section>
 
