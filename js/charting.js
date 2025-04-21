@@ -1,5 +1,5 @@
 // js/charting.js
-// Version: Syntax Error Fixed + Filters/Conditional PED/UE Types
+// Version: Complete - Applying Filters, Conditional PED, UE by Type Colors
 
 // --- Chart Instances Storage ---
 const chartInstances = {};
@@ -21,94 +21,35 @@ function getValue(obj, keys, defaultValue = 0) { let current = obj; for (const k
  * Creates or updates a Chart.js chart instance.
  */
 function createChart(canvasId, type, data, options = {}) {
+    // console.log(`DEBUG createChart: Attempting to create chart for canvasId: ${canvasId}`); // DEBUG
     const canvas = document.getElementById(canvasId); if (!canvas) { console.error(`Canvas element with id "${canvasId}" not found.`); return null; }
-    // Check if the canvas or its parent chart box is hidden
+    // Check if the canvas's parent chart box is hidden
     const chartBox = canvas.closest('.chart-box');
     if (chartBox && chartBox.classList.contains('hidden')) {
         // console.log(`Skipping chart creation for hidden canvas: ${canvasId}`);
-        if (chartInstances[canvasId]) { // Destroy any previous instance if now hidden
-             chartInstances[canvasId].destroy();
-             delete chartInstances[canvasId];
-        }
-        return null; // Don't create chart if hidden
+        if (chartInstances[canvasId]) { chartInstances[canvasId].destroy(); delete chartInstances[canvasId]; }
+        return null;
     }
+    // Also check if the parent SECTION is hidden
+    const parentSection = canvas.closest('section');
+     if (parentSection && parentSection.classList.contains('hidden')) {
+         // console.log(`Skipping chart creation for canvas in hidden section: ${canvasId}`);
+         if (chartInstances[canvasId]) { chartInstances[canvasId].destroy(); delete chartInstances[canvasId]; }
+         return null;
+     }
 
     const ctx = canvas.getContext('2d'); if (!ctx) { console.error(`Could not get 2D context for canvas "${canvasId}".`); return null; }
     if (chartInstances[canvasId]) { chartInstances[canvasId].destroy(); }
-
-    // Default options including maintainAspectRatio: false
-    const defaultOptions = {
-        responsive: true,
-        maintainAspectRatio: false, // Ensures chart respects CSS height
-        animation: { duration: 400 },
-        interaction: { mode: 'index', intersect: false },
-        plugins: { // Start plugins object
-            legend: {
-                position: 'bottom',
-                labels: { font: { size: 11 }, boxWidth: 15, padding: 10, usePointStyle: true }
-            }, // End legend property
-            title: {
-                display: false
-            }, // End title property
-            tooltip: {
-                bodyFont: { size: 12 },
-                titleFont: { size: 13, weight: 'bold'},
-                boxPadding: 4
-            } // End tooltip property
-        }, // *** MISSING COMMA WAS HERE *** <<< FIXED
-        scales: { // Start scales object
-            x: {
-                grid: { display: false },
-                ticks: { font: { size: 11 } }
-            }, // End x property
-            y: {
-                beginAtZero: true,
-                grid: { color: '#e0e0e0', borderDash: [2, 3] },
-                ticks: { font: { size: 11 } }
-            } // End y property
-        } // End scales object
-    }; // End defaultOptions object
-
-    // Merge options
-    const chartOptions = {
-         ...defaultOptions,
-         ...options,
-         plugins: {
-             ...defaultOptions.plugins,
-             ...(options.plugins || {}),
-             legend: { ...defaultOptions.plugins.legend, ...(options.plugins?.legend || {}) },
-             title: { ...defaultOptions.plugins.title, ...(options.plugins?.title || {}) },
-             tooltip: { ...defaultOptions.plugins.tooltip, ...(options.plugins?.tooltip || {}) }
-         },
-         scales: {
-             ...(defaultOptions.scales || {}),
-             ...(options.scales || {}),
-             x: { ...(defaultOptions.scales?.x || {}), ...(options.scales?.x || {}) },
-             y: { ...(defaultOptions.scales?.y || {}), ...(options.scales?.y || {}) }
-         }
-     };
-
-    try {
-        const chart = new Chart(ctx, { type, data, options: chartOptions });
-        chartInstances[canvasId] = chart; // Store the instance
-        return chart;
-    } catch (error) {
-        console.error(`Error creating chart "${canvasId}":`, error);
-        return null;
-    }
-};
-
+    const defaultOptions = { responsive: true, maintainAspectRatio: false, animation: { duration: 400 }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 15, padding: 10, usePointStyle: true } }, title: { display: false }, tooltip: { bodyFont: { size: 12 }, titleFont: { size: 13, weight: 'bold'}, boxPadding: 4 } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { beginAtZero: true, grid: { color: '#e0e0e0', borderDash: [2, 3] }, ticks: { font: { size: 11 } } } } };
+    const chartOptions = { ...defaultOptions, ...options, plugins: { ...defaultOptions.plugins, ...(options.plugins || {}), legend: { ...defaultOptions.plugins.legend, ...(options.plugins?.legend || {}) }, title: { ...defaultOptions.plugins.title, ...(options.plugins?.title || {}) }, tooltip: { ...defaultOptions.plugins.tooltip, ...(options.plugins?.tooltip || {}) } }, scales: { ...(defaultOptions.scales || {}), ...(options.scales || {}), x: { ...(defaultOptions.scales?.x || {}), ...(options.scales?.x || {}) }, y: { ...(defaultOptions.scales?.y || {}), ...(options.scales?.y || {}) } } };
+    try { const chart = new Chart(ctx, { type, data, options: chartOptions }); chartInstances[canvasId] = chart; return chart; } catch (error) { console.error(`Error creating chart "${canvasId}":`, error); return null; } };
 
 // --- Main Chart Update Function ---
 /**
  * Updates all charts based on model results, config, and filters.
  */
 function updateCharts(yearlyResults, chartConfigData, filters = {}) {
-    // Log inputs received
-    // console.log("DEBUG (charting.js - updateCharts): Received yearlyResults:", yearlyResults ? "Exists" : "null/undefined");
-    // console.log("DEBUG (charting.js - updateCharts): Received chartConfigData:", chartConfigData ? "Exists" : "null/undefined");
-    // console.log("DEBUG (charting.js - updateCharts): Received filters:", filters);
-
+    // console.log("DEBUG (charting.js - updateCharts): Function called."); // DEBUG
     if (!yearlyResults || !chartConfigData) { console.error("Missing data for chart update."); return; }
     const { years: chartLabels, endUseFuels, primaryFuels, powerTechs, hydrogenTechs, technologies, activityUnits, dataTypeLookup, sectors, subsectors } = chartConfigData;
     const { balanceSector = 'all', balanceSubsector = 'all', ueDisplayMode = 'fuel' } = filters;
@@ -121,27 +62,39 @@ function updateCharts(yearlyResults, chartConfigData, filters = {}) {
     const subsectorNameSpan = document.getElementById('selectedSubsectorName');
     if (subsectorNameSpan) { subsectorNameSpan.textContent = selectedSubsector ? `${selectedSector} - ${selectedSubsector}` : 'Select Subsector'; }
 
+    // console.log(`DEBUG (charting.js - updateCharts): Current subsector selection: ${selectedSubsectorKey}`); // DEBUG
+
     const ejTooltipCallback = (context) => { let label = context.dataset.label || ''; if (label) { label += ': '; } let value = context.parsed?.y; if (value !== null && !isNaN(value)) { label += value.toFixed(3) + ' EJ'; } else { label += 'N/A'; } return label; };
 
     // --- Subsector Charts (Unaffected by new filters, only check visibility) ---
     const subsectorChartsSection = document.getElementById('subsectorChartsSection');
+    // console.log(`DEBUG (charting.js - updateCharts): Subsector section hidden? ${subsectorChartsSection?.classList.contains('hidden')}`); // DEBUG
     if (subsectorChartsSection && !subsectorChartsSection.classList.contains('hidden')) {
+        // console.log("DEBUG (charting.js - updateCharts): Updating Subsector Charts..."); // DEBUG
         if (selectedSector && selectedSubsector) {
             const subsectorTechs = getValue(technologies, [selectedSector, selectedSubsector], []);
             const activityUnit = getValue(activityUnits, [selectedSector, selectedSubsector], 'Units');
+            // console.log(`DEBUG (charting.js - updateCharts): Subsector ${selectedSector}|${selectedSubsector}, Techs: [${subsectorTechs.join(', ')}]`); // DEBUG
+
             // 1. Activity
             const activityByTechDatasets = subsectorTechs.map((tech, techIndex) => ({ label: tech, data: chartLabels.map(y => getValue(yearlyResults, [y, 'demandTechActivity', selectedSector, selectedSubsector, tech], 0)), backgroundColor: getTechColor(tech, techIndex), })).filter(ds => ds.data.some(v => Math.abs(v) > 1e-3));
-             // console.log(`DEBUG (charting.js - updateCharts): Datasets for subsectorActivityChart: ${activityByTechDatasets.length} datasets`);
+            // console.log(`DEBUG (charting.js - updateCharts): Datasets for subsectorActivityChart: ${activityByTechDatasets.length} datasets`);
+            // if(activityByTechDatasets.length > 0) console.log("DEBUG ... First dataset data sample:", activityByTechDatasets[0].data.slice(0,3));
             createChart('subsectorActivityChart', 'bar', { labels: chartLabels, datasets: activityByTechDatasets }, { plugins: { tooltip: { mode: 'index' } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: `Activity (${activityUnit})`, font: {size: 12} } } } });
+
             // 2. FEC
             const subsectorFecDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => { let totalFuel = 0; subsectorTechs.forEach(tech => { totalFuel += getValue(yearlyResults, [y, 'fecDetailed', selectedSector, selectedSubsector, tech, fuel], 0); }); return totalFuel / GJ_PER_EJ; }), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
-             // console.log(`DEBUG (charting.js - updateCharts): Datasets for subsectorFecChart: ${subsectorFecDatasets.length} datasets`);
+            // console.log(`DEBUG (charting.js - updateCharts): Datasets for subsectorFecChart: ${subsectorFecDatasets.length} datasets`);
+            // if(subsectorFecDatasets.length > 0) console.log("DEBUG ... First dataset data sample:", subsectorFecDatasets[0].data.slice(0,3));
             createChart('subsectorFecChart', 'bar', { labels: chartLabels, datasets: subsectorFecDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'FEC (EJ)', font: {size: 12} } } } });
+
             // 3. UE
             const subsectorUeDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => { let totalFuel = 0; subsectorTechs.forEach(tech => { totalFuel += getValue(yearlyResults, [y, 'ueDetailed', selectedSector, selectedSubsector, tech, fuel], 0); }); return totalFuel / GJ_PER_EJ; }), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
-             // console.log(`DEBUG (charting.js - updateCharts): Datasets for subsectorUeChart: ${subsectorUeDatasets.length} datasets`);
+            // console.log(`DEBUG (charting.js - updateCharts): Datasets for subsectorUeChart: ${subsectorUeDatasets.length} datasets`);
+            // if(subsectorUeDatasets.length > 0) console.log("DEBUG ... First dataset data sample:", subsectorUeDatasets[0].data.slice(0,3));
             createChart('subsectorUeChart', 'bar', { labels: chartLabels, datasets: subsectorUeDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Useful Energy (EJ)', font: {size: 12} } } } });
         } else {
+             // console.log("DEBUG (charting.js - updateCharts): Clearing subsector charts as selection is invalid."); // DEBUG
             ['subsectorActivityChart', 'subsectorFecChart', 'subsectorUeChart'].forEach(id => { if (chartInstances[id]) chartInstances[id].destroy(); const canvas = document.getElementById(id); if(canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); });
         }
     }
@@ -149,8 +102,9 @@ function updateCharts(yearlyResults, chartConfigData, filters = {}) {
 
     // --- Overall Energy Balance Charts (Apply Filters & Visibility) ---
     const balanceChartsSection = document.getElementById('balanceChartsSection');
+    // console.log(`DEBUG (charting.js - updateCharts): Balance section hidden? ${balanceChartsSection?.classList.contains('hidden')}`); // DEBUG
     if (balanceChartsSection && !balanceChartsSection.classList.contains('hidden')) {
-
+        // console.log("DEBUG (charting.js - updateCharts): Updating Balance Charts..."); // DEBUG
         // Calculate filtered aggregates PER YEAR
         const filteredYearlyFecByFuel = {}; const filteredYearlyUeByFuel = {}; const filteredYearlyUeByType = {};
         const uniqueTypes = new Set();
@@ -192,27 +146,20 @@ function updateCharts(yearlyResults, chartConfigData, filters = {}) {
             pedYAxisTitle = `Total System PED (EJ)`;
             pedDatasets = primaryFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => getValue(yearlyResults, [y, 'pedByFuel', fuel], 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
         }
+        // console.log(`DEBUG (charting.js - updateCharts): Datasets for pedFuelChart: ${pedDatasets.length} datasets`); // DEBUG
         createChart('pedFuelChart', 'bar', { labels: chartLabels, datasets: pedDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: pedYAxisTitle, font: {size: 12} } } } });
 
 
         // 5. Final Energy (FEC) by Fuel (Filtered & Conditional Visibility)
-        const fecChartBox = document.getElementById('fecChartBox');
-        if (showFecChart && fecChartBox) {
-            fecChartBox.classList.remove('hidden'); // Ensure visible if needed
+        if (showFecChart) {
             const fecYAxisTitle = `Final Energy (FEC)${balanceSector !== 'all' ? ` (${balanceSector}${balanceSubsector !== 'all' ? ` - ${balanceSubsector}` : ''})` : ''} (EJ)`;
-            createChart('fecFuelChart', 'bar',
-                { labels: chartLabels, datasets: endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => (filteredYearlyFecByFuel[y]?.[fuel] || 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9)) },
-                { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: fecYAxisTitle, font: {size: 12} } } } }
-            );
-        } else if (fecChartBox) {
-             // fecChartBox.classList.add('hidden'); // Visibility handled by uiController now
-             if (chartInstances['fecFuelChart']) { chartInstances['fecFuelChart'].destroy(); delete chartInstances['fecFuelChart']; } // Destroy chart instance if box is hidden
-        }
+            const fecDatasets = endUseFuels.map((fuel, fuelIndex) => ({ label: fuel, data: chartLabels.map(y => (filteredYearlyFecByFuel[y]?.[fuel] || 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, fuelIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
+            // console.log(`DEBUG (charting.js - updateCharts): Datasets for fecFuelChart: ${fecDatasets.length} datasets`); // DEBUG
+            createChart('fecFuelChart', 'bar', { labels: chartLabels, datasets: fecDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: fecYAxisTitle, font: {size: 12} } } } });
+        } else { if (chartInstances['fecFuelChart']) { chartInstances['fecFuelChart'].destroy(); delete chartInstances['fecFuelChart']; } }
 
         // 6. Useful Energy (UE) (Filtered, By Fuel or Type & Conditional Visibility)
-        const ueChartBox = document.getElementById('ueChartBox');
-        if (showUeChart && ueChartBox) {
-            ueChartBox.classList.remove('hidden'); // Ensure visible if needed
+        if (showUeChart) {
             let ueDatasets = []; let ueYAxisTitle = `Useful Energy (UE)${balanceSector !== 'all' ? ` (${balanceSector}${balanceSubsector !== 'all' ? ` - ${balanceSubsector}` : ''})` : ''} (EJ)`;
             if (ueDisplayMode === 'fuel') {
                 ueYAxisTitle = `UE by Fuel${balanceSector !== 'all' ? ` (${balanceSector}${balanceSubsector !== 'all' ? ` - ${balanceSubsector}` : ''})` : ''} (EJ)`;
@@ -222,39 +169,27 @@ function updateCharts(yearlyResults, chartConfigData, filters = {}) {
                 const typeList = Array.from(uniqueTypes).sort();
                 ueDatasets = typeList.map((type, typeIndex) => ({ label: type, data: chartLabels.map(y => (filteredYearlyUeByType[y]?.[type] || 0) / GJ_PER_EJ), backgroundColor: getUeTypeColor(type, typeIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
             }
+            // console.log(`DEBUG (charting.js - updateCharts): Datasets for ueFuelChart: ${ueDatasets.length} datasets`); // DEBUG
             createChart('ueFuelChart', 'bar', { labels: chartLabels, datasets: ueDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: ueYAxisTitle, font: {size: 12} } } } } );
-        } else if (ueChartBox) {
-             // ueChartBox.classList.add('hidden'); // Visibility handled by uiController now
-             if (chartInstances['ueFuelChart']) { chartInstances['ueFuelChart'].destroy(); delete chartInstances['ueFuelChart']; } // Destroy chart instance if box is hidden
-        }
+        } else { if (chartInstances['ueFuelChart']) { chartInstances['ueFuelChart'].destroy(); delete chartInstances['ueFuelChart']; } }
     } // End of balance charts section update
 
 
     // --- Energy Supply & Transformations Charts (Unaffected by filters, check visibility) ---
     const supplyChartsSection = document.getElementById('supplyChartsSection');
+    // console.log(`DEBUG (charting.js - updateCharts): Supply section hidden? ${supplyChartsSection?.classList.contains('hidden')}`); // DEBUG
     if (supplyChartsSection && !supplyChartsSection.classList.contains('hidden')) {
-        console.log("DEBUG (charting.js): Updating Supply Charts...");
-
+        // console.log("DEBUG (charting.js - updateCharts): Updating Supply Charts..."); // DEBUG
         // 7. Power Generation
         const totalElectricityGenSeries = chartLabels.map(y => getValue(yearlyResults, [y, 'ecPostHydrogen', 'Electricity'], 0));
-        const powerMixDataForChart = chartLabels.map(y => getValue(yearlyResults, [y, 'powerProdMix'], {}));
-        console.log("DEBUG (charting.js): Power Techs List:", powerTechs);
-        console.log("DEBUG (charting.js): Total Elec Gen Series (First 5, GJ):", totalElectricityGenSeries.slice(0,5));
-        console.log("DEBUG (charting.js): Power Mix for 2023:", powerMixDataForChart[0]);
         const powerMixDatasets = (powerTechs || []).map((tech, techIndex) => ({ label: tech, data: chartLabels.map((y, yearIndex) => { const mixPercent = getValue(yearlyResults, [y, 'powerProdMix', tech], 0); const totalGen = totalElectricityGenSeries[yearIndex] || 0; return ((mixPercent / 100) * totalGen) / GJ_PER_EJ; }), backgroundColor: getTechColor(tech, techIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
-        console.log(`DEBUG (charting.js): Datasets for powerMixChart: ${powerMixDatasets.length} datasets`);
-        if (powerMixDatasets.length > 0) { console.log("DEBUG (charting.js): First dataset (Power):", powerMixDatasets[0].label, powerMixDatasets[0].data.slice(0,5)); }
+        // console.log(`DEBUG (charting.js - updateCharts): Datasets for powerMixChart: ${powerMixDatasets.length} datasets`);
         createChart('powerMixChart', 'bar', { labels: chartLabels, datasets: powerMixDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Power Generation (EJ)', font: {size: 12} } } } });
 
         // 8. Hydrogen Production
         const totalHydrogenProdSeries = chartLabels.map(y => getValue(yearlyResults, [y, 'fecByFuel', 'Hydrogen'], 0));
-        const hydrogenMixDataForChart = chartLabels.map(y => getValue(yearlyResults, [y, 'hydrogenProdMix'], {}));
-        console.log("DEBUG (charting.js): Hydrogen Techs List:", hydrogenTechs);
-        console.log("DEBUG (charting.js): Total H2 Prod Series (First 5, GJ):", totalHydrogenProdSeries.slice(0,5));
-        console.log("DEBUG (charting.js): Hydrogen Mix for 2023:", hydrogenMixDataForChart[0]);
         const hydrogenMixDatasets = (hydrogenTechs || []).map((tech, techIndex) => ({ label: tech, data: chartLabels.map((y, yearIndex) => { const mixPercent = getValue(yearlyResults, [y, 'hydrogenProdMix', tech], 0); const totalProd = totalHydrogenProdSeries[yearIndex] || 0; return ((mixPercent / 100) * totalProd) / GJ_PER_EJ; }), backgroundColor: getTechColor(tech, techIndex), })).filter(ds => ds.data.some(v => v > 1e-9));
-        console.log(`DEBUG (charting.js): Datasets for hydrogenMixChart: ${hydrogenMixDatasets.length} datasets`);
-        if (hydrogenMixDatasets.length > 0) { console.log("DEBUG (charting.js): First dataset (Hydrogen):", hydrogenMixDatasets[0].label, hydrogenMixDatasets[0].data.slice(0,5)); }
+        // console.log(`DEBUG (charting.js - updateCharts): Datasets for hydrogenMixChart: ${hydrogenMixDatasets.length} datasets`);
         createChart('hydrogenMixChart', 'bar', { labels: chartLabels, datasets: hydrogenMixDatasets }, { plugins: { tooltip: { mode: 'index', callbacks: { label: ejTooltipCallback } } }, scales: { x: { stacked: true, title: { display: false } }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Hydrogen Production (EJ)', font: {size: 12} } } } });
     } else {
          // Clear supply charts if section is hidden
