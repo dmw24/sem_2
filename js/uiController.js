@@ -1,5 +1,5 @@
 // js/uiController.js
-// Version: Fixed - Trigger chart update on view change + k/t0 Inputs + Filters
+// Version: Complete - Added Steepness k AND Midpoint Year t0 Inputs, Balance Chart Filters
 
 // --- UI Helper Functions ---
 /**
@@ -185,9 +185,6 @@ function initializeSidebarInputs(structuredData) {
     if (!sidebarInputContainer) { console.error("Sidebar input container (#inputGroupsContainer) not found!"); return; }
     sidebarInputContainer.innerHTML = ''; // Clear previous inputs
 
-    // Log data used for UI generation
-    // console.log("DEBUG (uiController - initializeSidebarInputs): Data received:", { sectors: structuredData?.sectors, subsectors: structuredData?.subsectors, technologies: structuredData?.technologies, baseDemandTechMix: structuredData?.baseDemandTechMix });
-
     const { sectors, subsectors, technologies, baseDemandTechMix, basePowerProdMix, baseHydrogenProdMix, powerTechs, hydrogenTechs } = structuredData || {};
 
      if (!sectors || !subsectors || !technologies || !baseDemandTechMix || !basePowerProdMix || !baseHydrogenProdMix || !powerTechs || !hydrogenTechs) { console.error("DEBUG (uiController - initializeSidebarInputs): Missing essential data structures for building inputs!"); sidebarInputContainer.innerHTML = '<p style="color: red;">Error: Could not load data needed to build parameter inputs.</p>'; return; }
@@ -197,7 +194,6 @@ function initializeSidebarInputs(structuredData) {
     (sectors || []).forEach(s => {
         if (s === 'Power' || s === 'Energy industry') return;
         const sectorSubsectors = subsectors[s] || [];
-        // console.log(`DEBUG (uiController - initializeSidebarInputs): Processing Sector "${s}", Subsectors: [${sectorSubsectors.join(', ')}]`);
         if (sectorSubsectors.length === 0) return;
 
         const sectorGroup = document.createElement('div'); sectorGroup.className = 'group';
@@ -211,7 +207,6 @@ function initializeSidebarInputs(structuredData) {
             const activityDiv = document.createElement('div'); activityDiv.className = 'activity-growth-input'; const activityLabel = document.createElement('label'); const activityInputId = `growth_${sanitizeForId(s)}_${sanitizeForId(b)}`; activityLabel.htmlFor = activityInputId; activityLabel.textContent = `Activity Growth (%/yr):`; const activityInput = document.createElement('input'); activityInput.type = 'number'; activityInput.id = activityInputId; activityInput.value = '0.5'; activityInput.step = '0.1'; activityDiv.appendChild(activityLabel); activityDiv.appendChild(activityInput); subContent.appendChild(activityDiv);
             const techs = technologies[s]?.[b] || [];
             const baseMix = getValue(baseDemandTechMix, [s, b], {});
-            // console.log(`DEBUG (uiController - initializeSidebarInputs):   Subsector "${b}", Techs: [${techs.join(', ')}], BaseMix:`, baseMix);
             if (techs.length === 0) { subContent.innerHTML += '<p><small>No technologies defined.</small></p>'; }
             else { techs.forEach(t => { subContent.appendChild(createTechInput('Demand', `${s}|${b}`, t, baseMix)); }); }
             subGroup.appendChild(subTitle); subGroup.appendChild(subContent); sectorContent.appendChild(subGroup);
@@ -221,19 +216,15 @@ function initializeSidebarInputs(structuredData) {
 
     // Create Power Generation Group
     const powerGroup = document.createElement('div'); powerGroup.className = 'group'; const powerTitle = document.createElement('h3'); powerTitle.className = 'group-title collapsed'; powerTitle.textContent = 'Power Generation'; powerTitle.onclick = function() { toggleGroup(this); }; const powerContent = document.createElement('div'); powerContent.className = 'group-content'; powerContent.style.display = 'none';
-    // console.log(`DEBUG (uiController - initializeSidebarInputs): Processing Power, Techs: [${(powerTechs || []).join(', ')}]`);
     (powerTechs || []).forEach(t => { powerContent.appendChild(createTechInput('Power', 'Power', t, basePowerProdMix)); });
     powerGroup.appendChild(powerTitle); powerGroup.appendChild(powerContent); sidebarInputContainer.appendChild(powerGroup); groupsAddedCount++;
 
     // Create Hydrogen Production Group
     const hydrogenGroup = document.createElement('div'); hydrogenGroup.className = 'group'; const hydrogenTitle = document.createElement('h3'); hydrogenTitle.className = 'group-title collapsed'; hydrogenTitle.textContent = 'Hydrogen Production'; hydrogenTitle.onclick = function() { toggleGroup(this); }; const hydrogenContent = document.createElement('div'); hydrogenContent.className = 'group-content'; hydrogenContent.style.display = 'none';
-    // console.log(`DEBUG (uiController - initializeSidebarInputs): Processing Hydrogen, Techs: [${(hydrogenTechs || []).join(', ')}]`);
     (hydrogenTechs || []).forEach(t => { hydrogenContent.appendChild(createTechInput('Hydrogen', 'Hydrogen', t, baseHydrogenProdMix)); });
     hydrogenGroup.appendChild(hydrogenTitle); hydrogenGroup.appendChild(hydrogenContent); sidebarInputContainer.appendChild(hydrogenGroup); groupsAddedCount++;
 
-    // console.log(`DEBUG (uiController - initializeSidebarInputs): Finished adding ${groupsAddedCount} groups to sidebar.`);
     if(groupsAddedCount === 0) { sidebarInputContainer.innerHTML = '<p style="color: orange;">Warning: No input groups were generated.</p>'; }
-
     console.log("Sidebar inputs initialized.");
 }
 
@@ -264,6 +255,7 @@ function updateBalanceChartVisibility(selectedSector) {
     const fecChartBox = document.getElementById('fecChartBox');
     const ueChartBox = document.getElementById('ueChartBox');
     const hideFecUe = (selectedSector === 'Power' || selectedSector === 'Energy industry');
+    // console.log(`DEBUG: Updating balance chart visibility. Selected Sector: ${selectedSector}, Hide FEC/UE: ${hideFecUe}`); // DEBUG
     if (fecChartBox) fecChartBox.classList.toggle('hidden', hideFecUe);
     if (ueChartBox) ueChartBox.classList.toggle('hidden', hideFecUe);
 }
@@ -323,74 +315,29 @@ function getUserInputsAndParams(structuredData) {
 
 // Helper to trigger chart update - defined globally within this file's scope
 function triggerChartUpdate() {
-    // Ensure necessary functions and state are available
-    // Assumes appState, updateCharts, getCurrentFilters are accessible globally or imported
     if (typeof updateCharts !== 'function') { console.error("updateCharts function is not defined."); return; }
     if (typeof getCurrentFilters !== 'function') { console.error("getCurrentFilters function is not defined."); return; }
-    if (typeof appState !== 'object' || !appState.latestResults || !appState.structuredData) {
-         console.warn("Cannot trigger chart update: Results or structured data not available in appState.");
-         return;
-    }
-    const filters = getCurrentFilters(); // Get current filter state
-    console.log("Triggering chart update with filters:", filters);
-    updateCharts(appState.latestResults, appState.structuredData, filters); // Pass filters
+    if (typeof appState !== 'object' || !appState.latestResults || !appState.structuredData) { console.warn("Cannot trigger chart update: Results or structured data not available in appState."); return; }
+    const filters = getCurrentFilters();
+    // console.log("Triggering chart update with filters:", filters); // DEBUG
+    updateCharts(appState.latestResults, appState.structuredData, filters);
 };
 
 /**
  * Handles changes in the main chart view selector dropdown.
  */
 function handleChartViewChange() {
-    const chartViewSelect = document.getElementById('selectChartView');
-    const subsectorSelectorDiv = document.getElementById('subsectorSelector');
-    const subsectorChartsSection = document.getElementById('subsectorChartsSection');
-    const balanceChartsSection = document.getElementById('balanceChartsSection');
-    const supplyChartsSection = document.getElementById('supplyChartsSection');
-    const balanceSectorSelect = document.getElementById('selectBalanceSector'); // Needed for visibility check
-
-    if (!chartViewSelect || !subsectorSelectorDiv || !subsectorChartsSection || !balanceChartsSection || !supplyChartsSection || !balanceSectorSelect) {
-        console.error("One or more chart view elements not found!");
-        return;
-    }
-
-    const selectedView = chartViewSelect.value;
-    const selectedBalanceSector = balanceSectorSelect.value;
-
-    // Show/hide subsector selector
+    const chartViewSelect = document.getElementById('selectChartView'); const subsectorSelectorDiv = document.getElementById('subsectorSelector'); const subsectorChartsSection = document.getElementById('subsectorChartsSection'); const balanceChartsSection = document.getElementById('balanceChartsSection'); const supplyChartsSection = document.getElementById('supplyChartsSection'); const balanceSectorSelect = document.getElementById('selectBalanceSector');
+    if (!chartViewSelect || !subsectorSelectorDiv || !subsectorChartsSection || !balanceChartsSection || !supplyChartsSection || !balanceSectorSelect) { console.error("One or more chart view elements not found!"); return; }
+    const selectedView = chartViewSelect.value; const selectedBalanceSector = balanceSectorSelect.value;
     subsectorSelectorDiv.classList.toggle('hidden', selectedView !== 'subsector');
-
-    // Show/hide chart sections
-    const showSubsector = selectedView === 'subsector';
-    const showBalance = selectedView === 'balance';
-    const showSupply = selectedView === 'supply';
-
-    subsectorChartsSection.classList.toggle('hidden', !showSubsector);
-    balanceChartsSection.classList.toggle('hidden', !showBalance);
-    supplyChartsSection.classList.toggle('hidden', !showSupply);
-
+    const showSubsector = selectedView === 'subsector'; const showBalance = selectedView === 'balance'; const showSupply = selectedView === 'supply';
+    subsectorChartsSection.classList.toggle('hidden', !showSubsector); balanceChartsSection.classList.toggle('hidden', !showBalance); supplyChartsSection.classList.toggle('hidden', !showSupply);
     console.log(`Chart view changed to: ${selectedView}`);
-
-    // Update visibility of balance charts specifically if balance view is selected
-    if (showBalance) {
-        updateBalanceChartVisibility(selectedBalanceSector);
-    }
-
-    // *** ADDED: Trigger chart update AFTER visibility is set ***
-    // This ensures charts are drawn when their section becomes visible
-     if (typeof appState !== 'object' || !appState.latestResults) {
-         console.log("No results yet, skipping chart update on view change.");
-     } else {
-         // Only trigger update if the relevant section is now visible
-         if ((showSubsector && !subsectorChartsSection.classList.contains('hidden')) ||
-             (showBalance && !balanceChartsSection.classList.contains('hidden')) ||
-             (showSupply && !supplyChartsSection.classList.contains('hidden')))
-         {
-              console.log("View changed, triggering chart update for visible section.");
-              // Use the globally defined helper
-              triggerChartUpdate();
-         }
-     }
+    if (showBalance) { updateBalanceChartVisibility(selectedBalanceSector); }
+     if (typeof appState !== 'object' || !appState.latestResults) { console.log("No results yet, skipping chart update on view change."); }
+     else { if ((showSubsector && !subsectorChartsSection.classList.contains('hidden')) || (showBalance && !balanceChartsSection.classList.contains('hidden')) || (showSupply && !supplyChartsSection.classList.contains('hidden'))) { console.log("View changed, triggering chart update for visible section."); triggerChartUpdate(); } }
 }
-
 
 /**
  * Gets the current filter settings from the UI.
@@ -399,33 +346,18 @@ function getCurrentFilters() { const balanceSectorSelect = document.getElementBy
 
 /**
  * Sets up event listeners for the Run button and all dropdowns/filters.
- * @param {object} appState - The shared application state object from main.js
  */
 function setupEventListeners(appState) {
-    const runButton = document.getElementById('runModelBtn');
-    const subsectorSelect = document.getElementById('selectSubsector');
-    const chartViewSelect = document.getElementById('selectChartView');
-    const balanceSectorSelect = document.getElementById('selectBalanceSector');
-    const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector');
-    const ueDisplayModeRadios = document.querySelectorAll('input[name="ueDisplayMode"]');
-
-    const { structuredData } = appState;
-    if (!structuredData) { console.error("Cannot setup event listeners: structuredData missing."); return; }
-
-    // Check elements exist
+    const runButton = document.getElementById('runModelBtn'); const subsectorSelect = document.getElementById('selectSubsector'); const chartViewSelect = document.getElementById('selectChartView'); const balanceSectorSelect = document.getElementById('selectBalanceSector'); const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector'); const ueDisplayModeRadios = document.querySelectorAll('input[name="ueDisplayMode"]');
+    const { structuredData } = appState; if (!structuredData) { console.error("Cannot setup event listeners: structuredData missing."); return; }
     if (!runButton || !subsectorSelect || !chartViewSelect || !balanceSectorSelect || !balanceSubsectorSelect || !ueDisplayModeRadios) { console.error("One or more UI elements for event listeners not found!"); return; }
-
-    // Assign Listeners
     runButton.onclick = async () => { runButton.disabled = true; runButton.textContent = 'Calculating...'; console.log("Run button clicked..."); try { const userInputs = getUserInputsAndParams(structuredData); if (typeof runModelCalculation !== 'function') { throw new Error("runModelCalculation function is not defined."); } const modelResults = await runModelCalculation(structuredData, userInputs); appState.latestResults = modelResults; triggerChartUpdate(); } catch (error) { console.error("Error during model execution or chart update:", error); alert(`An error occurred: ${error.message}.`); } finally { runButton.disabled = false; runButton.textContent = 'Run Model & Update Charts'; } };
     subsectorSelect.onchange = () => { console.log("Subsector selection changed."); triggerChartUpdate(); };
-    chartViewSelect.onchange = handleChartViewChange; // Use the updated handler
+    chartViewSelect.onchange = handleChartViewChange;
     balanceSectorSelect.onchange = () => { console.log("Balance sector filter changed."); const selectedSector = balanceSectorSelect.value; updateBalanceSubsectorFilter(selectedSector, structuredData); updateBalanceChartVisibility(selectedSector); triggerChartUpdate(); };
     balanceSubsectorSelect.onchange = () => { console.log("Balance subsector filter changed."); triggerChartUpdate(); };
     ueDisplayModeRadios.forEach(radio => { radio.onchange = () => { if (radio.checked) { console.log(`UE display mode changed to: ${radio.value}`); triggerChartUpdate(); } }; });
-
-    // Initial setup for visibility
-    handleChartViewChange();
-    updateBalanceChartVisibility(balanceSectorSelect.value);
-
+    handleChartViewChange(); // Set initial view section visibility
+    updateBalanceChartVisibility(balanceSectorSelect.value); // Set initial balance chart visibility
     console.log("UI Event listeners set up.");
 }
