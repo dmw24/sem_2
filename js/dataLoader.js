@@ -269,23 +269,45 @@ function transformOtherTransformData(parsedData) {
 
 // --- Main Loading Function ---
 async function loadAndStructureData() {
-    if (structuredModelData) { console.log("Returning cached structured data."); return structuredModelData; }
+    // Return cached data if available
+    if (structuredModelData) {
+        console.log("Returning cached structured data.");
+        return structuredModelData;
+    }
+
     console.log("Starting data load and transformation...");
-    const rawData = {};
+    const rawData = {}; // To store parsed data from each file
+
+    // Create promises for fetching and parsing each CSV file
     const loadPromises = Object.entries(csvFiles).map(async ([key, path]) => {
         try {
-            const response = await fetch(path);
-            if (!response.ok) { if (response.status === 404) { console.warn(`File not found: ${path}. Treating as empty.`); rawData[key] = []; return; } throw new Error(`HTTP error! status: ${response.status} for ${path}`); }
-            const csvText = await response.text();
-            rawData[key] = parseCSV(csvText);
+            const response = await fetch(path); // Fetch the CSV file
+            if (!response.ok) {
+                 // Handle non-OK responses (e.g., 404 Not Found)
+                 if (response.status === 404) {
+                     console.warn(`File not found: ${path}. Treating as empty.`);
+                     rawData[key] = []; // Assign empty array if file not found
+                     return; // Stop processing this file
+                 }
+                 // Throw error for other HTTP issues
+                 throw new Error(`HTTP error! status: ${response.status} for ${path}`);
+            }
+            const csvText = await response.text(); // Read file content as text
+            rawData[key] = parseCSV(csvText); // Parse CSV text into an array of objects
             // console.log(`Successfully loaded and parsed: ${path}`); // Reduce console noise
-        } catch (error) { console.error(`Failed to load or parse ${path}:`, error); rawData[key] = []; }
+        } catch (error) {
+            // Log errors during fetch/parse and assign empty array
+            console.error(`Failed to load or parse ${path}:`, error);
+            rawData[key] = [];
+        }
     });
+
+    // Wait for all fetch/parse promises to complete
     await Promise.all(loadPromises);
     console.log("All raw data loading attempts finished. Starting transformation...");
 
     try {
-        // Perform transformations
+        // Perform transformations on the parsed data
         const { baseActivity, activityUnits } = transformActivityData(rawData.activityLevel || []);
         const { baseDemandTechMix } = transformEndUseMixData(rawData.endUseTechMix || []);
         const { unitEnergyConsumption } = transformEndUseEnergyConsData(rawData.endUseTechEnergyCons || []);
@@ -296,34 +318,85 @@ async function loadAndStructureData() {
         const { hydrogenTechUnitEnergyCons } = transformHydrogenEffData(rawData.hydrogenTechEff || []);
         const { otherTechUnitEnergyCons, baseOtherProdMix } = transformOtherTransformData(rawData.otherTransform || []);
 
-        // Derive secondary structures
-        let allSectors = new Set(); let allSubsectors = {}; let allTechnologies = {};
-        const processRow = (row) => { if (!row || !row.Sector) return; const sector = row.Sector; allSectors.add(sector); const subsector = row.Subsector; if (subsector) { if (!allSubsectors[sector]) allSubsectors[sector] = new Set(); allSubsectors[sector].add(subsector); const tech = row.Technology; if (tech) { if (!allTechnologies[sector]) allTechnologies[sector] = {}; if (!allTechnologies[sector][subsector]) allTechnologies[sector][subsector] = new Set(); allTechnologies[sector][subsector].add(tech); } } };
-        (rawData.activityLevel || []).forEach(processRow); (rawData.endUseTechMix || []).forEach(processRow); (rawData.endUseTechEnergyCons || []).forEach(processRow);
-        allSectors.add('Power'); allSubsectors['Power'] = new Set(['Electricity']); allTechnologies['Power'] = { 'Electricity': new Set(Object.keys(basePowerProdMix)) };
-        allSectors.add('Energy industry'); allSubsectors['Energy industry'] = new Set(['Hydrogen']); allTechnologies['Energy industry'] = { 'Hydrogen': new Set(Object.keys(baseHydrogenProdMix)) };
-        const sectors = Array.from(allSectors); const subsectors = {}; sectors.forEach(s => { subsectors[s] = Array.from(allSubsectors[s] || new Set()); }); const technologies = {}; sectors.forEach(s => { technologies[s] = {}; (subsectors[s] || []).forEach(b => { technologies[s][b] = Array.from(allTechnologies[s]?.[b] || new Set()); }); });
+        // Derive secondary structures (lists of sectors, subsectors, technologies)
+        let allSectors = new Set();
+        let allSubsectors = {}; // { sector: Set(subsector1, subsector2) }
+        let allTechnologies = {}; // { sector: { subsector: Set(tech1, tech2) } }
 
-        // Define standard lists
-        const endUseFuels = ["Biomass", "Coal", "Electricity", "Gas", "Hydrogen", "Oil"];
-        const primaryFuels = ["Biomass", "Coal", "Gas", "Hydro", "Oil", "Other", "Solar", "Uranium", "Wind"];
-        const hydrogenTechs = Object.keys(baseHydrogenProdMix);
-        const powerTechs = Object.keys(basePowerProdMix);
-        const otherConvTechs = {}; Object.keys(otherTechUnitEnergyCons).forEach(fuel => { otherConvTechs[fuel] = Object.keys(otherTechUnitEnergyCons[fuel]); });
+        // Helper function to populate sets from various data sources
+        const processRow = (row) => {
+            if (!row || !row.Sector) return;
+            const sector = row.Sector;
+            allSectors.add(sector);
+            const subsector = row.Subsector;
+            if (subsector) {
+                if (!allSubsectors[sector]) allSubsectors[sector] = new Set();
+                allSubsectors[sector].add(subsector);
+                const tech = row.Technology;
+                if (tech) {
+                    if (!allTechnologies[sector]) allTechnologies[sector] = {};
+                    if (!allTechnologies[sector][subsector]) allTechnologies[sector][subsector] = new Set();
+                    allTechnologies[sector][subsector].add(tech);
+                }
+            }
+        };
+
+        // Process relevant CSV data to build the sets
+        (rawData.activityLevel || []).forEach(processRow);
+        (rawData.endUseTechMix || []).forEach(processRow);
+        (rawData.endUseTechEnergyCons || []).forEach(processRow);
+        // Manually add supply sectors and their technologies
+        allSectors.add('Power');
+        allSubsectors['Power'] = new Set(['Electricity']); // Single 'subsector' for power
+        allTechnologies['Power'] = { 'Electricity': new Set(Object.keys(basePowerProdMix)) };
+
+        allSectors.add('Energy industry');
+        allSubsectors['Energy industry'] = new Set(['Hydrogen']); // Single 'subsector' for hydrogen
+        allTechnologies['Energy industry'] = { 'Hydrogen': new Set(Object.keys(baseHydrogenProdMix)) };
+        // TODO: Add 'Other Transformations' if needed as distinct sectors/subsectors/techs
+
+        // Convert Sets to Arrays for easier use later
+        const sectors = Array.from(allSectors).sort(); // Sort for consistent order
+        const subsectors = {};
+        sectors.forEach(s => { subsectors[s] = Array.from(allSubsectors[s] || new Set()).sort(); });
+        const technologies = {};
+        sectors.forEach(s => {
+            technologies[s] = {};
+            (subsectors[s] || []).forEach(b => {
+                technologies[s][b] = Array.from(allTechnologies[s]?.[b] || new Set()).sort();
+            });
+        });
+
+        // Define standard lists based on processed data and known categories
+        const endUseFuels = ["Biomass", "Coal", "Electricity", "Gas", "Hydrogen", "Oil"]; // Standard list
+        const primaryFuels = ["Biomass", "Coal", "Gas", "Hydro", "Oil", "Other", "Solar", "Uranium", "Wind"]; // Standard list
+        const hydrogenTechs = Object.keys(baseHydrogenProdMix).sort();
+        const powerTechs = Object.keys(basePowerProdMix).sort();
+        const otherConvTechs = {}; Object.keys(otherTechUnitEnergyCons).forEach(fuel => { otherConvTechs[fuel] = Object.keys(otherTechUnitEnergyCons[fuel]).sort(); });
         const allEndUseSubsectors = sectors.filter(s => s !== 'Power' && s !== 'Energy industry').flatMap(s => (subsectors[s] || []).map(b => ({ sector: s, subsector: b })));
 
-        // Assemble final structured data object
+        // Assemble final structured data object to be returned
         structuredModelData = {
+            // Base data objects from transformations
             baseActivity, activityUnits, baseDemandTechMix, unitEnergyConsumption,
             placeholderUsefulEfficiency, basePowerProdMix, baseHydrogenProdMix,
             powerTechUnitEnergyCons, hydrogenTechUnitEnergyCons, otherTechUnitEnergyCons,
             baseOtherProdMix,
             dataTypeLookup, // Added Type lookup
+
+            // Derived/defined structures and lists
             sectors, subsectors, technologies, endUseFuels, primaryFuels,
             hydrogenTechs, powerTechs, otherConvTechs, allEndUseSubsectors,
             startYear, endYear, years
         };
+
         console.log("Data transformation complete.");
-        return structuredModelData;
-    } catch (transformError) { console.error("Error during data transformation:", transformError); structuredModelData = null; throw transformError; }
+        return structuredModelData; // Return the structured data
+
+    } catch (transformError) {
+        // Catch and log errors during the transformation phase
+        console.error("Error during data transformation:", transformError);
+        structuredModelData = null; // Ensure data is null on error
+        throw transformError; // Re-throw error to be caught by initializeApp
+    }
 }
