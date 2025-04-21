@@ -1,5 +1,5 @@
 // js/uiController.js
-// Version: Complete - Added Steepness k AND Midpoint Year t0 Inputs, Balance Chart Filters
+// Version: Complete - k/t0 Inputs, Filters, Sankey Logic
 
 // --- UI Helper Functions ---
 /**
@@ -57,9 +57,6 @@ function toggleSCurveInputs(selectElement, paramKey) {
         const isVisible = selectElement.value === 's-curve';
         container.style.display = isVisible ? 'block' : 'none';
         container.classList.toggle('visible', isVisible);
-    } else {
-        // This might happen briefly during initialization, usually not an issue
-        // console.warn("S-Curve input container not found for key:", paramKey, "ID:", containerId);
     }
 }
 
@@ -134,7 +131,6 @@ const createTechInput = (categoryType, categoryKey, tech, baseMixObject) => {
     container.appendChild(legend);
     const paramKey = `${categoryType}|${categoryKey}|${tech}`;
     const sanitizedParamKey = sanitizeForId(paramKey);
-    // Use the getValue helper function if available globally, otherwise basic access
     const baseValue = (typeof getValue === 'function') ? getValue(baseMixObject, [tech], 0) : (baseMixObject?.[tech] || 0);
     const behaviorDiv = document.createElement('div');
     behaviorDiv.className = 'tech-behavior-selector';
@@ -146,30 +142,20 @@ const createTechInput = (categoryType, categoryKey, tech, baseMixObject) => {
     behaviorSelect.onchange = () => toggleSCurveInputs(behaviorSelect, paramKey);
     ['Fixed', 'S-Curve (Growth)', 'Decline'].forEach(opt => {
         const option = document.createElement('option');
-        option.value = opt.toLowerCase().split(' ')[0]; // 'fixed', 's-curve', 'decline'
+        option.value = opt.toLowerCase().split(' ')[0];
         option.textContent = opt;
         behaviorSelect.appendChild(option);
     });
-    // Determine default behavior based on mappings
     let defaultBehavior = 'fixed';
-    const fullCatKey = categoryKey; // Use the combined key directly for demand
-    if ((categoryType === 'Demand' && defaultDeclineDemandTechsUI[fullCatKey] === tech) ||
-        (categoryType === 'Power' && defaultDeclinePowerTechsUI.includes(tech)) ||
-        (categoryType === 'Hydrogen' && defaultDeclineHydrogenTechsUI.includes(tech))) {
-        defaultBehavior = 'decline';
-    } else if ((categoryType === 'Demand' && defaultSCurveDemandTechsUI[fullCatKey] === tech) ||
-               (categoryType === 'Power' && defaultSCurvePowerTechsUI.includes(tech)) ||
-               (categoryType === 'Hydrogen' && defaultSCurveHydrogenTechsUI.includes(tech))) {
-        defaultBehavior = 's-curve';
-    }
+    const fullCatKey = categoryKey;
+    if ((categoryType === 'Demand' && defaultDeclineDemandTechsUI[fullCatKey] === tech) || (categoryType === 'Power' && defaultDeclinePowerTechsUI.includes(tech)) || (categoryType === 'Hydrogen' && defaultDeclineHydrogenTechsUI.includes(tech))) { defaultBehavior = 'decline'; }
+    else if ((categoryType === 'Demand' && defaultSCurveDemandTechsUI[fullCatKey] === tech) || (categoryType === 'Power' && defaultSCurvePowerTechsUI.includes(tech)) || (categoryType === 'Hydrogen' && defaultSCurveHydrogenTechsUI.includes(tech))) { defaultBehavior = 's-curve'; }
     behaviorSelect.value = defaultBehavior;
     behaviorDiv.appendChild(behaviorLabel);
     behaviorDiv.appendChild(behaviorSelect);
     container.appendChild(behaviorDiv);
-    // Create S-curve inputs (k and t0)
     const sCurveInputsDiv = createSCurveParamInputs(paramKey, baseValue);
     container.appendChild(sCurveInputsDiv);
-    // Call toggle initially AFTER element is potentially added to DOM
     setTimeout(() => toggleSCurveInputs(behaviorSelect, paramKey), 0);
     return container;
 };
@@ -183,7 +169,7 @@ function initializeSidebarInputs(structuredData) {
     console.log("Initializing sidebar inputs...");
     const sidebarInputContainer = document.getElementById('inputGroupsContainer');
     if (!sidebarInputContainer) { console.error("Sidebar input container (#inputGroupsContainer) not found!"); return; }
-    sidebarInputContainer.innerHTML = ''; // Clear previous inputs
+    sidebarInputContainer.innerHTML = '';
 
     const { sectors, subsectors, technologies, baseDemandTechMix, basePowerProdMix, baseHydrogenProdMix, powerTechs, hydrogenTechs } = structuredData || {};
 
@@ -260,6 +246,29 @@ function updateBalanceChartVisibility(selectedSector) {
     if (ueChartBox) ueChartBox.classList.toggle('hidden', hideFecUe);
 }
 
+/**
+ * Populates the year selector dropdown for the Sankey chart.
+ */
+function populateSankeyYearSelector(structuredData) {
+    const yearSelect = document.getElementById('selectSankeyYear');
+    if (!yearSelect) { console.error("Sankey year selector not found!"); return; }
+    yearSelect.innerHTML = ''; // Clear existing options
+
+    if (!structuredData?.years || structuredData.years.length === 0) {
+        console.error("Years data missing for Sankey selector.");
+        return;
+    }
+    // Populate with years, selecting the last year by default
+    structuredData.years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    });
+    yearSelect.value = structuredData.years[structuredData.years.length - 1]; // Default to last year
+    console.log("Sankey year selector populated.");
+}
+
 
 // --- Input Gathering ---
 /**
@@ -315,49 +324,131 @@ function getUserInputsAndParams(structuredData) {
 
 // Helper to trigger chart update - defined globally within this file's scope
 function triggerChartUpdate() {
+    // Ensure necessary functions and state are available
+    // Assumes appState, updateCharts, getCurrentFilters are accessible globally or imported
     if (typeof updateCharts !== 'function') { console.error("updateCharts function is not defined."); return; }
     if (typeof getCurrentFilters !== 'function') { console.error("getCurrentFilters function is not defined."); return; }
-    if (typeof appState !== 'object' || !appState.latestResults || !appState.structuredData) { console.warn("Cannot trigger chart update: Results or structured data not available in appState."); return; }
-    const filters = getCurrentFilters();
+    // Check if appState and necessary properties exist
+    if (typeof appState !== 'object' || !appState.latestResults || !appState.structuredData) {
+         console.warn("Cannot trigger chart update: Results or structured data not available in appState.");
+         return;
+    }
+    const filters = getCurrentFilters(); // Get current filter state
     // console.log("Triggering chart update with filters:", filters); // DEBUG
-    updateCharts(appState.latestResults, appState.structuredData, filters);
+    updateCharts(appState.latestResults, appState.structuredData, filters); // Pass filters
 };
+
 
 /**
  * Handles changes in the main chart view selector dropdown.
  */
 function handleChartViewChange() {
-    const chartViewSelect = document.getElementById('selectChartView'); const subsectorSelectorDiv = document.getElementById('subsectorSelector'); const subsectorChartsSection = document.getElementById('subsectorChartsSection'); const balanceChartsSection = document.getElementById('balanceChartsSection'); const supplyChartsSection = document.getElementById('supplyChartsSection'); const balanceSectorSelect = document.getElementById('selectBalanceSector');
-    if (!chartViewSelect || !subsectorSelectorDiv || !subsectorChartsSection || !balanceChartsSection || !supplyChartsSection || !balanceSectorSelect) { console.error("One or more chart view elements not found!"); return; }
-    const selectedView = chartViewSelect.value; const selectedBalanceSector = balanceSectorSelect.value;
+    const chartViewSelect = document.getElementById('selectChartView');
+    const subsectorSelectorDiv = document.getElementById('subsectorSelector');
+    const subsectorChartsSection = document.getElementById('subsectorChartsSection');
+    const balanceChartsSection = document.getElementById('balanceChartsSection');
+    const supplyChartsSection = document.getElementById('supplyChartsSection');
+    const sankeyChartSection = document.getElementById('sankeyChartSection'); // Get Sankey section
+    const balanceSectorSelect = document.getElementById('selectBalanceSector'); // Needed for visibility check
+
+    if (!chartViewSelect || !subsectorSelectorDiv || !subsectorChartsSection || !balanceChartsSection || !supplyChartsSection || !sankeyChartSection || !balanceSectorSelect) {
+        console.error("One or more chart view elements not found!");
+        return;
+    }
+
+    const selectedView = chartViewSelect.value;
+    const selectedBalanceSector = balanceSectorSelect.value;
+
+    // Show/hide subsector selector (only for subsector view)
     subsectorSelectorDiv.classList.toggle('hidden', selectedView !== 'subsector');
-    const showSubsector = selectedView === 'subsector'; const showBalance = selectedView === 'balance'; const showSupply = selectedView === 'supply';
-    subsectorChartsSection.classList.toggle('hidden', !showSubsector); balanceChartsSection.classList.toggle('hidden', !showBalance); supplyChartsSection.classList.toggle('hidden', !showSupply);
+
+    // Show/hide chart sections
+    const showSubsector = selectedView === 'subsector';
+    const showBalance = selectedView === 'balance';
+    const showSupply = selectedView === 'supply';
+    const showSankey = selectedView === 'sankey'; // Check for Sankey view
+
+    subsectorChartsSection.classList.toggle('hidden', !showSubsector);
+    balanceChartsSection.classList.toggle('hidden', !showBalance);
+    supplyChartsSection.classList.toggle('hidden', !showSupply);
+    sankeyChartSection.classList.toggle('hidden', !showSankey); // Toggle Sankey section
+
     console.log(`Chart view changed to: ${selectedView}`);
-    if (showBalance) { updateBalanceChartVisibility(selectedBalanceSector); }
-     if (typeof appState !== 'object' || !appState.latestResults) { console.log("No results yet, skipping chart update on view change."); }
-     else { if ((showSubsector && !subsectorChartsSection.classList.contains('hidden')) || (showBalance && !balanceChartsSection.classList.contains('hidden')) || (showSupply && !supplyChartsSection.classList.contains('hidden'))) { console.log("View changed, triggering chart update for visible section."); triggerChartUpdate(); } }
+
+    // Update visibility of balance charts specifically if balance view is selected
+    if (showBalance) {
+        updateBalanceChartVisibility(selectedBalanceSector);
+    }
+
+    // Trigger chart update AFTER visibility is set for the newly visible section
+     if (typeof appState !== 'object' || !appState.latestResults) {
+         // console.log("No results yet, skipping chart update on view change."); // Reduce noise
+     } else {
+         // Only trigger update if the relevant section is now visible
+         if ((showSubsector && !subsectorChartsSection.classList.contains('hidden')) ||
+             (showBalance && !balanceChartsSection.classList.contains('hidden')) ||
+             (showSupply && !supplyChartsSection.classList.contains('hidden')) ||
+             (showSankey && !sankeyChartSection.classList.contains('hidden'))) // Include Sankey check
+         {
+              console.log("View changed, triggering chart update for visible section.");
+              triggerChartUpdate();
+         }
+     }
 }
+
 
 /**
  * Gets the current filter settings from the UI.
  */
-function getCurrentFilters() { const balanceSectorSelect = document.getElementById('selectBalanceSector'); const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector'); const ueModeFuel = document.querySelector('input[name="ueDisplayMode"][value="fuel"]'); return { balanceSector: balanceSectorSelect ? balanceSectorSelect.value : 'all', balanceSubsector: balanceSubsectorSelect ? balanceSubsectorSelect.value : 'all', ueDisplayMode: ueModeFuel?.checked ? 'fuel' : 'type' }; }
+function getCurrentFilters() {
+    const balanceSectorSelect = document.getElementById('selectBalanceSector');
+    const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector');
+    const ueModeFuel = document.querySelector('input[name="ueDisplayMode"][value="fuel"]');
+    const sankeyYearSelect = document.getElementById('selectSankeyYear'); // Get Sankey year selector
+
+    return {
+        balanceSector: balanceSectorSelect ? balanceSectorSelect.value : 'all',
+        balanceSubsector: balanceSubsectorSelect ? balanceSubsectorSelect.value : 'all',
+        ueDisplayMode: ueModeFuel?.checked ? 'fuel' : 'type',
+        sankeyYear: sankeyYearSelect ? parseInt(sankeyYearSelect.value, 10) : uiEndYear // Default to last year if null
+    };
+}
 
 /**
  * Sets up event listeners for the Run button and all dropdowns/filters.
+ * @param {object} appState - The shared application state object from main.js
  */
 function setupEventListeners(appState) {
-    const runButton = document.getElementById('runModelBtn'); const subsectorSelect = document.getElementById('selectSubsector'); const chartViewSelect = document.getElementById('selectChartView'); const balanceSectorSelect = document.getElementById('selectBalanceSector'); const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector'); const ueDisplayModeRadios = document.querySelectorAll('input[name="ueDisplayMode"]');
-    const { structuredData } = appState; if (!structuredData) { console.error("Cannot setup event listeners: structuredData missing."); return; }
-    if (!runButton || !subsectorSelect || !chartViewSelect || !balanceSectorSelect || !balanceSubsectorSelect || !ueDisplayModeRadios) { console.error("One or more UI elements for event listeners not found!"); return; }
+    const runButton = document.getElementById('runModelBtn');
+    const subsectorSelect = document.getElementById('selectSubsector');
+    const chartViewSelect = document.getElementById('selectChartView');
+    const balanceSectorSelect = document.getElementById('selectBalanceSector');
+    const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector');
+    const ueDisplayModeRadios = document.querySelectorAll('input[name="ueDisplayMode"]');
+    const sankeyYearSelect = document.getElementById('selectSankeyYear'); // Get Sankey year selector
+
+    const { structuredData } = appState;
+    if (!structuredData) { console.error("Cannot setup event listeners: structuredData missing."); return; }
+
+    // Check elements exist
+    if (!runButton || !subsectorSelect || !chartViewSelect || !balanceSectorSelect || !balanceSubsectorSelect || !ueDisplayModeRadios || !sankeyYearSelect) {
+        console.error("One or more UI elements for event listeners not found!");
+        return;
+    }
+
+    // Assign Listeners
     runButton.onclick = async () => { runButton.disabled = true; runButton.textContent = 'Calculating...'; console.log("Run button clicked..."); try { const userInputs = getUserInputsAndParams(structuredData); if (typeof runModelCalculation !== 'function') { throw new Error("runModelCalculation function is not defined."); } const modelResults = await runModelCalculation(structuredData, userInputs); appState.latestResults = modelResults; triggerChartUpdate(); } catch (error) { console.error("Error during model execution or chart update:", error); alert(`An error occurred: ${error.message}.`); } finally { runButton.disabled = false; runButton.textContent = 'Run Model & Update Charts'; } };
     subsectorSelect.onchange = () => { console.log("Subsector selection changed."); triggerChartUpdate(); };
-    chartViewSelect.onchange = handleChartViewChange;
+    chartViewSelect.onchange = handleChartViewChange; // Use the updated handler
     balanceSectorSelect.onchange = () => { console.log("Balance sector filter changed."); const selectedSector = balanceSectorSelect.value; updateBalanceSubsectorFilter(selectedSector, structuredData); updateBalanceChartVisibility(selectedSector); triggerChartUpdate(); };
     balanceSubsectorSelect.onchange = () => { console.log("Balance subsector filter changed."); triggerChartUpdate(); };
     ueDisplayModeRadios.forEach(radio => { radio.onchange = () => { if (radio.checked) { console.log(`UE display mode changed to: ${radio.value}`); triggerChartUpdate(); } }; });
-    handleChartViewChange(); // Set initial view section visibility
-    updateBalanceChartVisibility(balanceSectorSelect.value); // Set initial balance chart visibility
+    sankeyYearSelect.onchange = () => { console.log("Sankey year selection changed."); triggerChartUpdate(); }; // Trigger update for Sankey
+
+    // Initial setup for visibility
+    handleChartViewChange();
+    updateBalanceChartVisibility(balanceSectorSelect.value);
+
     console.log("UI Event listeners set up.");
 }
+
