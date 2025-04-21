@@ -1,8 +1,9 @@
 // js/charting.js
 // Further refactored for maximum conciseness
+// Removed duplicate GJ_PER_EJ declaration
 
 const chartInstances = {};
-const GJ_PER_EJ = 1e9;
+// const GJ_PER_EJ = 1e9; // REMOVED - Declared in modelLogic.js
 
 // --- Color Palette & Mapping (Keep full for clarity) ---
 const emberColors = { green_ember: '#13CE74', green_pine: '#06371F', green_forest: '#0B6638', green_grass: '#0F9A56', green_mint: '#89E7BA', blue_navy: '#204172', blue_azure: '#1E6DA9', blue_sky: '#37A6E6', blue_arctic: '#C4D9E9', fossil_fire: '#E04B00', fossil_clay: '#891B05', fossil_rust: '#BF3100', fossil_tangerine: '#EE7309', fossil_sunrise: '#FCA311', grey_smoke: '#999999', grey_fog: '#F7F7F7', grey_dark: '#718096', black: '#000000' };
@@ -33,7 +34,7 @@ const createOrUpdateChart = (canvasId, type, data, options = {}) => {
 };
 
 // Tooltip & Default Options (Concise)
-const ejTooltip = ctx => `${ctx.dataset.label || ''}: ${ctx.parsed?.y != null ? ctx.parsed.y.toFixed(3) + ' EJ' : 'N/A'}`;
+const ejTooltip = ctx => `${ctx.dataset.label || ''}: ${ctx.parsed?.y != null ? ctx.parsed.y.toFixed(3) + ' EJ' : 'N/A'}`; // Uses GJ_PER_EJ implicitly via calculation results
 const stackedBarOpts = yTitle => ({ plugins: { tooltip: { callbacks: { label: ejTooltip } } }, scales: { y: { title: { text: yTitle } } } });
 
 // --- Main Chart Update (Concise) ---
@@ -45,6 +46,7 @@ function updateCharts(results, config) {
     const [selSector, selSubsector] = subKey?.split('|') || [];
 
     // Helper to create dataset array
+    // GJ_PER_EJ is used implicitly here when dividing results (which are in GJ)
     const createDatasets = (labels, dataMapFn, filterFn = ds => ds.data.some(v => Math.abs(v) > 1e-9)) =>
         labels.map(dataMapFn).filter(filterFn);
 
