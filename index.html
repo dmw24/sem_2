@@ -7,85 +7,82 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="css/style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
-
 </head>
 <body>
     <header class="container">
         <h1>S-Curve Energy Model</h1>
         <p class="disclaimer">
-            Energy system projection model (2023-2050). Define subsector growth and technology behavior (S-Curve, Decline, Fixed).
+            Energy system projection (2023-2050). Define growth & tech behavior (S-Curve/Decline/Fixed).
         </p>
     </header>
 
     <div class="container sim-container">
-        <div id="sidebar">
-            <h2>Model Parameters</h2>
-            <button type="button" id="runModelBtn">Run Model & Update Charts</button>
-            <div id="inputGroupsContainer"></div>
-        </div>
 
-        <div id="content">
+        <aside id="sidebar">
+            <h2>Parameters</h2>
+            <button type="button" id="runModelBtn">Run Model & Update Charts</button>
+            <div id="inputGroupsContainer">
+                </div>
+        </aside>
+
+        <main id="content">
             <h2>Results Projection (2023 - 2050)</h2>
 
             <div id="chartViewSelectorContainer">
-                 <label for="selectChartView">Select Chart View:</label>
+                 <label for="selectChartView">View:</label>
                  <select id="selectChartView">
                      <option value="subsector" selected>Subsector Details</option>
-                     <option value="balance">Overall Energy Balance</option>
+                     <option value="balance">Overall Balance</option>
                      <option value="supply">Supply & Transformations</option>
-                     <option value="sankey">Sankey Diagram</option> </select>
+                 </select>
             </div>
 
-            <div id="subsectorSelector" class="hidden">
-                <label for="selectSubsector">View Detailed Charts for Subsector:</label>
-                <select id="selectSubsector"></select>
+            <div id="subsectorSelector">
+                <label for="selectSubsector">Subsector:</label>
+                <select id="selectSubsector">
+                    </select>
             </div>
 
             <section id="subsectorChartsSection">
-                <h3 class="chart-section-heading">Subsector Details: <span id="selectedSubsectorName">Loading...</span></h3>
-                <div id="subsectorCharts" class="chart-grid">
-                     <div class="chart-box"><h3>Activity by Technology</h3><canvas id="subsectorActivityChart"></canvas></div>
-                     <div class="chart-box"><h3>Final Energy (FEC) by Fuel</h3><canvas id="subsectorFecChart"></canvas></div>
-                     <div class="chart-box"><h3>Useful Energy (UE) by Fuel</h3><canvas id="subsectorUeChart"></canvas></div>
+                <h3 class="chart-section-heading">Subsector: <span id="selectedSubsectorName">Loading...</span></h3>
+                <div class="chart-grid">
+                     <div class="chart-box"><h3>Activity</h3><canvas id="subsectorActivityChart"></canvas></div>
+                     <div class="chart-box"><h3>FEC</h3><canvas id="subsectorFecChart"></canvas></div>
+                     <div class="chart-box"><h3>Useful Energy</h3><canvas id="subsectorUeChart"></canvas></div>
                 </div>
             </section>
 
             <section id="balanceChartsSection" class="hidden">
                 <h3 class="chart-section-heading">Overall Energy Balance</h3>
-                <div class="chart-filters"> /* ... Filters ... */ </div>
-                <div id="balanceCharts" class="chart-grid"> /* ... Chart boxes ... */ </div>
+                <div class="chart-grid">
+                    <div class="chart-box"><h3>Total FEC</h3><canvas id="fecFuelChart"></canvas></div>
+                    <div class="chart-box"><h3>Total PED</h3><canvas id="pedFuelChart"></canvas></div>
+                    <div class="chart-box"><h3>Total Useful Energy</h3><canvas id="ueFuelChart"></canvas></div>
+                </div>
             </section>
 
             <section id="supplyChartsSection" class="hidden">
-                <h3 class="chart-section-heading">Energy Supply & Transformations</h3>
-                <div id="supplyCharts" class="chart-grid"> /* ... Chart boxes ... */ </div>
+                <h3 class="chart-section-heading">Supply & Transformations</h3>
+                <div class="chart-grid">
+                    <div class="chart-box"><h3>Power Generation</h3><canvas id="powerMixChart"></canvas></div>
+                    <div class="chart-box"><h3>Hydrogen Production</h3><canvas id="hydrogenMixChart"></canvas></div>
+                    </div>
             </section>
 
-            <section id="sankeyChartSection" class="hidden">
-                <h3 class="chart-section-heading">Energy Flow Sankey Diagram</h3>
-                <div class="chart-filters">
-                     <div class="filter-group">
-                        <label for="selectSankeyYear">Select Year:</label>
-                        <select id="selectSankeyYear">
-                            </select>
-                    </div>
-                </div>
-                <div id="sankeyChartContainer">
-                    </div>
-            </section>
-            </div> </div> <footer> S-Curve Energy Model | Projections: 2023-2050 | Data Source: User Provided CSVs </footer>
+        </main>
+    </div>
+
+    <footer>
+        S-Curve Energy Model | Projections: 2023-2050
+    </footer>
 
     <script src="js/charting.js"></script>
-    <script src="js/dataLoader.js"></script>
-    <script src="js/modelLogic.js"></script>
+    <script src="js/dataLoader.js"></script> <script src="js/modelLogic.js"></script>
     <script src="js/uiController.js"></script>
-    <script src="js/main.js"></script>
-
-</body>
+    <script src="js/main.js"></script> </body>
 </html>
