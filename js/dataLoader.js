@@ -278,7 +278,7 @@ async function loadAndStructureData() {
             if (!response.ok) { if (response.status === 404) { console.warn(`File not found: ${path}. Treating as empty.`); rawData[key] = []; return; } throw new Error(`HTTP error! status: ${response.status} for ${path}`); }
             const csvText = await response.text();
             rawData[key] = parseCSV(csvText);
-            console.log(`Successfully loaded and parsed: ${path}`);
+            // console.log(`Successfully loaded and parsed: ${path}`); // Reduce console noise
         } catch (error) { console.error(`Failed to load or parse ${path}:`, error); rawData[key] = []; }
     });
     await Promise.all(loadPromises);
