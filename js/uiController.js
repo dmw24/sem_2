@@ -1,454 +1,167 @@
 // js/uiController.js
-// Version: Complete - k/t0 Inputs, Filters, Sankey Logic
+// Further refactored for maximum conciseness
 
-// --- UI Helper Functions ---
-/**
- * Toggles the display of collapsible group content.
- * @param {HTMLElement} el - The title element (h3 or h4) that was clicked.
- */
-function toggleGroup(el) {
-    let content = el.nextElementSibling;
-    // Ensure the sibling is the content div we expect
-    if (!content || (!content.classList.contains('group-content') && !content.classList.contains('sub-group-content'))) {
-        console.warn("Could not find content sibling for toggle element:", el);
-        return;
-    }
-    // Toggle display and arrow class
-    if (content.style.display === "none" || content.style.display === "") {
-        content.style.display = "block";
-        el.classList.remove("collapsed");
-        el.classList.add("expanded");
-    } else {
-        content.style.display = "none";
-        el.classList.remove("expanded");
-        el.classList.add("collapsed");
-    }
-}
-
-/**
- * Sanitizes a string to be used as part of an HTML ID.
- * Replaces invalid characters with underscores.
- */
-function sanitizeForId(str) {
-    if (typeof str !== 'string') str = String(str);
-    // Remove or replace characters invalid in IDs
-    let sanitized = str.replace(/[^a-zA-Z0-9_-]/g, '_');
-    // Collapse multiple consecutive underscores
-    sanitized = sanitized.replace(/__+/g, '_');
-    // Remove leading/trailing underscores
-    sanitized = sanitized.replace(/^_+|_+$/g, '');
-     // Prevent IDs starting with a digit
-     if (/^\d/.test(sanitized)) {
-         sanitized = 'id_' + sanitized;
-     }
-    // Fallback for empty or invalid strings
-    return sanitized || 'invalid_id';
-}
-
-/**
- * Shows or hides the S-curve parameter inputs based on the behavior selection.
- * @param {HTMLSelectElement} selectElement - The behavior select dropdown.
- * @param {string} paramKey - The unique key for this parameter set.
- */
-function toggleSCurveInputs(selectElement, paramKey) {
-    const containerId = `sCurveInputs_${sanitizeForId(paramKey)}`;
-    const container = document.getElementById(containerId);
-    if (container) {
-        const isVisible = selectElement.value === 's-curve';
-        container.style.display = isVisible ? 'block' : 'none';
-        container.classList.toggle('visible', isVisible);
-    }
-}
-
-// --- Dynamic Input Creation Helpers ---
-// Default behavior mappings (needed for setting initial UI state)
-const defaultDeclineDemandTechsUI = { 'Transport|Passenger cars': 'ICE', 'Transport|Trucks': 'ICE', 'Transport|Buses': 'ICE', 'Transport|2/3 wheelers': 'ICE', 'Transport|Ships': 'Conventional ship', 'Transport|Planes': 'Conventional plane', 'Transport|Trains': 'Diesel train', 'Industry|Steel': 'BF-BOF', 'Industry|Cement': 'Conventional kiln', 'Industry|Chemicals': 'Conventional', 'Industry|Low temp. heating': 'Fossil boiler', 'Industry|High temp. heating': 'Fossil furnace', 'Industry|Other industry - energy': 'Conventional', 'Buildings|Residential heating': 'Fossil boiler', 'Buildings|Residential cooking': 'Conventional fossil', 'Buildings|Residential lighting': 'Conventional', 'Buildings|Other residential': 'Conventional', 'Buildings|Building cooling': 'Low efficiency airco', 'Buildings|Commercial heating': 'Fossil boiler', 'Buildings|Commercial lighting': 'Conventional', 'Buildings|Other commercial': 'Conventional', 'Transport|Other transport': 'Conventional' };
-const defaultSCurveDemandTechsUI = { 'Transport|Passenger cars': 'EV', 'Transport|Trucks': 'EV', 'Transport|Buses': 'EV', 'Transport|2/3 wheelers': 'EV', 'Transport|Ships': 'Ammonia ship', 'Transport|Planes': 'Electric plane', 'Transport|Trains': 'Electric train', 'Industry|Steel': 'DRI-EAF (H2)', 'Industry|Cement': 'Electric kiln', 'Industry|Chemicals': 'Electrified', 'Industry|Low temp. heating': 'Heat pump', 'Industry|High temp. heating': 'Electric furnace', 'Industry|Other industry - energy': 'Electrified', 'Buildings|Residential heating': 'Heat pump', 'Buildings|Residential cooking': 'Electrified', 'Buildings|Residential lighting': 'Full LED', 'Buildings|Other residential': 'Electrified', 'Buildings|Building cooling': 'High efficiency airco', 'Buildings|Commercial heating': 'Heat pump', 'Buildings|Commercial lighting': 'Full LED', 'Buildings|Other commercial': 'Electrified', 'Transport|Other transport': 'Electrified' };
-const defaultDeclinePowerTechsUI = ['Gas power', 'Coal power', 'Oil power'];
-const defaultSCurvePowerTechsUI = ['Solar PV', 'Wind'];
-const defaultDeclineHydrogenTechsUI = ['Blue'];
-const defaultSCurveHydrogenTechsUI = ['Green'];
-// Define years locally for UI defaults
-const uiStartYear = 2023;
-const uiEndYear = 2050;
-
-/**
- * Creates the HTML elements for S-curve parameters (Target Share, Target Year, Steepness k, Midpoint Year t0).
- * @param {string} paramKey - Unique identifier for the parameter set.
- * @param {number} baseValue - The base year share value (%) for default target.
- * @returns {HTMLDivElement} The container div with the input elements.
- */
-const createSCurveParamInputs = (paramKey, baseValue) => {
-    const div = document.createElement('div');
-    div.className = 's-curve-inputs';
-    const sanitizedParamKey = sanitizeForId(paramKey);
-    div.id = `sCurveInputs_${sanitizedParamKey}`;
-
-    const targetInputId = `sCurveTarget_${sanitizedParamKey}`;
-    const targetYearInputId = `sCurveTargetYear_${sanitizedParamKey}`;
-    const kValueInputId = `sCurveKValue_${sanitizedParamKey}`;
-    const midpointYearInputId = `sCurveMidpointYear_${sanitizedParamKey}`; // t0 input ID
-
-    // Target Share Input
-    const targetLabel = document.createElement('label'); targetLabel.htmlFor = targetInputId; targetLabel.textContent = `Target Share (%):`;
-    const targetInput = document.createElement('input'); targetInput.type = 'number'; targetInput.id = targetInputId; targetInput.min = '0'; targetInput.max = '100'; targetInput.step = '1'; targetInput.value = Math.min(100, Math.max(0, baseValue + 5)).toFixed(1);
-    div.appendChild(targetLabel); div.appendChild(targetInput);
-
-    // Target Year Input
-    const targetYearLabel = document.createElement('label'); targetYearLabel.htmlFor = targetYearInputId; targetYearLabel.textContent = `Target Year:`;
-    const targetYearInput = document.createElement('input'); targetYearInput.type = 'number'; targetYearInput.id = targetYearInputId; targetYearInput.min = String(uiStartYear + 1); targetYearInput.max = String(uiEndYear + 10); targetYearInput.step = '1'; targetYearInput.value = String(uiEndYear);
-    div.appendChild(targetYearLabel); div.appendChild(targetYearInput);
-
-    // Steepness (k) Input
-    const kValueLabel = document.createElement('label'); kValueLabel.htmlFor = kValueInputId; kValueLabel.textContent = `Steepness (k):`;
-    const kValueInput = document.createElement('input'); kValueInput.type = 'number'; kValueInput.id = kValueInputId; kValueInput.min = '0.01'; kValueInput.max = '1.0'; kValueInput.step = '0.01'; kValueInput.value = '0.15'; // Default k
-    div.appendChild(kValueLabel); div.appendChild(kValueInput);
-    const kValueHelp = document.createElement('small'); kValueHelp.textContent = "Controls growth rate (e.g., 0.1 ≈ 10%/yr initial relative growth).";
-    div.appendChild(kValueHelp);
-
-    // Midpoint Year (t0) Input
-    const midpointYearLabel = document.createElement('label'); midpointYearLabel.htmlFor = midpointYearInputId; midpointYearLabel.textContent = `Midpoint Year (t0):`;
-    const midpointYearInput = document.createElement('input'); midpointYearInput.type = 'number'; midpointYearInput.id = midpointYearInputId; midpointYearInput.min = String(uiStartYear - 10); // Allow midpoint before start year
-    midpointYearInput.max = String(uiEndYear + 10); // Allow midpoint after target year
-    midpointYearInput.step = '1';
-    const defaultMidpoint = Math.round(uiStartYear + (parseInt(targetYearInput.value, 10) - uiStartYear) / 2); // Default halfway
-    midpointYearInput.value = String(defaultMidpoint);
-    div.appendChild(midpointYearLabel); div.appendChild(midpointYearInput);
-    const midpointHelp = document.createElement('small'); midpointHelp.textContent = "Year when growth is fastest.";
-    div.appendChild(midpointHelp);
-
-    return div;
+// --- UI Helpers (Concise) ---
+const toggleGroup = el => {
+    const content = el.nextElementSibling;
+    if (!content?.matches('.group-content, .sub-group-content')) return;
+    const isHidden = !content.style.display || content.style.display === "none";
+    content.style.display = isHidden ? "block" : "none";
+    el.classList.toggle("expanded", isHidden); el.classList.toggle("collapsed", !isHidden);
+};
+const sanitizeForId = (str = '') => String(str).replace(/[^a-zA-Z0-9_-]/g, '_').replace(/__+/g, '_').replace(/^_+|_+$/g, '') || 'invalid_id';
+const toggleSCurveInputsVisibility = sel => {
+    const container = sel.closest('.tech-input-container')?.querySelector('.s-curve-inputs');
+    if (container) container.style.display = sel.value === 's-curve' ? 'block' : 'none';
 };
 
-/**
- * Creates the HTML elements for a single technology's behavior controls.
- */
-const createTechInput = (categoryType, categoryKey, tech, baseMixObject) => {
-    const container = document.createElement('div');
-    container.className = 'tech-input-container';
-    const legend = document.createElement('legend');
-    legend.textContent = tech;
-    container.appendChild(legend);
-    const paramKey = `${categoryType}|${categoryKey}|${tech}`;
-    const sanitizedParamKey = sanitizeForId(paramKey);
-    const baseValue = (typeof getValue === 'function') ? getValue(baseMixObject, [tech], 0) : (baseMixObject?.[tech] || 0);
-    const behaviorDiv = document.createElement('div');
-    behaviorDiv.className = 'tech-behavior-selector';
-    const behaviorLabel = document.createElement('label');
-    behaviorLabel.htmlFor = `behavior_${sanitizedParamKey}`;
-    behaviorLabel.textContent = 'Behavior: ';
-    const behaviorSelect = document.createElement('select');
-    behaviorSelect.id = `behavior_${sanitizedParamKey}`;
-    behaviorSelect.onchange = () => toggleSCurveInputs(behaviorSelect, paramKey);
-    ['Fixed', 'S-Curve (Growth)', 'Decline'].forEach(opt => {
-        const option = document.createElement('option');
-        option.value = opt.toLowerCase().split(' ')[0];
-        option.textContent = opt;
-        behaviorSelect.appendChild(option);
+// --- Default Behaviors (Minimal) ---
+const defaultBehaviors = { dD: { /* declineDemand */ }, sD: { /* sCurveDemand */ }, dP: ['Gas power', 'Coal power', 'Oil power'], sP: ['Solar PV', 'Wind'], dH: ['Blue'], sH: ['Green'] }; // Populate dD, sD if needed, or remove if unused
+const getDefaultBehavior = (type, key, tech) => type === 'Demand' ? (defaultBehaviors.dD[key] === tech ? 'decline' : defaultBehaviors.sD[key] === tech ? 's-curve' : 'fixed') : type === 'Power' ? (defaultBehaviors.dP.includes(tech) ? 'decline' : defaultBehaviors.sP.includes(tech) ? 's-curve' : 'fixed') : type === 'Hydrogen' ? (defaultBehaviors.dH.includes(tech) ? 'decline' : defaultBehaviors.sH.includes(tech) ? 's-curve' : 'fixed') : 'fixed';
+
+// --- Dynamic Input Creation (Concise) ---
+const createEl = (tag, props = {}, children = []) => {
+    const el = document.createElement(tag);
+    Object.entries(props).forEach(([key, value]) => {
+        if (key === 'textContent') el.textContent = value;
+        else if (key === 'innerHTML') el.innerHTML = value;
+        else if (key === 'style') Object.assign(el.style, value);
+        else if (key.startsWith('on') && typeof value === 'function') el[key.toLowerCase()] = value; // Basic event handling
+        else el.setAttribute(key, value);
     });
-    let defaultBehavior = 'fixed';
-    const fullCatKey = categoryKey;
-    if ((categoryType === 'Demand' && defaultDeclineDemandTechsUI[fullCatKey] === tech) || (categoryType === 'Power' && defaultDeclinePowerTechsUI.includes(tech)) || (categoryType === 'Hydrogen' && defaultDeclineHydrogenTechsUI.includes(tech))) { defaultBehavior = 'decline'; }
-    else if ((categoryType === 'Demand' && defaultSCurveDemandTechsUI[fullCatKey] === tech) || (categoryType === 'Power' && defaultSCurvePowerTechsUI.includes(tech)) || (categoryType === 'Hydrogen' && defaultSCurveHydrogenTechsUI.includes(tech))) { defaultBehavior = 's-curve'; }
-    behaviorSelect.value = defaultBehavior;
-    behaviorDiv.appendChild(behaviorLabel);
-    behaviorDiv.appendChild(behaviorSelect);
-    container.appendChild(behaviorDiv);
-    const sCurveInputsDiv = createSCurveParamInputs(paramKey, baseValue);
-    container.appendChild(sCurveInputsDiv);
-    setTimeout(() => toggleSCurveInputs(behaviorSelect, paramKey), 0);
+    children.forEach(child => child && el.appendChild(typeof child === 'string' ? document.createTextNode(child) : child));
+    return el;
+};
+const createInputGrp = (id, type, props = {}, labelTxt, helpTxt) => createEl('div', { className: `input-group ig-${type}` }, [
+    createEl('label', { htmlFor: id, textContent: labelTxt }),
+    createEl('input', { id, type, ...props }),
+    helpTxt ? createEl('small', { textContent: helpTxt }) : null
+]);
+const createSCurveParams = (pKey, baseVal, startYr, endYr) => {
+    const sKey = sanitizeForId(pKey);
+    const tYr = endYr, midYr = Math.round(startYr + (tYr - startYr) / 2);
+    return createEl('div', { id: `sCurveInputs_${sKey}`, className: 's-curve-inputs' }, [ // Hidden by CSS
+        createInputGrp(`sCurveTarget_${sKey}`, 'number', { min: 0, max: 100, step: 1, value: Math.min(100, Math.max(0, baseVal + 5)).toFixed(1) }, 'Target Share (%):'),
+        createInputGrp(`sCurveTargetYear_${sKey}`, 'number', { min: startYr + 1, max: endYr + 10, step: 1, value: tYr }, 'Target Year:'),
+        createInputGrp(`sCurveKValue_${sKey}`, 'number', { min: 0.01, max: 1.0, step: 0.01, value: 0.15 }, 'Steepness (k):', 'Growth rate'),
+        createInputGrp(`sCurveMidpointYear_${sKey}`, 'number', { min: startYr - 10, max: endYr + 10, step: 1, value: midYr }, 'Midpoint Year (t0):', 'Fastest growth year')
+    ]);
+};
+const createTechInput = (catType, catKey, tech, baseVal, startYr, endYr) => {
+    const pKey = `${catType}|${catKey}|${tech}`, sKey = sanitizeForId(pKey);
+    const select = createEl('select', { id: `behavior_${sKey}`, onchange: e => toggleSCurveInputsVisibility(e.target) },
+        ['Fixed', 'S-Curve', 'Decline'].map(opt => createEl('option', { value: opt.toLowerCase(), textContent: opt }))
+    );
+    select.value = getDefaultBehavior(catType, catKey, tech);
+    const container = createEl('div', { className: 'tech-input-container' }, [
+        createEl('legend', { textContent: tech }),
+        createEl('div', { className: 'tech-behavior-selector' }, [ createEl('label', { htmlFor: select.id, textContent: 'Behavior: ' }), select ]),
+        createSCurveParams(pKey, baseVal, startYr, endYr)
+    ]);
+    setTimeout(() => toggleSCurveInputsVisibility(select), 0); // Ensure initial state
     return container;
 };
 
-
-// --- UI Initialization ---
-/**
- * Dynamically creates the input groups in the sidebar based on loaded data.
- */
+// --- UI Initialization (Concise) ---
 function initializeSidebarInputs(structuredData) {
-    console.log("Initializing sidebar inputs...");
-    const sidebarInputContainer = document.getElementById('inputGroupsContainer');
-    if (!sidebarInputContainer) { console.error("Sidebar input container (#inputGroupsContainer) not found!"); return; }
-    sidebarInputContainer.innerHTML = '';
-
-    const { sectors, subsectors, technologies, baseDemandTechMix, basePowerProdMix, baseHydrogenProdMix, powerTechs, hydrogenTechs } = structuredData || {};
-
-     if (!sectors || !subsectors || !technologies || !baseDemandTechMix || !basePowerProdMix || !baseHydrogenProdMix || !powerTechs || !hydrogenTechs) { console.error("DEBUG (uiController - initializeSidebarInputs): Missing essential data structures for building inputs!"); sidebarInputContainer.innerHTML = '<p style="color: red;">Error: Could not load data needed to build parameter inputs.</p>'; return; }
-     let groupsAddedCount = 0;
-
-    // Create End-Use Sector Groups
-    (sectors || []).forEach(s => {
-        if (s === 'Power' || s === 'Energy industry') return;
-        const sectorSubsectors = subsectors[s] || [];
-        if (sectorSubsectors.length === 0) return;
-
-        const sectorGroup = document.createElement('div'); sectorGroup.className = 'group';
-        const sectorTitle = document.createElement('h3'); sectorTitle.className = 'group-title collapsed'; sectorTitle.textContent = s; sectorTitle.onclick = function() { toggleGroup(this); };
-        const sectorContent = document.createElement('div'); sectorContent.className = 'group-content'; sectorContent.style.display = 'none';
-
-        sectorSubsectors.forEach(b => {
-            const subGroup = document.createElement('div'); subGroup.className = 'sub-group';
-            const subTitle = document.createElement('h4'); subTitle.className = 'sub-group-title collapsed'; subTitle.textContent = b; subTitle.onclick = function() { toggleGroup(this); };
-            const subContent = document.createElement('div'); subContent.className = 'sub-group-content'; subContent.style.display = 'none';
-            const activityDiv = document.createElement('div'); activityDiv.className = 'activity-growth-input'; const activityLabel = document.createElement('label'); const activityInputId = `growth_${sanitizeForId(s)}_${sanitizeForId(b)}`; activityLabel.htmlFor = activityInputId; activityLabel.textContent = `Activity Growth (%/yr):`; const activityInput = document.createElement('input'); activityInput.type = 'number'; activityInput.id = activityInputId; activityInput.value = '0.5'; activityInput.step = '0.1'; activityDiv.appendChild(activityLabel); activityDiv.appendChild(activityInput); subContent.appendChild(activityDiv);
-            const techs = technologies[s]?.[b] || [];
-            const baseMix = getValue(baseDemandTechMix, [s, b], {});
-            if (techs.length === 0) { subContent.innerHTML += '<p><small>No technologies defined.</small></p>'; }
-            else { techs.forEach(t => { subContent.appendChild(createTechInput('Demand', `${s}|${b}`, t, baseMix)); }); }
-            subGroup.appendChild(subTitle); subGroup.appendChild(subContent); sectorContent.appendChild(subGroup);
+    const cont = document.getElementById('inputGroupsContainer');
+    if (!cont) return console.error("Sidebar container not found!");
+    cont.innerHTML = '';
+    const { sectors = [], subsectors = {}, technologies = {}, baseDemandTechMix = {}, basePowerProdMix = {}, baseHydrogenProdMix = {}, powerTechs = [], hydrogenTechs = [], startYear, endYear } = structuredData ?? {};
+    const frag = document.createDocumentFragment();
+    const createGroup = (title, contentCb) => {
+        const contentEl = createEl('div', { className: 'group-content' }); contentCb(contentEl); // Hidden by CSS
+        return createEl('div', { className: 'group' }, [
+            createEl('h3', { className: 'group-title collapsed', textContent: title, onclick: e => toggleGroup(e.target) }), contentEl
+        ]);
+    };
+    sectors.filter(s => !['Power', 'Energy industry'].includes(s)).forEach(s => frag.appendChild(createGroup(s, sCont => {
+        (subsectors[s] || []).forEach(b => {
+            const subContent = createEl('div', { className: 'sub-group-content' }); // Hidden by CSS
+            subContent.appendChild(createInputGrp(`growth_${sanitizeForId(s)}_${sanitizeForId(b)}`, 'number', { value: 0.5, step: 0.1 }, `Activity Growth (%/yr):`));
+            const baseMix = baseDemandTechMix?.[s]?.[b] ?? {};
+            (technologies?.[s]?.[b] ?? []).forEach(t => subContent.appendChild(createTechInput('Demand', `${s}|${b}`, t, baseMix[t] ?? 0, startYear, endYear)));
+            sCont.appendChild(createEl('div', { className: 'sub-group' }, [
+                createEl('h4', { className: 'sub-group-title collapsed', textContent: b, onclick: e => toggleGroup(e.target) }), subContent
+            ]));
         });
-        sectorGroup.appendChild(sectorTitle); sectorGroup.appendChild(sectorContent); sidebarInputContainer.appendChild(sectorGroup); groupsAddedCount++;
-    });
-
-    // Create Power Generation Group
-    const powerGroup = document.createElement('div'); powerGroup.className = 'group'; const powerTitle = document.createElement('h3'); powerTitle.className = 'group-title collapsed'; powerTitle.textContent = 'Power Generation'; powerTitle.onclick = function() { toggleGroup(this); }; const powerContent = document.createElement('div'); powerContent.className = 'group-content'; powerContent.style.display = 'none';
-    (powerTechs || []).forEach(t => { powerContent.appendChild(createTechInput('Power', 'Power', t, basePowerProdMix)); });
-    powerGroup.appendChild(powerTitle); powerGroup.appendChild(powerContent); sidebarInputContainer.appendChild(powerGroup); groupsAddedCount++;
-
-    // Create Hydrogen Production Group
-    const hydrogenGroup = document.createElement('div'); hydrogenGroup.className = 'group'; const hydrogenTitle = document.createElement('h3'); hydrogenTitle.className = 'group-title collapsed'; hydrogenTitle.textContent = 'Hydrogen Production'; hydrogenTitle.onclick = function() { toggleGroup(this); }; const hydrogenContent = document.createElement('div'); hydrogenContent.className = 'group-content'; hydrogenContent.style.display = 'none';
-    (hydrogenTechs || []).forEach(t => { hydrogenContent.appendChild(createTechInput('Hydrogen', 'Hydrogen', t, baseHydrogenProdMix)); });
-    hydrogenGroup.appendChild(hydrogenTitle); hydrogenGroup.appendChild(hydrogenContent); sidebarInputContainer.appendChild(hydrogenGroup); groupsAddedCount++;
-
-    if(groupsAddedCount === 0) { sidebarInputContainer.innerHTML = '<p style="color: orange;">Warning: No input groups were generated.</p>'; }
+    })));
+    frag.appendChild(createGroup('Power Generation', pCont => powerTechs.forEach(t => pCont.appendChild(createTechInput('Power', 'Power', t, basePowerProdMix[t] ?? 0, startYear, endYear)))));
+    frag.appendChild(createGroup('Hydrogen Production', hCont => hydrogenTechs.forEach(t => hCont.appendChild(createTechInput('Hydrogen', 'Hydrogen', t, baseHydrogenProdMix[t] ?? 0, startYear, endYear)))));
+    cont.appendChild(frag);
     console.log("Sidebar inputs initialized.");
 }
-
-/**
- * Populates the subsector selection dropdown.
- */
 function populateSubsectorDropdown(structuredData) {
-    const subsectorSelect = document.getElementById('selectSubsector'); if (!subsectorSelect) { console.error("Subsector select dropdown not found!"); return; } subsectorSelect.innerHTML = ''; const { allEndUseSubsectors } = structuredData; let firstSubsectorKey = null; if (!allEndUseSubsectors || allEndUseSubsectors.length === 0) { console.warn("No end-use subsectors found in data to populate dropdown."); const option = document.createElement('option'); option.value = ""; option.textContent = "No subsectors available"; subsectorSelect.appendChild(option); return; } allEndUseSubsectors.forEach(({ sector, subsector }) => { const option = document.createElement('option'); const key = `${sector}|${subsector}`; option.value = key; option.textContent = `${sector} - ${subsector}`; subsectorSelect.appendChild(option); if (!firstSubsectorKey) firstSubsectorKey = key; }); if (firstSubsectorKey) { subsectorSelect.value = firstSubsectorKey; const subsectorNameSpan = document.getElementById('selectedSubsectorName'); if (subsectorNameSpan) { const [selSector, selSubsector] = firstSubsectorKey.split('|'); subsectorNameSpan.textContent = `${selSector} - ${selSubsector}`; } } console.log("Subsector dropdown populated."); }
-
-/**
- * Populates the sector filter dropdown for the balance charts.
- */
-function populateBalanceFilters(structuredData) {
-    const sectorSelect = document.getElementById('selectBalanceSector'); if (!sectorSelect) { console.error("Balance chart sector filter not found!"); return; } sectorSelect.innerHTML = '<option value="all" selected>All Sectors</option>';
-    (structuredData.sectors || []).forEach(sector => { const option = document.createElement('option'); option.value = sector; option.textContent = (sector === 'Energy industry') ? 'Hydrogen Supply' : sector; sectorSelect.appendChild(option); });
-    const subsectorContainer = document.getElementById('balanceSubsectorFilterContainer'); if (subsectorContainer) { subsectorContainer.classList.add('hidden'); } console.log("Balance chart filters populated."); }
-
-/**
- * Updates the subsector filter dropdown based on the selected sector.
- */
-function updateBalanceSubsectorFilter(selectedSector, structuredData) {
-    const subsectorContainer = document.getElementById('balanceSubsectorFilterContainer'); const subsectorSelect = document.getElementById('selectBalanceSubsector'); if (!subsectorContainer || !subsectorSelect) { console.error("Balance subsector filter elements not found!"); return; } subsectorSelect.innerHTML = '<option value="all" selected>All Subsectors</option>'; const isEndUseSector = selectedSector && selectedSector !== 'all' && selectedSector !== 'Power' && selectedSector !== 'Energy industry'; if (isEndUseSector && structuredData.subsectors && structuredData.subsectors[selectedSector]) { (structuredData.subsectors[selectedSector] || []).forEach(subsector => { const option = document.createElement('option'); option.value = subsector; option.textContent = subsector; subsectorSelect.appendChild(option); }); subsectorContainer.classList.remove('hidden'); } else { subsectorContainer.classList.add('hidden'); } }
-
-/**
- * Updates visibility of FEC and UE charts based on selected sector filter.
- */
-function updateBalanceChartVisibility(selectedSector) {
-    const fecChartBox = document.getElementById('fecChartBox');
-    const ueChartBox = document.getElementById('ueChartBox');
-    const hideFecUe = (selectedSector === 'Power' || selectedSector === 'Energy industry');
-    // console.log(`DEBUG: Updating balance chart visibility. Selected Sector: ${selectedSector}, Hide FEC/UE: ${hideFecUe}`); // DEBUG
-    if (fecChartBox) fecChartBox.classList.toggle('hidden', hideFecUe);
-    if (ueChartBox) ueChartBox.classList.toggle('hidden', hideFecUe);
-}
-
-/**
- * Populates the year selector dropdown for the Sankey chart.
- */
-function populateSankeyYearSelector(structuredData) {
-    const yearSelect = document.getElementById('selectSankeyYear');
-    if (!yearSelect) { console.error("Sankey year selector not found!"); return; }
-    yearSelect.innerHTML = ''; // Clear existing options
-
-    if (!structuredData?.years || structuredData.years.length === 0) {
-        console.error("Years data missing for Sankey selector.");
-        return;
+    const sel = document.getElementById('selectSubsector'); if (!sel) return;
+    sel.innerHTML = ''; // Clear
+    const subsectors = structuredData?.allEndUseSubsectors ?? [];
+    if (!subsectors.length) { sel.add(new Option("No subsectors", "")); return; }
+    subsectors.forEach(({ sector, subsector }) => sel.add(new Option(`${sector} - ${subsector}`, `${sector}|${subsector}`)));
+    if (sel.options.length > 0) {
+        sel.value = sel.options[0].value;
+        const nameSpan = document.getElementById('selectedSubsectorName');
+        if (nameSpan) nameSpan.textContent = sel.options[0].text;
     }
-    // Populate with years, selecting the last year by default
-    structuredData.years.forEach(year => {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        yearSelect.appendChild(option);
-    });
-    yearSelect.value = structuredData.years[structuredData.years.length - 1]; // Default to last year
-    console.log("Sankey year selector populated.");
+    console.log("Subsector dropdown populated.");
 }
 
-
-// --- Input Gathering ---
-/**
- * Reads the current values from all sidebar inputs.
- */
+// --- Input Gathering (Concise) ---
 function getUserInputsAndParams(structuredData) {
-    const { sectors, subsectors, technologies, powerTechs, hydrogenTechs, allEndUseSubsectors, startYear, endYear } = structuredData;
-    const userInputParameters = { activityGrowthFactors: {}, techBehaviorsAndParams: {} };
-
-    // Read Activity Growth Rates
-    (allEndUseSubsectors || []).forEach(({ sector, subsector }) => { const inputId = `growth_${sanitizeForId(sector)}_${sanitizeForId(subsector)}`; const inputElement = document.getElementById(inputId); const growthPercent = inputElement ? parseFloat(inputElement.value) : 0; const growthFactor = isNaN(growthPercent) ? 1.0 : 1 + (growthPercent / 100); userInputParameters.activityGrowthFactors[`${sector}|${subsector}`] = growthFactor; });
-
-    // Read Technology Behaviors and S-Curve Parameters
-    const readTechInputs = (categoryType, categoryKey, techList) => {
-        (techList || []).forEach(t => {
-            const paramKey = `${categoryType}|${categoryKey}|${t}`;
-            const sanitizedParamKey = sanitizeForId(paramKey);
-            const behaviorEl = document.getElementById(`behavior_${sanitizedParamKey}`);
-            const behavior = behaviorEl ? behaviorEl.value : 'fixed';
-            const techParams = { behavior: behavior };
-
-            if (behavior === 's-curve') {
-                const targetEl = document.getElementById(`sCurveTarget_${sanitizedParamKey}`);
-                const targetYearEl = document.getElementById(`sCurveTargetYear_${sanitizedParamKey}`);
-                const kValueEl = document.getElementById(`sCurveKValue_${sanitizedParamKey}`);
-                const midpointYearEl = document.getElementById(`sCurveMidpointYear_${sanitizedParamKey}`);
-
-                techParams.targetShare = targetEl ? parseFloat(targetEl.value) : 0;
-                techParams.targetYear = targetYearEl ? parseInt(targetYearEl.value, 10) : endYear;
-                techParams.kValue = kValueEl ? parseFloat(kValueEl.value) : 0.15; // Read k
-                techParams.midpointYear = midpointYearEl ? parseInt(midpointYearEl.value, 10) : Math.round(startYear + (endYear - startYear) / 2); // Read t0
-
-                // Basic validation/defaults
-                if (isNaN(techParams.targetShare)) techParams.targetShare = 0;
-                if (isNaN(techParams.targetYear)) techParams.targetYear = endYear;
-                if (isNaN(techParams.kValue) || techParams.kValue <= 0) techParams.kValue = 0.15;
-                if (isNaN(techParams.midpointYear)) { techParams.midpointYear = Math.round(startYear + (techParams.targetYear - startYear) / 2); }
-            }
-            userInputParameters.techBehaviorsAndParams[paramKey] = techParams;
-        });
-    };
-
-    // Read Demand, Power, Hydrogen Techs
-    sectors.forEach(s => { if (subsectors[s]){ subsectors[s].forEach(b => { readTechInputs('Demand', `${s}|${b}`, technologies[s]?.[b] || []); }); } });
-    readTechInputs('Power', 'Power', powerTechs);
-    readTechInputs('Hydrogen', 'Hydrogen', hydrogenTechs);
-
-    return userInputParameters;
+    const { sectors = [], subsectors = {}, technologies = {}, powerTechs = [], hydrogenTechs = [], allEndUseSubsectors = [], startYear, endYear } = structuredData ?? {};
+    const params = { activityGrowthFactors: {}, techBehaviorsAndParams: {} };
+    allEndUseSubsectors.forEach(({ sector, subsector }) => {
+        const input = document.getElementById(`growth_${sanitizeForId(sector)}_${sanitizeForId(subsector)}`);
+        const growthPc = parseFloat(input?.value ?? '0');
+        params.activityGrowthFactors[`${sector}|${subsector}`] = isNaN(growthPc) ? 1.0 : 1 + growthPc / 100;
+    });
+    const readTechs = (catType, catKey, techList) => (techList || []).forEach(t => {
+        const pKey = `${catType}|${catKey}|${t}`, sKey = sanitizeForId(pKey);
+        const behavior = document.getElementById(`behavior_${sKey}`)?.value ?? 'fixed';
+        const techP = { behavior };
+        if (behavior === 's-curve') {
+            const getVal = (elId, parseFn, defaultVal) => { const v = parseFn(document.getElementById(elId)?.value); return isNaN(v) ? defaultVal : v; };
+            const targetYr = getVal(`sCurveTargetYear_${sKey}`, parseInt, endYear);
+            const kVal = getVal(`sCurveKValue_${sKey}`, parseFloat, 0.15);
+            const midYr = getVal(`sCurveMidpointYear_${sKey}`, parseInt, Math.round(startYear + (targetYr - startYear) / 2));
+            techP.targetShare = getVal(`sCurveTarget_${sKey}`, parseFloat, 0);
+            techP.targetYear = targetYr; techP.kValue = kVal <= 0 ? 0.15 : kVal; techP.midpointYear = midYr;
+        }
+        params.techBehaviorsAndParams[pKey] = techP;
+    });
+    sectors.forEach(s => (subsectors[s] || []).forEach(b => readTechs('Demand', `${s}|${b}`, technologies?.[s]?.[b])));
+    readTechs('Power', 'Power', powerTechs); readTechs('Hydrogen', 'Hydrogen', hydrogenTechs);
+    return params;
 }
 
-
-// --- Event Listener Setup ---
-
-// Helper to trigger chart update - defined globally within this file's scope
-function triggerChartUpdate() {
-    // Ensure necessary functions and state are available
-    // Assumes appState, updateCharts, getCurrentFilters are accessible globally or imported
-    if (typeof updateCharts !== 'function') { console.error("updateCharts function is not defined."); return; }
-    if (typeof getCurrentFilters !== 'function') { console.error("getCurrentFilters function is not defined."); return; }
-    // Check if appState and necessary properties exist
-    if (typeof appState !== 'object' || !appState.latestResults || !appState.structuredData) {
-         console.warn("Cannot trigger chart update: Results or structured data not available in appState.");
-         return;
-    }
-    const filters = getCurrentFilters(); // Get current filter state
-    // console.log("Triggering chart update with filters:", filters); // DEBUG
-    updateCharts(appState.latestResults, appState.structuredData, filters); // Pass filters
-};
-
-
-/**
- * Handles changes in the main chart view selector dropdown.
- */
+// --- Event Listeners (Concise) ---
 function handleChartViewChange() {
-    const chartViewSelect = document.getElementById('selectChartView');
-    const subsectorSelectorDiv = document.getElementById('subsectorSelector');
-    const subsectorChartsSection = document.getElementById('subsectorChartsSection');
-    const balanceChartsSection = document.getElementById('balanceChartsSection');
-    const supplyChartsSection = document.getElementById('supplyChartsSection');
-    const sankeyChartSection = document.getElementById('sankeyChartSection'); // Get Sankey section
-    const balanceSectorSelect = document.getElementById('selectBalanceSector'); // Needed for visibility check
-
-    if (!chartViewSelect || !subsectorSelectorDiv || !subsectorChartsSection || !balanceChartsSection || !supplyChartsSection || !sankeyChartSection || !balanceSectorSelect) {
-        console.error("One or more chart view elements not found!");
-        return;
-    }
-
-    const selectedView = chartViewSelect.value;
-    const selectedBalanceSector = balanceSectorSelect.value;
-
-    // Show/hide subsector selector (only for subsector view)
-    subsectorSelectorDiv.classList.toggle('hidden', selectedView !== 'subsector');
-
-    // Show/hide chart sections
-    const showSubsector = selectedView === 'subsector';
-    const showBalance = selectedView === 'balance';
-    const showSupply = selectedView === 'supply';
-    const showSankey = selectedView === 'sankey'; // Check for Sankey view
-
-    subsectorChartsSection.classList.toggle('hidden', !showSubsector);
-    balanceChartsSection.classList.toggle('hidden', !showBalance);
-    supplyChartsSection.classList.toggle('hidden', !showSupply);
-    sankeyChartSection.classList.toggle('hidden', !showSankey); // Toggle Sankey section
-
-    console.log(`Chart view changed to: ${selectedView}`);
-
-    // Update visibility of balance charts specifically if balance view is selected
-    if (showBalance) {
-        updateBalanceChartVisibility(selectedBalanceSector);
-    }
-
-    // Trigger chart update AFTER visibility is set for the newly visible section
-     if (typeof appState !== 'object' || !appState.latestResults) {
-         // console.log("No results yet, skipping chart update on view change."); // Reduce noise
-     } else {
-         // Only trigger update if the relevant section is now visible
-         if ((showSubsector && !subsectorChartsSection.classList.contains('hidden')) ||
-             (showBalance && !balanceChartsSection.classList.contains('hidden')) ||
-             (showSupply && !supplyChartsSection.classList.contains('hidden')) ||
-             (showSankey && !sankeyChartSection.classList.contains('hidden'))) // Include Sankey check
-         {
-              console.log("View changed, triggering chart update for visible section.");
-              triggerChartUpdate();
-         }
-     }
+    const view = document.getElementById('selectChartView')?.value ?? 'subsector';
+    document.getElementById('subsectorSelector')?.classList.toggle('hidden', view !== 'subsector');
+    ['subsectorChartsSection', 'balanceChartsSection', 'supplyChartsSection'].forEach(id => {
+        document.getElementById(id)?.classList.toggle('hidden', !id.toLowerCase().includes(view));
+    });
 }
-
-
-/**
- * Gets the current filter settings from the UI.
- */
-function getCurrentFilters() {
-    const balanceSectorSelect = document.getElementById('selectBalanceSector');
-    const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector');
-    const ueModeFuel = document.querySelector('input[name="ueDisplayMode"][value="fuel"]');
-    const sankeyYearSelect = document.getElementById('selectSankeyYear'); // Get Sankey year selector
-
-    return {
-        balanceSector: balanceSectorSelect ? balanceSectorSelect.value : 'all',
-        balanceSubsector: balanceSubsectorSelect ? balanceSubsectorSelect.value : 'all',
-        ueDisplayMode: ueModeFuel?.checked ? 'fuel' : 'type',
-        sankeyYear: sankeyYearSelect ? parseInt(sankeyYearSelect.value, 10) : uiEndYear // Default to last year if null
-    };
-}
-
-/**
- * Sets up event listeners for the Run button and all dropdowns/filters.
- * @param {object} appState - The shared application state object from main.js
- */
 function setupEventListeners(appState) {
-    const runButton = document.getElementById('runModelBtn');
-    const subsectorSelect = document.getElementById('selectSubsector');
-    const chartViewSelect = document.getElementById('selectChartView');
-    const balanceSectorSelect = document.getElementById('selectBalanceSector');
-    const balanceSubsectorSelect = document.getElementById('selectBalanceSubsector');
-    const ueDisplayModeRadios = document.querySelectorAll('input[name="ueDisplayMode"]');
-    const sankeyYearSelect = document.getElementById('selectSankeyYear'); // Get Sankey year selector
-
-    const { structuredData } = appState;
-    if (!structuredData) { console.error("Cannot setup event listeners: structuredData missing."); return; }
-
-    // Check elements exist
-    if (!runButton || !subsectorSelect || !chartViewSelect || !balanceSectorSelect || !balanceSubsectorSelect || !ueDisplayModeRadios || !sankeyYearSelect) {
-        console.error("One or more UI elements for event listeners not found!");
-        return;
-    }
-
-    // Assign Listeners
-    runButton.onclick = async () => { runButton.disabled = true; runButton.textContent = 'Calculating...'; console.log("Run button clicked..."); try { const userInputs = getUserInputsAndParams(structuredData); if (typeof runModelCalculation !== 'function') { throw new Error("runModelCalculation function is not defined."); } const modelResults = await runModelCalculation(structuredData, userInputs); appState.latestResults = modelResults; triggerChartUpdate(); } catch (error) { console.error("Error during model execution or chart update:", error); alert(`An error occurred: ${error.message}.`); } finally { runButton.disabled = false; runButton.textContent = 'Run Model & Update Charts'; } };
-    subsectorSelect.onchange = () => { console.log("Subsector selection changed."); triggerChartUpdate(); };
-    chartViewSelect.onchange = handleChartViewChange; // Use the updated handler
-    balanceSectorSelect.onchange = () => { console.log("Balance sector filter changed."); const selectedSector = balanceSectorSelect.value; updateBalanceSubsectorFilter(selectedSector, structuredData); updateBalanceChartVisibility(selectedSector); triggerChartUpdate(); };
-    balanceSubsectorSelect.onchange = () => { console.log("Balance subsector filter changed."); triggerChartUpdate(); };
-    ueDisplayModeRadios.forEach(radio => { radio.onchange = () => { if (radio.checked) { console.log(`UE display mode changed to: ${radio.value}`); triggerChartUpdate(); } }; });
-    sankeyYearSelect.onchange = () => { console.log("Sankey year selection changed."); triggerChartUpdate(); }; // Trigger update for Sankey
-
-    // Initial setup for visibility
-    handleChartViewChange();
-    updateBalanceChartVisibility(balanceSectorSelect.value);
-
-    console.log("UI Event listeners set up.");
+    const btn = document.getElementById('runModelBtn'), subSel = document.getElementById('selectSubsector'), viewSel = document.getElementById('selectChartView');
+    if (!btn || !subSel || !viewSel || !appState.structuredData) return console.error("Missing elements/data for listeners.");
+    btn.onclick = async () => {
+        btn.disabled = true; btn.textContent = 'Calculating...';
+        try {
+            if (typeof runModelCalculation !== 'function' || typeof updateCharts !== 'function' || typeof getUserInputsAndParams !== 'function') throw new Error("Core function missing.");
+            const inputs = getUserInputsAndParams(appState.structuredData);
+            appState.latestResults = await runModelCalculation(appState.structuredData, inputs);
+            updateCharts(appState.latestResults, appState.structuredData);
+        } catch (err) { console.error("Run error:", err); alert(`Error: ${err.message}.`); }
+        finally { btn.disabled = false; btn.textContent = 'Run Model & Update Charts'; }
+    };
+    subSel.onchange = () => {
+        if (typeof updateCharts === 'function' && appState.latestResults) {
+            const nameSpan = document.getElementById('selectedSubsectorName');
+            if (nameSpan && subSel.selectedIndex >= 0) nameSpan.textContent = subSel.options[subSel.selectedIndex].text;
+            updateCharts(appState.latestResults, appState.structuredData);
+        }
+    };
+    viewSel.onchange = handleChartViewChange;
+    handleChartViewChange(); // Initial call
+    console.log("UI Listeners set up.");
 }
-
