@@ -1,5 +1,6 @@
 // js/dataLoader.js
 // Further refactored for maximum conciseness
+// Fixed TypeError: ensurePath(...).add is not a function
 
 const CSV_FILES = { activityLevel: 'data/Activity_level.csv', usefulEnergyConv: 'data/Useful_energy_conv.csv', endUseTechMix: 'data/EndUseTechMix.csv', endUseTechEnergyCons: 'data/EndUseTech_energy_cons.csv', powerTechMix: 'data/Power_tech_mix.csv', hydrogenTechMix: 'data/Hydrogen_tech_mix.csv', hydrogenTechEff: 'data/Hydrogen_tech_eff.csv', powerTechEff: 'data/Power_tech_eff.csv', otherTransform: 'data/Other_transform_tech_energy_int.csv' };
 const START_YEAR = 2023;
@@ -35,11 +36,23 @@ const transformData = (rawData) => {
     };
     const val2023 = String(START_YEAR);
     const ensurePath = (obj, path) => path.reduce((acc, key) => (acc[key] = acc[key] || {}), obj);
-    const addMeta = (r, fuelsSet = null) => { // Helper to add sector/subsector/tech meta
+
+    // Helper to add sector/subsector/tech meta
+    const addMeta = (r, fuelsSet = null) => {
         if (!r?.Sector) return;
         d.allSectors.add(r.Sector);
+        // Ensure subsector Set exists and add subsector
         if (r.Subsector) (d.allSubsectors[r.Sector] = d.allSubsectors[r.Sector] || new Set()).add(r.Subsector);
-        if (r.Subsector && r.Technology) (ensurePath(d.allTechnologies, [r.Sector, r.Subsector])).add(r.Technology);
+        // Ensure technology Set exists and add technology
+        if (r.Subsector && r.Technology) {
+            // 1. Ensure the Sector object exists in allTechnologies
+            const techSectorContainer = ensurePath(d.allTechnologies, [r.Sector]); // Gets d.allTechnologies[r.Sector] or creates {}
+            // 2. Ensure the Subsector property within that Sector object holds a Set
+            techSectorContainer[r.Subsector] = techSectorContainer[r.Subsector] || new Set();
+            // 3. Add the technology to that Set
+            techSectorContainer[r.Subsector].add(r.Technology);
+        }
+        // Add fuel if applicable
         if (fuelsSet && r.Fuel) fuelsSet.add(r.Fuel);
     };
 
@@ -52,17 +65,17 @@ const transformData = (rawData) => {
     rawData.endUseTechMix?.forEach(r => {
         if (!r.Sector || !r.Subsector || !r.Technology) return;
         ensurePath(d.baseDemandTechMix, [r.Sector, r.Subsector])[r.Technology] = (r[val2023] || 0) * 100;
-        addMeta(r);
+        addMeta(r); // Will add Sector, Subsector, and Technology to metadata Sets
     });
     rawData.endUseTechEnergyCons?.forEach(r => {
         if (!r.Sector || !r.Subsector || !r.Technology || !r.Fuel) return;
         ensurePath(d.unitEnergyConsumption, [r.Sector, r.Subsector, r.Technology])[r.Fuel] = (r[val2023] || 0) * GJ_PER_TJ;
-        addMeta(r, d.endUseFuels);
+        addMeta(r, d.endUseFuels); // Will add S/S/T and Fuel
     });
     rawData.usefulEnergyConv?.forEach(r => {
         if (!r.Sector || !r.Subsector || !r.Technology || !r.Fuel) return;
         ensurePath(d.placeholderUsefulEfficiency, [r.Sector, r.Subsector, r.Technology])[r.Fuel] = r[val2023] || 0;
-        addMeta(r, d.endUseFuels);
+        addMeta(r, d.endUseFuels); // Will add S/S/T and Fuel
     });
     rawData.powerTechMix?.forEach(r => r.Technology && (d.basePowerProdMix[r.Technology] = (r[val2023] || 0) * 100));
     rawData.powerTechEff?.forEach(r => {
@@ -108,10 +121,26 @@ const transformData = (rawData) => {
     d.sectors = Array.from(d.allSectors).concat(['Power', 'Energy industry']);
     d.subsectors = d.sectors.reduce((acc, s) => ({ ...acc, [s]: Array.from(d.allSubsectors[s] || []) }), {});
     d.subsectors['Power'] = ['Electricity']; d.subsectors['Energy industry'] = ['Hydrogen'];
+    // Convert nested technology Sets to Arrays
     d.technologies = d.sectors.reduce((acc, s) => {
-        acc[s] = d.subsectors[s]?.reduce((subAcc, b) => ({ ...subAcc, [b]: Array.from(d.allTechnologies[s]?.[b] || []) }), {});
+        acc[s] = {}; // Ensure sector object exists
+        if (d.allTechnologies[s]) { // Check if sector exists in the temp structure
+             Object.entries(d.allTechnologies[s]).forEach(([subsector, techSet]) => {
+                 if (techSet instanceof Set) { // Check if it's a Set before converting
+                     acc[s][subsector] = Array.from(techSet);
+                 } else {
+                     console.warn(`Expected Set for technologies[${s}][${subsector}], found:`, techSet);
+                     acc[s][subsector] = []; // Default to empty array if not a Set
+                 }
+             });
+        }
+        // Ensure subsectors defined in d.subsectors but maybe not in d.allTechnologies get an empty array
+        (d.subsectors[s] || []).forEach(b => {
+             acc[s][b] = acc[s][b] || [];
+        });
         return acc;
     }, {});
+
     d.technologies['Power'] = { 'Electricity': Object.keys(d.basePowerProdMix) };
     d.technologies['Energy industry'] = { 'Hydrogen': Object.keys(d.baseHydrogenProdMix) };
     d.endUseFuels = Array.from(d.endUseFuels); d.primaryFuels = Array.from(d.primaryFuels);
@@ -145,6 +174,6 @@ async function loadAndStructureData() {
         return structuredModelData;
     } catch (transformError) {
         console.error("Data transformation error:", transformError);
-        structuredModelData = null; throw transformError;
+        structuredModelData = null; throw transformError; // Re-throw error
     }
 }
