@@ -1,85 +1,47 @@
 // js/main.js
-// Version: Corrected Initialization Order
+// Further refactored for maximum conciseness
 
-// Simple state object to hold shared data
-const appState = {
-    structuredData: null,
-    latestResults: null
-};
+const appState = { structuredData: null, latestResults: null };
 
-/**
- * Main initialization function for the application.
- */
 async function initializeApp() {
-    console.log("Application starting initialization...");
-    const runButton = document.getElementById('runModelBtn');
+    console.log("App init...");
+    const btn = document.getElementById('runModelBtn');
+    const setBtn = (text, disabled) => { if(btn) { btn.textContent = text; btn.disabled = disabled; } };
+    const showError = (msg) => {
+        console.error("Init Error:", msg);
+        document.getElementById('content')?.insertAdjacentHTML('afterbegin', `<p style='color:red;'>Error: ${msg}</p>`);
+        setBtn('Init Failed', true); alert(`Init Error: ${msg}`);
+    };
 
     try {
-        if (runButton) { runButton.disabled = true; runButton.textContent = 'Loading Data...'; }
-
-        // --- Step 1: Load and structure data ---
-        appState.structuredData = await loadAndStructureData();
-        if (!appState.structuredData || !appState.structuredData.sectors || appState.structuredData.sectors.length === 0) {
-            throw new Error("Essential data (sectors) failed to load or is empty.");
+        setBtn('Loading...', true);
+        // Basic check for function existence (assumes they are global)
+        if (![loadAndStructureData, initializeSidebarInputs, populateSubsectorDropdown, setupEventListeners, getUserInputsAndParams, runModelCalculation, updateCharts].every(f => typeof f === 'function')) {
+            throw new Error("Core function missing.");
         }
-        console.log("Data loaded and structured successfully.");
+        appState.structuredData = await loadAndStructureData();
+        if (!appState.structuredData?.sectors?.length) throw new Error("Data load failed.");
+        console.log("Data loaded.");
 
-        // --- Step 2: Initialize UI elements that DEPEND on structuredData ---
-        // Check functions exist before calling
-        if (typeof initializeSidebarInputs === 'function') {
-            initializeSidebarInputs(appState.structuredData);
-        } else { throw new Error("initializeSidebarInputs function not defined."); }
+        initializeSidebarInputs(appState.structuredData);
+        populateSubsectorDropdown(appState.structuredData);
+        console.log("UI init.");
 
-        if (typeof populateSubsectorDropdown === 'function') {
-            populateSubsectorDropdown(appState.structuredData);
-        } else { throw new Error("populateSubsectorDropdown function not defined."); }
+        setupEventListeners(appState); // Passes state object
+        console.log("Listeners set.");
 
-        if (typeof populateBalanceFilters === 'function') {
-            populateBalanceFilters(appState.structuredData);
-        } else { console.warn("populateBalanceFilters function not defined."); }
+        setBtn('Calculating...', true);
+        const initialInputs = getUserInputsAndParams(appState.structuredData);
+        appState.latestResults = await runModelCalculation(appState.structuredData, initialInputs);
+        console.log("Initial calc done.");
 
-        if (typeof populateSankeyYearSelector === 'function') {
-            populateSankeyYearSelector(appState.structuredData);
-        } else { console.warn("populateSankeyYearSelector function not defined."); }
-        console.log("UI inputs and dropdowns initialized.");
+        updateCharts(appState.latestResults, appState.structuredData);
+        console.log("Initial charts done.");
 
+        setBtn('Run Model & Update Charts', false);
+        console.log("App ready.");
 
-        // --- Step 3: Perform initial model run ---
-        console.log("Performing initial model run...");
-        if (runButton) { runButton.textContent = 'Calculating Initial...'; }
-        if (typeof getUserInputsAndParams !== 'function') { throw new Error("getUserInputsAndParams function not defined."); }
-        const initialUserInputs = getUserInputsAndParams(appState.structuredData);
-        if (typeof runModelCalculation !== 'function') { throw new Error("runModelCalculation function not defined."); }
-        appState.latestResults = await runModelCalculation(appState.structuredData, initialUserInputs);
-        console.log("Initial calculation complete.");
-
-
-        // --- Step 4: Display initial charts ---
-        if (typeof updateCharts !== 'function') { throw new Error("updateCharts function not defined."); }
-        const initialFilters = (typeof getCurrentFilters === 'function') ? getCurrentFilters() : {};
-        updateCharts(appState.latestResults, appState.structuredData, initialFilters);
-        console.log("Initial charts displayed.");
-
-
-        // --- Step 5: Setup event listeners (AFTER elements exist and initial charts drawn) ---
-         if (typeof setupEventListeners !== 'function') { throw new Error("setupEventListeners function not defined."); }
-        setupEventListeners(appState); // Call this last in the try block
-        // Log moved inside setupEventListeners
-
-
-        // --- Step 6: Finalize ---
-        if (runButton) { runButton.disabled = false; runButton.textContent = 'Run Model & Update Charts'; }
-        console.log("Application initialization successful.");
-
-    } catch (error) {
-        // --- Error Handling ---
-        console.error("Error during application initialization:", error);
-        alert(`A critical error occurred during initialization: ${error.message}. Check console.`);
-        if (runButton) { runButton.textContent = 'Initialization Failed'; runButton.disabled = true; }
-        const contentDiv = document.getElementById('content');
-        if (contentDiv) { contentDiv.innerHTML = `<h2 style='color: red;'>Initialization Error</h2><p style='color: red;'>${error.message}. Check console (F12).</p>`; }
-    }
+    } catch (err) { showError(err.message || String(err)); }
 }
 
-// --- Start the application ---
 document.addEventListener('DOMContentLoaded', initializeApp);
