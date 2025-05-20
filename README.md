@@ -19,6 +19,16 @@ This project implements an energy model based on the S-curve methodology describ
     * `/lib`: (Optional) For third-party libraries like PapaParse or Chart.js
 * `/data`: Contains input data CSV files (structure based on `SEM dataset - *.csv` files)
 
+## Setup
+
+Run the setup script once to install dependencies locally and copy required libraries into `js/lib`:
+
+```bash
+bash scripts/setup.sh
+```
+
+This only needs to be done before running tests or serving the project for the first time.
+
 ## Methodology
 
 The core calculations follow the logic outlined in the `Methodology.docx` document[cite: 1], including:
