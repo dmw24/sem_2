@@ -85,10 +85,13 @@ function computeSankeyFlows(yearData, config) {
     const powerIn = yearData.powerInputs || {};
     const h2In = yearData.hydrogenInputs || {};
     const otherIn = yearData.otherInputs || {};
-    const fecByFuel = yearData.fecByFuel || {};
+    const fecDetail = yearData.fecDetailed || {};
+    const ueBySub = yearData.ueBySubsector || {};
     const { primaryFuels = [], sectors = [], subsectors = {} } = config;
 
-    // Primary to transforms/direct supply
+    // --- Primary to transformations or direct supply ---
+    const supplyNodes = new Set();
+
     primaryFuels.forEach(f => {
         const pw = powerIn[f] || 0;
         const h2 = h2In[f] || 0;
@@ -97,23 +100,15 @@ function computeSankeyFlows(yearData, config) {
         if (pw > 1e-3) flows.push({ from: f, to: 'Power generation', flow: pw / GJ_PER_EJ });
         if (h2 > 1e-3) flows.push({ from: f, to: 'Hydrogen production', flow: h2 / GJ_PER_EJ });
         if (ot > 1e-3) flows.push({ from: f, to: 'Other transform', flow: ot / GJ_PER_EJ });
-        if (direct > 1e-3) flows.push({ from: f, to: `${f} supply`, flow: direct / GJ_PER_EJ });
-    });
-
-    // Transform to final fuels
-    if (fecByFuel['Electricity'] > 1e-3) flows.push({ from: 'Power generation', to: 'Electricity', flow: fecByFuel['Electricity'] / GJ_PER_EJ });
-    if (fecByFuel['Hydrogen'] > 1e-3) flows.push({ from: 'Hydrogen production', to: 'Hydrogen', flow: fecByFuel['Hydrogen'] / GJ_PER_EJ });
-    primaryFuels.forEach(f => {
-        if (['Electricity', 'Hydrogen'].includes(f)) return;
-        const val = fecByFuel[f] || 0;
-        if (val > 1e-3) {
-            const src = (otherIn[f] || 0) > 1e-3 ? 'Other transform' : `${f} supply`;
-            flows.push({ from: src, to: f, flow: val / GJ_PER_EJ });
+        if (direct > 1e-3) {
+            const node = `${f} supply`;
+            supplyNodes.add(node);
+            flows.push({ from: f, to: node, flow: direct / GJ_PER_EJ });
         }
     });
 
-    // Final fuel to sectors
-    const fecDetail = yearData.fecDetailed || {};
+    // --- Final energy by sector ---
+
     const fecSectorFuel = {};
     Object.entries(fecDetail).forEach(([sec, subObj]) => {
         Object.values(subObj || {}).forEach(techs => {
@@ -125,18 +120,25 @@ function computeSankeyFlows(yearData, config) {
             });
         });
     });
-    Object.entries(fecSectorFuel).forEach(([sec, fuels]) => {
-        Object.entries(fuels).forEach(([f, val]) => {
-            const src = ['Electricity','Hydrogen'].includes(f) ? (f === 'Electricity' ? 'Electricity' : 'Hydrogen') : f;
-            if (val > 1e-3) flows.push({ from: src, to: sec, flow: val / GJ_PER_EJ });
+
+
+    sectors.forEach(sec => {
+        const fuels = fecSectorFuel[sec] || {};
+        const elec = fuels['Electricity'] || 0;
+        const h2 = fuels['Hydrogen'] || 0;
+        if (elec > 1e-3) flows.push({ from: 'Power generation', to: sec, flow: elec / GJ_PER_EJ });
+        if (h2 > 1e-3) flows.push({ from: 'Hydrogen production', to: sec, flow: h2 / GJ_PER_EJ });
+        Object.entries(fuels).forEach(([fuel, val]) => {
+            if (['Electricity', 'Hydrogen'].includes(fuel)) return;
+            if (val > 1e-3) flows.push({ from: `${fuel} supply`, to: sec, flow: val / GJ_PER_EJ });
         });
     });
 
-    // Sector to subsector/use and losses
-    const ueBySub = yearData.ueBySubsector || {};
+    // --- Useful energy by subsector and losses ---
     const ueSector = {};
     Object.entries(subsectors).forEach(([sec, subs]) => {
-        subs.forEach(sub => {
+        (subs || []).forEach(sub => {
+
             const ue = ueBySub[sub] || 0;
             if (ue > 1e-3) {
                 flows.push({ from: sec, to: sub, flow: ue / GJ_PER_EJ });
@@ -144,12 +146,15 @@ function computeSankeyFlows(yearData, config) {
             }
         });
     });
-    Object.entries(fecSectorFuel).forEach(([sec, fuels]) => {
-        const fecTot = Object.values(fuels).reduce((a,b)=>a+b,0);
+
+    sectors.forEach(sec => {
+        const totFec = Object.values(fecSectorFuel[sec] || {}).reduce((a,b)=>a+b,0);
         const ueTot = ueSector[sec] || 0;
-        const loss = fecTot - ueTot;
+        const loss = totFec - ueTot;
         if (loss > 1e-3) flows.push({ from: sec, to: 'Losses', flow: loss / GJ_PER_EJ });
     });
+
+
     return flows;
 }
 

@@ -77,16 +77,16 @@ header p.disclaimer { font-size: 0.9em; color: var(--dark-grey); margin: 0 0 1re
 }
 #content h3.chart-section-heading:first-of-type { margin-top: 0; }
 
-#chartViewSelectorContainer, #subsectorSelector {
+#chartViewSelectorContainer, #subsectorSelector, #sankeyYearSelector {
     margin-bottom: 1rem;
     padding-bottom: 1rem;
 }
 #chartViewSelectorContainer { border-bottom: 1px solid var(--grey-blue); }
 
-#chartViewSelectorContainer label, #subsectorSelector label {
+#chartViewSelectorContainer label, #subsectorSelector label, #sankeyYearSelector label {
     font-weight: 600; margin-right: 10px; font-size: 1.1em;
 }
-#chartViewSelectorContainer select, #subsectorSelector select {
+#chartViewSelectorContainer select, #subsectorSelector select, #sankeyYearSelector select {
     padding: 0.5rem;
     border: 1px solid var(--grey-blue);
     border-radius: 4px;
