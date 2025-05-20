@@ -16,7 +16,7 @@ async function initializeApp() {
     try {
         setBtn('Loading...', true);
         // Basic check for function existence (assumes they are global)
-        if (![loadAndStructureData, initializeSidebarInputs, populateSubsectorDropdown, setupEventListeners, getUserInputsAndParams, runModelCalculation, updateCharts].every(f => typeof f === 'function')) {
+        if (![loadAndStructureData, initializeSidebarInputs, populateSubsectorDropdown, populateYearDropdown, setupEventListeners, getUserInputsAndParams, runModelCalculation, updateCharts].every(f => typeof f === 'function')) {
             throw new Error("Core function missing.");
         }
         appState.structuredData = await loadAndStructureData();
@@ -25,6 +25,7 @@ async function initializeApp() {
 
         initializeSidebarInputs(appState.structuredData);
         populateSubsectorDropdown(appState.structuredData);
+        populateYearDropdown(appState.structuredData);
         console.log("UI init.");
 
         setupEventListeners(appState); // Passes state object
