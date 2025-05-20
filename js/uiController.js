@@ -5,9 +5,14 @@
 const toggleGroup = el => {
     const content = el.nextElementSibling;
     if (!content?.matches('.group-content, .sub-group-content')) return;
-    const isHidden = !content.style.display || content.style.display === "none";
-    content.style.display = isHidden ? "block" : "none";
-    el.classList.toggle("expanded", isHidden); el.classList.toggle("collapsed", !isHidden);
+    const expanded = !el.classList.contains('expanded');
+    el.classList.toggle('expanded', expanded);
+    el.classList.toggle('collapsed', !expanded);
+    if (expanded) {
+        content.style.maxHeight = content.scrollHeight + 'px';
+    } else {
+        content.style.maxHeight = '0';
+    }
 };
 const sanitizeForId = (str = '') => String(str).replace(/[^a-zA-Z0-9_-]/g, '_').replace(/__+/g, '_').replace(/^_+|_+$/g, '') || 'invalid_id';
 const toggleSCurveInputsVisibility = sel => {
