@@ -105,6 +105,15 @@ function populateSubsectorDropdown(structuredData) {
     console.log("Subsector dropdown populated.");
 }
 
+function populateYearDropdown(structuredData) {
+    const sel = document.getElementById('selectSankeyYear'); if (!sel) return;
+    sel.innerHTML = '';
+    const { years = [] } = structuredData ?? {};
+    years.forEach(y => sel.add(new Option(String(y), String(y))));
+    if (sel.options.length > 0) sel.value = sel.options[0].value;
+    console.log('Year dropdown populated.');
+}
+
 // --- Input Gathering (Concise) ---
 function getUserInputsAndParams(structuredData) {
     const { sectors = [], subsectors = {}, technologies = {}, powerTechs = [], hydrogenTechs = [], allEndUseSubsectors = [], startYear, endYear } = structuredData ?? {};
@@ -137,12 +146,13 @@ function getUserInputsAndParams(structuredData) {
 function handleChartViewChange() {
     const view = document.getElementById('selectChartView')?.value ?? 'subsector';
     document.getElementById('subsectorSelector')?.classList.toggle('hidden', view !== 'subsector');
-    ['subsectorChartsSection', 'balanceChartsSection', 'supplyChartsSection'].forEach(id => {
+    document.getElementById('sankeyYearSelector')?.classList.toggle('hidden', view !== 'sankey');
+    ['subsectorChartsSection', 'balanceChartsSection', 'supplyChartsSection', 'sankeySection'].forEach(id => {
         document.getElementById(id)?.classList.toggle('hidden', !id.toLowerCase().includes(view));
     });
 }
 function setupEventListeners(appState) {
-    const btn = document.getElementById('runModelBtn'), subSel = document.getElementById('selectSubsector'), viewSel = document.getElementById('selectChartView');
+    const btn = document.getElementById('runModelBtn'), subSel = document.getElementById('selectSubsector'), viewSel = document.getElementById('selectChartView'), yearSel = document.getElementById('selectSankeyYear');
     if (!btn || !subSel || !viewSel || !appState.structuredData) return console.error("Missing elements/data for listeners.");
     btn.onclick = async () => {
         btn.disabled = true; btn.textContent = 'Calculating...';
@@ -162,6 +172,7 @@ function setupEventListeners(appState) {
         }
     };
     viewSel.onchange = handleChartViewChange;
+    if (yearSel) yearSel.onchange = () => { if (typeof updateCharts === 'function' && appState.latestResults) updateCharts(appState.latestResults, appState.structuredData); };
     handleChartViewChange(); // Initial call
     console.log("UI Listeners set up.");
 }
