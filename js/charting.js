@@ -91,6 +91,7 @@ function computeSankeyFlows(yearData, config) {
 
     // --- Primary to transformations or direct supply ---
     const supplyNodes = new Set();
+
     primaryFuels.forEach(f => {
         const pw = powerIn[f] || 0;
         const h2 = h2In[f] || 0;
@@ -107,6 +108,7 @@ function computeSankeyFlows(yearData, config) {
     });
 
     // --- Final energy by sector ---
+
     const fecSectorFuel = {};
     Object.entries(fecDetail).forEach(([sec, subObj]) => {
         Object.values(subObj || {}).forEach(techs => {
@@ -118,6 +120,7 @@ function computeSankeyFlows(yearData, config) {
             });
         });
     });
+
 
     sectors.forEach(sec => {
         const fuels = fecSectorFuel[sec] || {};
@@ -135,6 +138,7 @@ function computeSankeyFlows(yearData, config) {
     const ueSector = {};
     Object.entries(subsectors).forEach(([sec, subs]) => {
         (subs || []).forEach(sub => {
+
             const ue = ueBySub[sub] || 0;
             if (ue > 1e-3) {
                 flows.push({ from: sec, to: sub, flow: ue / GJ_PER_EJ });
@@ -149,6 +153,7 @@ function computeSankeyFlows(yearData, config) {
         const loss = totFec - ueTot;
         if (loss > 1e-3) flows.push({ from: sec, to: 'Losses', flow: loss / GJ_PER_EJ });
     });
+
 
     return flows;
 }
