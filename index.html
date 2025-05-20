@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.9.1/dist/chartjs-chart-sankey.min.js"></script>
 </head>
 <body>
     <header class="container">
@@ -39,6 +40,7 @@
                      <option value="subsector" selected>Subsector Details</option>
                      <option value="balance">Overall Balance</option>
                      <option value="supply">Supply & Transformations</option>
+                     <option value="sankey">Energy Flow Sankey</option>
                  </select>
             </div>
 
@@ -46,6 +48,11 @@
                 <label for="selectSubsector">Subsector:</label>
                 <select id="selectSubsector">
                     </select>
+            </div>
+
+            <div id="sankeyYearSelector" class="hidden">
+                <label for="selectSankeyYear">Year:</label>
+                <select id="selectSankeyYear"></select>
             </div>
 
             <section id="subsectorChartsSection">
@@ -72,6 +79,11 @@
                     <div class="chart-box"><h3>Power Generation</h3><canvas id="powerMixChart"></canvas></div>
                     <div class="chart-box"><h3>Hydrogen Production</h3><canvas id="hydrogenMixChart"></canvas></div>
                     </div>
+            </section>
+
+            <section id="sankeySection" class="hidden">
+                <h3 class="chart-section-heading">Energy Flow</h3>
+                <div class="chart-box"><canvas id="sankeyCanvas"></canvas></div>
             </section>
 
         </main>

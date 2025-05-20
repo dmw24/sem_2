@@ -163,6 +163,7 @@ function runModelCalculation(structuredData, userParams) {
         });
         resYr.ecPostHydrogen = { ...resYr.fecByFuel }; delete resYr.ecPostHydrogen['Hydrogen'];
         Object.entries(h2Inputs).forEach(([f, dem]) => { if (dem > 1e-3) resYr.ecPostHydrogen[f] = (resYr.ecPostHydrogen[f] || 0) + dem; });
+        resYr.hydrogenInputs = h2Inputs;
 
         // --- 6. Power Transform ---
         const ecElec = resYr.ecPostHydrogen['Electricity'] || 0;
@@ -175,6 +176,7 @@ function runModelCalculation(structuredData, userParams) {
         });
         resYr.ecPostPower = { ...resYr.ecPostHydrogen }; delete resYr.ecPostPower['Electricity'];
         Object.entries(powerInputs).forEach(([f, dem]) => { if (dem > 1e-3) resYr.ecPostPower[f] = (resYr.ecPostPower[f] || 0) + dem; });
+        resYr.powerInputs = powerInputs;
 
         // --- 7. Other Transforms ---
         const otherInputs = {};
@@ -189,9 +191,11 @@ function runModelCalculation(structuredData, userParams) {
                              otherInputs[p_primary] = (otherInputs[p_primary] || 0) + demandConvert * mixFrac * (uCons || 0);
                          }
                      });
-                 });
+                });
              }
         });
+
+        resYr.otherInputs = otherInputs;
 
         // --- 8. PED ---
         resYr.pedByFuel = { ...otherInputs };

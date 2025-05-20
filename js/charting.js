@@ -70,5 +70,92 @@ function updateCharts(results, config) {
     createOrUpdateChart('powerMixChart', 'bar', { labels: years, datasets: createDatasets(powerTechs, (tech, i) => ({ label: tech, data: years.map(y => (((results?.[y]?.powerProdMix?.[tech] ?? 0) / 100) * (results?.[y]?.ecPostHydrogen?.['Electricity'] ?? 0)) / GJ_PER_EJ), backgroundColor: getTechColor(tech, i) })) }, stackedBarOpts('Power Generation (EJ)'));
     createOrUpdateChart('hydrogenMixChart', 'bar', { labels: years, datasets: createDatasets(hydrogenTechs, (tech, i) => ({ label: tech, data: years.map(y => (((results?.[y]?.hydrogenProdMix?.[tech] ?? 0) / 100) * (results?.[y]?.fecByFuel?.['Hydrogen'] ?? 0)) / GJ_PER_EJ), backgroundColor: getTechColor(tech, i) })) }, stackedBarOpts('Hydrogen Production (EJ)'));
 
+    const yrSel = document.getElementById('selectSankeyYear');
+    const sankeyYear = yrSel ? parseInt(yrSel.value || years[0]) : years[0];
+    if (!isNaN(sankeyYear)) updateSankey(results, config, sankeyYear);
+
     console.log("Charts updated.");
+}
+
+// --- Sankey Chart ---
+function computeSankeyFlows(yearData, config) {
+    if (!yearData || !config) return [];
+    const flows = [];
+    const ped = yearData.pedByFuel || {};
+    const powerIn = yearData.powerInputs || {};
+    const h2In = yearData.hydrogenInputs || {};
+    const otherIn = yearData.otherInputs || {};
+    const fecByFuel = yearData.fecByFuel || {};
+    const { primaryFuels = [], sectors = [], subsectors = {} } = config;
+
+    // Primary to transforms/direct supply
+    primaryFuels.forEach(f => {
+        const pw = powerIn[f] || 0;
+        const h2 = h2In[f] || 0;
+        const ot = otherIn[f] || 0;
+        const direct = (ped[f] || 0) - pw - h2 - ot;
+        if (pw > 1e-3) flows.push({ from: f, to: 'Power generation', flow: pw / GJ_PER_EJ });
+        if (h2 > 1e-3) flows.push({ from: f, to: 'Hydrogen production', flow: h2 / GJ_PER_EJ });
+        if (ot > 1e-3) flows.push({ from: f, to: 'Other transform', flow: ot / GJ_PER_EJ });
+        if (direct > 1e-3) flows.push({ from: f, to: `${f} supply`, flow: direct / GJ_PER_EJ });
+    });
+
+    // Transform to final fuels
+    if (fecByFuel['Electricity'] > 1e-3) flows.push({ from: 'Power generation', to: 'Electricity', flow: fecByFuel['Electricity'] / GJ_PER_EJ });
+    if (fecByFuel['Hydrogen'] > 1e-3) flows.push({ from: 'Hydrogen production', to: 'Hydrogen', flow: fecByFuel['Hydrogen'] / GJ_PER_EJ });
+    primaryFuels.forEach(f => {
+        if (['Electricity', 'Hydrogen'].includes(f)) return;
+        const val = fecByFuel[f] || 0;
+        if (val > 1e-3) {
+            const src = (otherIn[f] || 0) > 1e-3 ? 'Other transform' : `${f} supply`;
+            flows.push({ from: src, to: f, flow: val / GJ_PER_EJ });
+        }
+    });
+
+    // Final fuel to sectors
+    const fecDetail = yearData.fecDetailed || {};
+    const fecSectorFuel = {};
+    Object.entries(fecDetail).forEach(([sec, subObj]) => {
+        Object.values(subObj || {}).forEach(techs => {
+            Object.values(techs || {}).forEach(fuels => {
+                Object.entries(fuels || {}).forEach(([fuel, val]) => {
+                    fecSectorFuel[sec] = fecSectorFuel[sec] || {};
+                    fecSectorFuel[sec][fuel] = (fecSectorFuel[sec][fuel] || 0) + val;
+                });
+            });
+        });
+    });
+    Object.entries(fecSectorFuel).forEach(([sec, fuels]) => {
+        Object.entries(fuels).forEach(([f, val]) => {
+            const src = ['Electricity','Hydrogen'].includes(f) ? (f === 'Electricity' ? 'Electricity' : 'Hydrogen') : f;
+            if (val > 1e-3) flows.push({ from: src, to: sec, flow: val / GJ_PER_EJ });
+        });
+    });
+
+    // Sector to subsector/use and losses
+    const ueBySub = yearData.ueBySubsector || {};
+    const ueSector = {};
+    Object.entries(subsectors).forEach(([sec, subs]) => {
+        subs.forEach(sub => {
+            const ue = ueBySub[sub] || 0;
+            if (ue > 1e-3) {
+                flows.push({ from: sec, to: sub, flow: ue / GJ_PER_EJ });
+                ueSector[sec] = (ueSector[sec] || 0) + ue;
+            }
+        });
+    });
+    Object.entries(fecSectorFuel).forEach(([sec, fuels]) => {
+        const fecTot = Object.values(fuels).reduce((a,b)=>a+b,0);
+        const ueTot = ueSector[sec] || 0;
+        const loss = fecTot - ueTot;
+        if (loss > 1e-3) flows.push({ from: sec, to: 'Losses', flow: loss / GJ_PER_EJ });
+    });
+    return flows;
+}
+
+function updateSankey(results, config, year) {
+    const dataYear = results?.[year];
+    if (!dataYear) return;
+    const flows = computeSankeyFlows(dataYear, config);
+    createOrUpdateChart('sankeyCanvas', 'sankey', { datasets: [{ data: flows }] }, { plugins: { legend: { display: false } } });
 }
