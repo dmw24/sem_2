@@ -3,6 +3,60 @@
 
 const GJ_PER_EJ = 1e9;
 
+// Helper to calculate PED from a fuel mix for a single sector
+const calcPedFromFec = (
+    fecFuel = {}, currentPowerMix = {}, currentHydroMix = {},
+    powerTechUnitEnergyCons = {}, hydrogenTechUnitEnergyCons = {},
+    otherConvTechs = {}, baseOtherProdMix = {}, otherTechUnitEnergyCons = {},
+    primaryFuels = [], hydrogenTechs = [], powerTechs = []
+) => {
+    const h2Demand = fecFuel['Hydrogen'] || 0;
+    const h2Inputs = {};
+    hydrogenTechs.forEach(ht => {
+        const mixFrac = (currentHydroMix?.[ht] ?? 0) / 100;
+        Object.entries(hydrogenTechUnitEnergyCons?.[ht] ?? {}).forEach(([f, u]) => {
+            h2Inputs[f] = (h2Inputs[f] || 0) + h2Demand * mixFrac * (u || 0);
+        });
+    });
+    const postH2 = { ...fecFuel }; delete postH2['Hydrogen'];
+    Object.entries(h2Inputs).forEach(([f, v]) => { if (v > 1e-3) postH2[f] = (postH2[f] || 0) + v; });
+
+    const elec = postH2['Electricity'] || 0;
+    const powerInputs = {};
+    powerTechs.forEach(pt => {
+        const mixFrac = (currentPowerMix?.[pt] ?? 0) / 100;
+        Object.entries(powerTechUnitEnergyCons?.[pt] ?? {}).forEach(([f, u]) => {
+            powerInputs[f] = (powerInputs[f] || 0) + elec * mixFrac * (u || 0);
+        });
+    });
+    const postPower = { ...postH2 }; delete postPower['Electricity'];
+    Object.entries(powerInputs).forEach(([f, v]) => { if (v > 1e-3) postPower[f] = (postPower[f] || 0) + v; });
+
+    const otherInputs = {};
+    Object.entries(otherConvTechs).forEach(([fEnd, techs]) => {
+        const dem = postPower[fEnd] || 0;
+        if (dem > 1e-3) {
+            const baseMix = baseOtherProdMix?.[fEnd] ?? {};
+            techs.forEach(ot => {
+                const mixFrac = (baseMix[ot] ?? 0) / 100;
+                Object.entries(otherTechUnitEnergyCons?.[fEnd]?.[ot] ?? {}).forEach(([pFuel, u]) => {
+                    if (primaryFuels.includes(pFuel)) {
+                        otherInputs[pFuel] = (otherInputs[pFuel] || 0) + dem * mixFrac * (u || 0);
+                    }
+                });
+            });
+        }
+    });
+
+    const ped = { ...otherInputs };
+    Object.entries(postPower).forEach(([f, dem]) => {
+        if (primaryFuels.includes(f) && !(f in otherConvTechs) && dem > 1e-3) {
+            ped[f] = (ped[f] || 0) + dem;
+        }
+    });
+    return ped;
+};
+
 // --- S-Curve Calculation (Concise) ---
 const sigma = (t, k, t0) => {
     if (Math.abs(k) < 1e-9) return t < t0 ? 0 : t > t0 ? 1 : 0.5;
@@ -51,6 +105,7 @@ function runModelCalculation(structuredData, userParams) {
     if (!years?.length || !startYear || !endYear) throw new Error("Invalid years config.");
     const { activityGrowthFactors = {}, techBehaviorsAndParams = {} } = userParams;
     const baseYr = startYear;
+    const endUseSectors = sectors.filter(s => !['Power', 'Energy industry'].includes(s));
     console.log(`--- Running Model (${startYear}-${endYear}) ---`);
     const results = { [baseYr]: { activity: { ...baseActivity } } }; // Init base year
 
@@ -127,6 +182,8 @@ function runModelCalculation(structuredData, userParams) {
 
         // --- 4. FEC & UE ---
         resYr.fecDetailed = {}; resYr.ueDetailed = {}; resYr.fecByFuel = {}; resYr.ueByFuel = {}; resYr.ueBySubsector = {};
+        resYr.fecBySectorFuel = {};
+        endUseSectors.forEach(s => resYr.fecBySectorFuel[s] = {});
         sectors.forEach(s => {
             if (subsectors[s]) {
                 resYr.fecDetailed[s] = {}; resYr.ueDetailed[s] = {};
@@ -140,6 +197,9 @@ function runModelCalculation(structuredData, userParams) {
                                 const eCons = techAct * (unitCons || 0);
                                 resYr.fecDetailed[s][b][t][f] = eCons;
                                 resYr.fecByFuel[f] = (resYr.fecByFuel[f] || 0) + eCons;
+                                if (endUseSectors.includes(s)) {
+                                    resYr.fecBySectorFuel[s][f] = (resYr.fecBySectorFuel[s][f] || 0) + eCons;
+                                }
                                 const eff = placeholderUsefulEfficiency?.[s]?.[b]?.[t]?.[f] ?? placeholderUsefulEfficiency?.[s]?.[b]?.[t] ?? placeholderUsefulEfficiency?.[s]?.[b] ?? placeholderUsefulEfficiency?._default ?? 0.65;
                                 const uEnergy = eCons * eff;
                                 resYr.ueDetailed[s][b][t][f] = uEnergy;
@@ -203,6 +263,29 @@ function runModelCalculation(structuredData, userParams) {
              if (primaryFuels.includes(f) && !(f in otherConvTechs) && dem > 1e-3) {
                 resYr.pedByFuel[f] = (resYr.pedByFuel[f] || 0) + dem;
              }
+        });
+
+        // PED by sector (end-use sectors only)
+        resYr.pedBySectorFuel = {};
+        resYr.pedEndUseByFuel = {};
+        endUseSectors.forEach(sec => {
+            const pedSec = calcPedFromFec(
+                resYr.fecBySectorFuel[sec],
+                currentPowerMix,
+                currentHydroMix,
+                powerTechUnitEnergyCons,
+                hydrogenTechUnitEnergyCons,
+                otherConvTechs,
+                baseOtherProdMix,
+                otherTechUnitEnergyCons,
+                primaryFuels,
+                hydrogenTechs,
+                powerTechs
+            );
+            resYr.pedBySectorFuel[sec] = pedSec;
+            Object.entries(pedSec).forEach(([f, v]) => {
+                resYr.pedEndUseByFuel[f] = (resYr.pedEndUseByFuel[f] || 0) + v;
+            });
         });
 
     } // End year loop
