@@ -63,7 +63,7 @@ function updateCharts(results, config) {
 
     // --- Balance Charts ---
     createOrUpdateChart('fecFuelChart', 'bar', { labels: years, datasets: createDatasets(endUseFuels, (fuel, i) => ({ label: fuel, data: years.map(y => (results?.[y]?.fecByFuel?.[fuel] ?? 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, i) })) }, stackedBarOpts('Total FEC (EJ)'));
-    createOrUpdateChart('pedFuelChart', 'bar', { labels: years, datasets: createDatasets(primaryFuels, (fuel, i) => ({ label: fuel, data: years.map(y => (results?.[y]?.pedByFuel?.[fuel] ?? 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, i) })) }, stackedBarOpts('Total PED (EJ)'));
+    createOrUpdateChart('pedFuelChart', 'bar', { labels: years, datasets: createDatasets(primaryFuels, (fuel, i) => ({ label: fuel, data: years.map(y => (results?.[y]?.pedEndUseByFuel?.[fuel] ?? results?.[y]?.pedByFuel?.[fuel] ?? 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, i) })) }, stackedBarOpts('Total PED (EJ)'));
     createOrUpdateChart('ueFuelChart', 'bar', { labels: years, datasets: createDatasets(endUseFuels, (fuel, i) => ({ label: fuel, data: years.map(y => (results?.[y]?.ueByFuel?.[fuel] ?? 0) / GJ_PER_EJ), backgroundColor: getTechColor(fuel, i) })) }, stackedBarOpts('Total Useful Energy (EJ)'));
 
     // --- Supply Charts ---
