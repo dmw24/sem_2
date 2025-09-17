@@ -4,14 +4,20 @@
 // --- UI Helpers (Concise) ---
 const toggleGroup = el => {
     const content = el.nextElementSibling;
-    if (!content?.matches('.group-content, .sub-group-content')) return;
+    if (!content || !content.matches('.group-content, .sub-group-content')) return;
     const isHidden = !content.style.display || content.style.display === "none";
     content.style.display = isHidden ? "block" : "none";
-    el.classList.toggle("expanded", isHidden); el.classList.toggle("collapsed", !isHidden);
+    el.classList.toggle("expanded", isHidden);
+    el.classList.toggle("collapsed", !isHidden);
 };
-const sanitizeForId = (str = '') => String(str).replace(/[^a-zA-Z0-9_-]/g, '_').replace(/__+/g, '_').replace(/^_+|_+$/g, '') || 'invalid_id';
+const sanitizeForId = (str) => {
+    const safeStr = String(str || '');
+    const sanitized = safeStr.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/__+/g, '_').replace(/^_+|_+$/g, '');
+    return sanitized || 'invalid_id';
+};
 const toggleSCurveInputsVisibility = sel => {
-    const container = sel.closest('.tech-input-container')?.querySelector('.s-curve-inputs');
+    const parent = sel.closest('.tech-input-container');
+    const container = parent ? parent.querySelector('.s-curve-inputs') : null;
     if (container) container.style.display = sel.value === 's-curve' ? 'block' : 'none';
 };
 
@@ -20,16 +26,25 @@ const defaultBehaviors = { dD: { /* declineDemand */ }, sD: { /* sCurveDemand */
 const getDefaultBehavior = (type, key, tech) => type === 'Demand' ? (defaultBehaviors.dD[key] === tech ? 'decline' : defaultBehaviors.sD[key] === tech ? 's-curve' : 'fixed') : type === 'Power' ? (defaultBehaviors.dP.includes(tech) ? 'decline' : defaultBehaviors.sP.includes(tech) ? 's-curve' : 'fixed') : type === 'Hydrogen' ? (defaultBehaviors.dH.includes(tech) ? 'decline' : defaultBehaviors.sH.includes(tech) ? 's-curve' : 'fixed') : 'fixed';
 
 // --- Dynamic Input Creation (Concise) ---
-const createEl = (tag, props = {}, children = []) => {
+const createEl = (tag, props, children) => {
+    const safeProps = props || {};
+    const safeChildren = Array.isArray(children) ? children : (children ? [children] : []);
     const el = document.createElement(tag);
-    Object.entries(props).forEach(([key, value]) => {
+    Object.keys(safeProps).forEach(key => {
+        const value = safeProps[key];
         if (key === 'textContent') el.textContent = value;
         else if (key === 'innerHTML') el.innerHTML = value;
         else if (key === 'style') Object.assign(el.style, value);
-        else if (key.startsWith('on') && typeof value === 'function') el[key.toLowerCase()] = value; // Basic event handling
+        else if (key === 'className') el.className = value;
+        else if (key === 'htmlFor' || key === 'for') el.htmlFor = value;
+        else if (key === 'value') el.value = value;
+        else if (key.indexOf('on') === 0 && typeof value === 'function') el[key.toLowerCase()] = value; // Basic event handling
         else el.setAttribute(key, value);
     });
-    children.forEach(child => child && el.appendChild(typeof child === 'string' ? document.createTextNode(child) : child));
+    safeChildren.forEach(child => {
+        if (!child && child !== 0) return;
+        el.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+    });
     return el;
 };
 const createInputGrp = (id, type, props = {}, labelTxt, helpTxt) => createEl('div', { className: `input-group ig-${type}` }, [
@@ -65,36 +80,67 @@ const createTechInput = (catType, catKey, tech, baseVal, startYr, endYr) => {
 // --- UI Initialization (Concise) ---
 function initializeSidebarInputs(structuredData) {
     const cont = document.getElementById('inputGroupsContainer');
-    if (!cont) return console.error("Sidebar container not found!");
+    if (!cont) {
+        console.error("Sidebar container not found!");
+        return;
+    }
     cont.innerHTML = '';
-    const { sectors = [], subsectors = {}, technologies = {}, baseDemandTechMix = {}, basePowerProdMix = {}, baseHydrogenProdMix = {}, powerTechs = [], hydrogenTechs = [], startYear, endYear } = structuredData ?? {};
+    const data = structuredData || {};
+    const sectors = data.sectors || [];
+    const subsectors = data.subsectors || {};
+    const technologies = data.technologies || {};
+    const baseDemandTechMix = data.baseDemandTechMix || {};
+    const basePowerProdMix = data.basePowerProdMix || {};
+    const baseHydrogenProdMix = data.baseHydrogenProdMix || {};
+    const powerTechs = data.powerTechs || [];
+    const hydrogenTechs = data.hydrogenTechs || [];
+    const startYear = data.startYear;
+    const endYear = data.endYear;
     const frag = document.createDocumentFragment();
     const createGroup = (title, contentCb) => {
-        const contentEl = createEl('div', { className: 'group-content' }); contentCb(contentEl); // Hidden by CSS
+        const contentEl = createEl('div', { className: 'group-content' });
+        contentCb(contentEl); // Hidden by CSS
         return createEl('div', { className: 'group' }, [
-            createEl('h3', { className: 'group-title collapsed', textContent: title, onclick: e => toggleGroup(e.target) }), contentEl
+            createEl('h3', { className: 'group-title collapsed', textContent: title, onclick: e => toggleGroup(e.target) }),
+            contentEl
         ]);
     };
     sectors.filter(s => !['Power', 'Energy industry'].includes(s)).forEach(s => frag.appendChild(createGroup(s, sCont => {
         (subsectors[s] || []).forEach(b => {
             const subContent = createEl('div', { className: 'sub-group-content' }); // Hidden by CSS
             subContent.appendChild(createInputGrp(`growth_${sanitizeForId(s)}_${sanitizeForId(b)}`, 'number', { value: 0.5, step: 0.1 }, `Activity Growth (%/yr):`));
-            const baseMix = baseDemandTechMix?.[s]?.[b] ?? {};
-            (technologies?.[s]?.[b] ?? []).forEach(t => subContent.appendChild(createTechInput('Demand', `${s}|${b}`, t, baseMix[t] ?? 0, startYear, endYear)));
+            const baseMix = baseDemandTechMix[s] && baseDemandTechMix[s][b] ? baseDemandTechMix[s][b] : {};
+            const techList = technologies[s] && technologies[s][b] ? technologies[s][b] : [];
+            techList.forEach(t => {
+                const mixVal = Object.prototype.hasOwnProperty.call(baseMix, t) ? baseMix[t] : 0;
+                subContent.appendChild(createTechInput('Demand', `${s}|${b}`, t, mixVal, startYear, endYear));
+            });
             sCont.appendChild(createEl('div', { className: 'sub-group' }, [
-                createEl('h4', { className: 'sub-group-title collapsed', textContent: b, onclick: e => toggleGroup(e.target) }), subContent
+                createEl('h4', { className: 'sub-group-title collapsed', textContent: b, onclick: e => toggleGroup(e.target) }),
+                subContent
             ]));
         });
     })));
-    frag.appendChild(createGroup('Power Generation', pCont => powerTechs.forEach(t => pCont.appendChild(createTechInput('Power', 'Power', t, basePowerProdMix[t] ?? 0, startYear, endYear)))));
-    frag.appendChild(createGroup('Hydrogen Production', hCont => hydrogenTechs.forEach(t => hCont.appendChild(createTechInput('Hydrogen', 'Hydrogen', t, baseHydrogenProdMix[t] ?? 0, startYear, endYear)))));
+    frag.appendChild(createGroup('Power Generation', pCont => {
+        powerTechs.forEach(t => {
+            const mixVal = Object.prototype.hasOwnProperty.call(basePowerProdMix, t) ? basePowerProdMix[t] : 0;
+            pCont.appendChild(createTechInput('Power', 'Power', t, mixVal, startYear, endYear));
+        });
+    }));
+    frag.appendChild(createGroup('Hydrogen Production', hCont => {
+        hydrogenTechs.forEach(t => {
+            const mixVal = Object.prototype.hasOwnProperty.call(baseHydrogenProdMix, t) ? baseHydrogenProdMix[t] : 0;
+            hCont.appendChild(createTechInput('Hydrogen', 'Hydrogen', t, mixVal, startYear, endYear));
+        });
+    }));
     cont.appendChild(frag);
     console.log("Sidebar inputs initialized.");
 }
 function populateSubsectorDropdown(structuredData) {
-    const sel = document.getElementById('selectSubsector'); if (!sel) return;
+    const sel = document.getElementById('selectSubsector');
+    if (!sel) return;
     sel.innerHTML = ''; // Clear
-    const subsectors = structuredData?.allEndUseSubsectors ?? [];
+    const subsectors = structuredData && structuredData.allEndUseSubsectors ? structuredData.allEndUseSubsectors : [];
     if (!subsectors.length) { sel.add(new Option("No subsectors", "")); return; }
     subsectors.forEach(({ sector, subsector }) => sel.add(new Option(`${sector} - ${subsector}`, `${sector}|${subsector}`)));
     if (sel.options.length > 0) {
@@ -107,19 +153,33 @@ function populateSubsectorDropdown(structuredData) {
 
 // --- Input Gathering (Concise) ---
 function getUserInputsAndParams(structuredData) {
-    const { sectors = [], subsectors = {}, technologies = {}, powerTechs = [], hydrogenTechs = [], allEndUseSubsectors = [], startYear, endYear } = structuredData ?? {};
+    const data = structuredData || {};
+    const sectors = data.sectors || [];
+    const subsectors = data.subsectors || {};
+    const technologies = data.technologies || {};
+    const powerTechs = data.powerTechs || [];
+    const hydrogenTechs = data.hydrogenTechs || [];
+    const allEndUseSubsectors = data.allEndUseSubsectors || [];
+    const startYear = data.startYear;
+    const endYear = data.endYear;
     const params = { activityGrowthFactors: {}, techBehaviorsAndParams: {} };
     allEndUseSubsectors.forEach(({ sector, subsector }) => {
         const input = document.getElementById(`growth_${sanitizeForId(sector)}_${sanitizeForId(subsector)}`);
-        const growthPc = parseFloat(input?.value ?? '0');
+        const growthPc = parseFloat(input ? input.value : '0');
         params.activityGrowthFactors[`${sector}|${subsector}`] = isNaN(growthPc) ? 1.0 : 1 + growthPc / 100;
     });
     const readTechs = (catType, catKey, techList) => (techList || []).forEach(t => {
         const pKey = `${catType}|${catKey}|${t}`, sKey = sanitizeForId(pKey);
-        const behavior = document.getElementById(`behavior_${sKey}`)?.value ?? 'fixed';
+        const behaviorEl = document.getElementById(`behavior_${sKey}`);
+        const behavior = behaviorEl ? behaviorEl.value : 'fixed';
         const techP = { behavior };
         if (behavior === 's-curve') {
-            const getVal = (elId, parseFn, defaultVal) => { const v = parseFn(document.getElementById(elId)?.value); return isNaN(v) ? defaultVal : v; };
+            const getVal = (elId, parseFn, defaultVal) => {
+                const el = document.getElementById(elId);
+                const raw = el ? el.value : undefined;
+                const v = parseFn(raw);
+                return isNaN(v) ? defaultVal : v;
+            };
             const targetYr = getVal(`sCurveTargetYear_${sKey}`, parseInt, endYear);
             const kVal = getVal(`sCurveKValue_${sKey}`, parseFloat, 0.15);
             const midYr = getVal(`sCurveMidpointYear_${sKey}`, parseInt, Math.round(startYear + (targetYr - startYear) / 2));
@@ -128,17 +188,23 @@ function getUserInputsAndParams(structuredData) {
         }
         params.techBehaviorsAndParams[pKey] = techP;
     });
-    sectors.forEach(s => (subsectors[s] || []).forEach(b => readTechs('Demand', `${s}|${b}`, technologies?.[s]?.[b])));
+    sectors.forEach(s => (subsectors[s] || []).forEach(b => {
+        const techList = technologies[s] && technologies[s][b] ? technologies[s][b] : [];
+        readTechs('Demand', `${s}|${b}`, techList);
+    }));
     readTechs('Power', 'Power', powerTechs); readTechs('Hydrogen', 'Hydrogen', hydrogenTechs);
     return params;
 }
 
 // --- Event Listeners (Concise) ---
 function handleChartViewChange() {
-    const view = document.getElementById('selectChartView')?.value ?? 'subsector';
-    document.getElementById('subsectorSelector')?.classList.toggle('hidden', view !== 'subsector');
+    const viewSel = document.getElementById('selectChartView');
+    const view = viewSel ? viewSel.value : 'subsector';
+    const subsectorSelector = document.getElementById('subsectorSelector');
+    if (subsectorSelector) subsectorSelector.classList.toggle('hidden', view !== 'subsector');
     ['subsectorChartsSection', 'balanceChartsSection', 'supplyChartsSection'].forEach(id => {
-        document.getElementById(id)?.classList.toggle('hidden', !id.toLowerCase().includes(view));
+        const section = document.getElementById(id);
+        if (section) section.classList.toggle('hidden', id.toLowerCase().indexOf(view) === -1);
     });
 }
 function setupEventListeners(appState) {

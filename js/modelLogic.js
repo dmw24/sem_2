@@ -2,6 +2,14 @@
 // Further refactored for maximum conciseness
 
 const GJ_PER_EJ = 1e9;
+const modelSafeGet = (obj, path, fallback) => {
+    let current = obj;
+    for (let i = 0; i < path.length; i += 1) {
+        if (current == null || !(path[i] in current)) return fallback;
+        current = current[path[i]];
+    }
+    return current == null ? fallback : current;
+};
 
 // --- S-Curve Calculation (Concise) ---
 const sigma = (t, k, t0) => {
@@ -48,20 +56,25 @@ const normalizeShares = (shares, force100Tech = null) => {
 function runModelCalculation(structuredData, userParams) {
     if (!structuredData || !userParams) throw new Error("Missing data or params for model.");
     const { baseActivity = {}, baseDemandTechMix = {}, unitEnergyConsumption = {}, placeholderUsefulEfficiency = {'_default': 0.65}, basePowerProdMix = {}, baseHydrogenProdMix = {}, powerTechUnitEnergyCons = {}, hydrogenTechUnitEnergyCons = {}, otherTechUnitEnergyCons = {}, baseOtherProdMix = {}, sectors = [], subsectors = {}, technologies = {}, endUseFuels = [], primaryFuels = [], hydrogenTechs = [], powerTechs = [], otherConvTechs = {}, startYear, endYear, years = [] } = structuredData;
-    if (!years?.length || !startYear || !endYear) throw new Error("Invalid years config.");
+    if (!years || !years.length || !startYear || !endYear) throw new Error("Invalid years config.");
     const { activityGrowthFactors = {}, techBehaviorsAndParams = {} } = userParams;
     const baseYr = startYear;
     console.log(`--- Running Model (${startYear}-${endYear}) ---`);
-    const results = { [baseYr]: { activity: { ...baseActivity } } }; // Init base year
+    const results = {};
+    results[baseYr] = { activity: Object.assign({}, baseActivity) }; // Init base year
 
     for (const yr of years) {
         const resYr = results[yr] = results[yr] || {}; // Ensure year object exists
 
         // --- 1. Activity ---
-        const prevActivity = results[yr - 1]?.activity;
+        const prevActivity = modelSafeGet(results, [yr - 1, 'activity'], null);
         resYr.activity = (yr === baseYr) ? results[baseYr].activity : sectors.reduce((act, s) => {
             if (subsectors[s]) act[s] = subsectors[s].reduce((subAct, b) => {
-                subAct[b] = (prevActivity?.[s]?.[b] ?? 0) * (activityGrowthFactors[`${s}|${b}`] ?? 1.0);
+                const prevVal = modelSafeGet(prevActivity, [s, b], 0);
+                const growthKey = `${s}|${b}`;
+                const growth = Object.prototype.hasOwnProperty.call(activityGrowthFactors, growthKey) ? activityGrowthFactors[growthKey] : undefined;
+                const growthFactor = (growth !== undefined && growth !== null) ? growth : 1.0;
+                subAct[b] = prevVal * growthFactor;
                 return subAct;
             }, {});
             return act;
@@ -76,7 +89,7 @@ function runModelCalculation(structuredData, userParams) {
             (techList || []).forEach(t => {
                 const pKey = `${catType}|${catKey}|${t}`;
                 const behaviorInfo = techBehaviorsAndParams[pKey] || { behavior: 'fixed' };
-                const baseVal = baseMix?.[t] ?? 0;
+                const baseVal = baseMix && Object.prototype.hasOwnProperty.call(baseMix, t) ? baseMix[t] : 0;
                 if (behaviorInfo.behavior === 's-curve' && yr > baseYr) {
                     const share = calculateForcedLogisticShare(yr, behaviorInfo.kValue, behaviorInfo.midpointYear, baseYr, baseVal, behaviorInfo.targetYear, behaviorInfo.targetShare);
                     currentShares[t] = share; sCurveTotal += share; sCurveTechs.push(t);
@@ -101,7 +114,9 @@ function runModelCalculation(structuredData, userParams) {
         };
         resYr.demandTechMix = sectors.reduce((mix, s) => {
             if (subsectors[s]) mix[s] = subsectors[s].reduce((subMix, b) => {
-                subMix[b] = calculateMix('Demand', `${s}|${b}`, technologies?.[s]?.[b] ?? [], baseDemandTechMix?.[s]?.[b] ?? {});
+                const techList = modelSafeGet(technologies, [s, b], []);
+                const baseMix = modelSafeGet(baseDemandTechMix, [s, b], {});
+                subMix[b] = calculateMix('Demand', `${s}|${b}`, techList, baseMix);
                 return subMix;
             }, {});
             return mix;
@@ -115,8 +130,11 @@ function runModelCalculation(structuredData, userParams) {
         // --- 3. Demand Tech Activity ---
         resYr.demandTechActivity = sectors.reduce((act, s) => {
             if (subsectors[s]) act[s] = subsectors[s].reduce((subAct, b) => {
-                subAct[b] = (technologies?.[s]?.[b] ?? []).reduce((techAct, t) => {
-                    techAct[t] = ((currentDemandMix?.[s]?.[b]?.[t] ?? 0) / 100) * (currentActivity?.[s]?.[b] ?? 0);
+                const techList = modelSafeGet(technologies, [s, b], []);
+                subAct[b] = techList.reduce((techAct, t) => {
+                    const mixVal = modelSafeGet(currentDemandMix, [s, b, t], 0);
+                    const activityVal = modelSafeGet(currentActivity, [s, b], 0);
+                    techAct[t] = (mixVal / 100) * activityVal;
                     return techAct;
                 }, {});
                 return subAct;
@@ -131,16 +149,23 @@ function runModelCalculation(structuredData, userParams) {
             if (subsectors[s]) {
                 resYr.fecDetailed[s] = {}; resYr.ueDetailed[s] = {};
                 subsectors[s].forEach(b => {
-                    resYr.fecDetailed[s][b] = {}; resYr.ueDetailed[s][b] = {}; resYr.ueBySubsector[b] ??= 0;
-                    (technologies?.[s]?.[b] ?? []).forEach(t => {
+                    resYr.fecDetailed[s][b] = {}; resYr.ueDetailed[s][b] = {};
+                    if (resYr.ueBySubsector[b] == null) resYr.ueBySubsector[b] = 0;
+                    const techList = modelSafeGet(technologies, [s, b], []);
+                    techList.forEach(t => {
                         resYr.fecDetailed[s][b][t] = {}; resYr.ueDetailed[s][b][t] = {};
-                        const techAct = currentDemandActivity?.[s]?.[b]?.[t] ?? 0;
-                        Object.entries(unitEnergyConsumption?.[s]?.[b]?.[t] ?? {}).forEach(([f, unitCons]) => {
+                        const techAct = modelSafeGet(currentDemandActivity, [s, b, t], 0);
+                        const unitConsData = modelSafeGet(unitEnergyConsumption, [s, b, t], {});
+                        Object.entries(unitConsData).forEach(([f, unitCons]) => {
                             if (endUseFuels.includes(f)) {
                                 const eCons = techAct * (unitCons || 0);
                                 resYr.fecDetailed[s][b][t][f] = eCons;
                                 resYr.fecByFuel[f] = (resYr.fecByFuel[f] || 0) + eCons;
-                                const eff = placeholderUsefulEfficiency?.[s]?.[b]?.[t]?.[f] ?? placeholderUsefulEfficiency?.[s]?.[b]?.[t] ?? placeholderUsefulEfficiency?.[s]?.[b] ?? placeholderUsefulEfficiency?._default ?? 0.65;
+                                let eff = modelSafeGet(placeholderUsefulEfficiency, [s, b, t, f], null);
+                                if (eff == null) eff = modelSafeGet(placeholderUsefulEfficiency, [s, b, t], null);
+                                if (eff == null) eff = modelSafeGet(placeholderUsefulEfficiency, [s, b], null);
+                                if (eff == null && placeholderUsefulEfficiency) eff = placeholderUsefulEfficiency._default;
+                                if (eff == null) eff = 0.65;
                                 const uEnergy = eCons * eff;
                                 resYr.ueDetailed[s][b][t][f] = uEnergy;
                                 resYr.ueByFuel[f] = (resYr.ueByFuel[f] || 0) + uEnergy;
@@ -156,24 +181,28 @@ function runModelCalculation(structuredData, userParams) {
         const fecH2 = resYr.fecByFuel['Hydrogen'] || 0;
         const h2Inputs = {};
         hydrogenTechs.forEach(ht => {
-            const mixFrac = (currentHydroMix?.[ht] ?? 0) / 100;
-            Object.entries(hydrogenTechUnitEnergyCons?.[ht] ?? {}).forEach(([f_in, uCons]) => {
+            const mixFrac = modelSafeGet(currentHydroMix, [ht], 0) / 100;
+            const h2Cons = modelSafeGet(hydrogenTechUnitEnergyCons, [ht], {});
+            Object.entries(h2Cons).forEach(([f_in, uCons]) => {
                 h2Inputs[f_in] = (h2Inputs[f_in] || 0) + fecH2 * mixFrac * (uCons || 0);
             });
         });
-        resYr.ecPostHydrogen = { ...resYr.fecByFuel }; delete resYr.ecPostHydrogen['Hydrogen'];
+        resYr.ecPostHydrogen = Object.assign({}, resYr.fecByFuel);
+        delete resYr.ecPostHydrogen['Hydrogen'];
         Object.entries(h2Inputs).forEach(([f, dem]) => { if (dem > 1e-3) resYr.ecPostHydrogen[f] = (resYr.ecPostHydrogen[f] || 0) + dem; });
 
         // --- 6. Power Transform ---
         const ecElec = resYr.ecPostHydrogen['Electricity'] || 0;
         const powerInputs = {};
         powerTechs.forEach(pt => {
-            const mixFrac = (currentPowerMix?.[pt] ?? 0) / 100;
-            Object.entries(powerTechUnitEnergyCons?.[pt] ?? {}).forEach(([f_in, uCons]) => {
+            const mixFrac = modelSafeGet(currentPowerMix, [pt], 0) / 100;
+            const powerCons = modelSafeGet(powerTechUnitEnergyCons, [pt], {});
+            Object.entries(powerCons).forEach(([f_in, uCons]) => {
                 powerInputs[f_in] = (powerInputs[f_in] || 0) + ecElec * mixFrac * (uCons || 0);
             });
         });
-        resYr.ecPostPower = { ...resYr.ecPostHydrogen }; delete resYr.ecPostPower['Electricity'];
+        resYr.ecPostPower = Object.assign({}, resYr.ecPostHydrogen);
+        delete resYr.ecPostPower['Electricity'];
         Object.entries(powerInputs).forEach(([f, dem]) => { if (dem > 1e-3) resYr.ecPostPower[f] = (resYr.ecPostPower[f] || 0) + dem; });
 
         // --- 7. Other Transforms ---
@@ -181,10 +210,11 @@ function runModelCalculation(structuredData, userParams) {
         Object.entries(otherConvTechs).forEach(([f_endUse, techs]) => {
              const demandConvert = resYr.ecPostPower[f_endUse] || 0;
              if (demandConvert > 1e-3) {
-                 const baseMix = baseOtherProdMix?.[f_endUse] ?? {};
+                 const baseMix = modelSafeGet(baseOtherProdMix, [f_endUse], {});
                  techs.forEach(ot => {
-                     const mixFrac = (baseMix[ot] ?? 0) / 100;
-                     Object.entries(otherTechUnitEnergyCons?.[f_endUse]?.[ot] ?? {}).forEach(([p_primary, uCons]) => {
+                     const mixFrac = (baseMix && Object.prototype.hasOwnProperty.call(baseMix, ot) ? baseMix[ot] : 0) / 100;
+                     const otherCons = modelSafeGet(otherTechUnitEnergyCons, [f_endUse, ot], {});
+                     Object.entries(otherCons).forEach(([p_primary, uCons]) => {
                          if (primaryFuels.includes(p_primary)) {
                              otherInputs[p_primary] = (otherInputs[p_primary] || 0) + demandConvert * mixFrac * (uCons || 0);
                          }
@@ -194,7 +224,7 @@ function runModelCalculation(structuredData, userParams) {
         });
 
         // --- 8. PED ---
-        resYr.pedByFuel = { ...otherInputs };
+        resYr.pedByFuel = Object.assign({}, otherInputs);
         Object.entries(resYr.ecPostPower).forEach(([f, dem]) => {
              if (primaryFuels.includes(f) && !(f in otherConvTechs) && dem > 1e-3) {
                 resYr.pedByFuel[f] = (resYr.pedByFuel[f] || 0) + dem;

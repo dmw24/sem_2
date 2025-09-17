@@ -9,7 +9,8 @@ async function initializeApp() {
     const setBtn = (text, disabled) => { if(btn) { btn.textContent = text; btn.disabled = disabled; } };
     const showError = (msg) => {
         console.error("Init Error:", msg);
-        document.getElementById('content')?.insertAdjacentHTML('afterbegin', `<p style='color:red;'>Error: ${msg}</p>`);
+        const content = document.getElementById('content');
+        if (content) content.insertAdjacentHTML('afterbegin', `<p style='color:red;'>Error: ${msg}</p>`);
         setBtn('Init Failed', true); alert(`Init Error: ${msg}`);
     };
 
@@ -20,7 +21,7 @@ async function initializeApp() {
             throw new Error("Core function missing.");
         }
         appState.structuredData = await loadAndStructureData();
-        if (!appState.structuredData?.sectors?.length) throw new Error("Data load failed.");
+        if (!appState.structuredData || !appState.structuredData.sectors || !appState.structuredData.sectors.length) throw new Error("Data load failed.");
         console.log("Data loaded.");
 
         initializeSidebarInputs(appState.structuredData);
