@@ -51,26 +51,66 @@
             <section id="subsectorChartsSection">
                 <h3 class="chart-section-heading">Subsector: <span id="selectedSubsectorName">Loading...</span></h3>
                 <div class="chart-grid">
-                     <div class="chart-box"><h3>Activity</h3><canvas id="subsectorActivityChart"></canvas></div>
-                     <div class="chart-box"><h3>FEC</h3><canvas id="subsectorFecChart"></canvas></div>
-                     <div class="chart-box"><h3>Useful Energy</h3><canvas id="subsectorUeChart"></canvas></div>
+                     <div class="chart-box">
+                         <h3>Activity</h3>
+                         <div class="chart-canvas-wrap">
+                             <canvas id="subsectorActivityChart"></canvas>
+                         </div>
+                     </div>
+                     <div class="chart-box">
+                         <h3>FEC</h3>
+                         <div class="chart-canvas-wrap">
+                             <canvas id="subsectorFecChart"></canvas>
+                         </div>
+                     </div>
+                     <div class="chart-box">
+                         <h3>Useful Energy</h3>
+                         <div class="chart-canvas-wrap">
+                             <canvas id="subsectorUeChart"></canvas>
+                         </div>
+                     </div>
                 </div>
             </section>
 
             <section id="balanceChartsSection" class="hidden">
                 <h3 class="chart-section-heading">Overall Energy Balance</h3>
                 <div class="chart-grid">
-                    <div class="chart-box"><h3>Total FEC</h3><canvas id="fecFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Total PED</h3><canvas id="pedFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Total Useful Energy</h3><canvas id="ueFuelChart"></canvas></div>
+                    <div class="chart-box">
+                        <h3>Total FEC</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="fecFuelChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Total PED</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="pedFuelChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Total Useful Energy</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="ueFuelChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section id="supplyChartsSection" class="hidden">
                 <h3 class="chart-section-heading">Supply & Transformations</h3>
                 <div class="chart-grid">
-                    <div class="chart-box"><h3>Power Generation</h3><canvas id="powerMixChart"></canvas></div>
-                    <div class="chart-box"><h3>Hydrogen Production</h3><canvas id="hydrogenMixChart"></canvas></div>
+                    <div class="chart-box">
+                        <h3>Power Generation</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="powerMixChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Hydrogen Production</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="hydrogenMixChart"></canvas>
+                        </div>
+                    </div>
                     </div>
             </section>
 
