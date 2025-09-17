@@ -26,6 +26,9 @@ const createEl = (tag, props = {}, children = []) => {
         if (key === 'textContent') el.textContent = value;
         else if (key === 'innerHTML') el.innerHTML = value;
         else if (key === 'style') Object.assign(el.style, value);
+        else if (key === 'className') el.className = value;
+        else if (key === 'htmlFor' || key === 'for') el.htmlFor = value;
+        else if (key === 'value') el.value = value;
         else if (key.startsWith('on') && typeof value === 'function') el[key.toLowerCase()] = value; // Basic event handling
         else el.setAttribute(key, value);
     });
