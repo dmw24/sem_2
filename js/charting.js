@@ -362,14 +362,16 @@ function updateCharts(yearlyResults, chartConfigData) {
         }
 
         // 8. Hydrogen Mix
+        // console.log('DEBUG: Hydrogen Techs:', hydrogenTechs);
         const activeH2Techs = hydrogenTechs.filter(tech => years.some(y => getValue(yearlyResults, [y, 'hydrogenProdMix', tech], 0) > 0));
+        // console.log('DEBUG: Active H2 Techs (FORCED):', activeH2Techs);
+
         if (activeH2Techs.length > 0) {
-            const traces = preparePlotlyData(years, activeH2Techs, (y, tech) => {
-                const totalH2 = getValue(yearlyResults, [y, 'ecPostHydrogen', 'Hydrogen'], 0);
-                const mix = getValue(yearlyResults, [y, 'hydrogenProdMix', tech], 0);
-                return ((mix / 100) * totalH2) / GJ_PER_EJ;
-            }, 'bar');
-            drawPlotlyChart('hydrogenMixChart', traces, '', 'Hydrogen Production (EJ)', true);
+            const h2MixData = preparePlotlyData(years, activeH2Techs, (y, t) => getValue(yearlyResults, [y, 'hydrogenProdMix', t], 0), 'bar');
+            drawPlotlyChart('hydrogenMixChart', h2MixData, {}, 'Hydrogen Production Mix (%)', true);
+        } else {
+            // console.warn('DEBUG: No active hydrogen techs found, skipping chart.');
+            document.getElementById('hydrogenMixChart').innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No hydrogen production data to display</div>';
         }
 
     } catch (error) {
