@@ -209,6 +209,11 @@ function renderSankey(results, year, structuredData) {
                 d3.select(this).attr('opacity', 0.5);
             });
 
+        // Add tooltips to links
+        svg.selectAll('path')
+            .append('title')
+            .text(d => `${d.source.name} → ${d.target.name}\n${(d.value / 1e9).toFixed(2)} EJ`);
+
         // Draw nodes
         const nodeGroup = svg.append('g')
             .selectAll('g')
@@ -223,7 +228,9 @@ function renderSankey(results, year, structuredData) {
             .attr('fill', d => window.getTechColor(d.name) || '#999')
             .attr('stroke', '#000')
             .attr('stroke-width', 0.5)
-            .attr('opacity', 0.9);
+            .attr('opacity', 0.9)
+            .append('title') // Add tooltip to node rect
+            .text(d => `${d.name}\n${(d.value / 1e9).toFixed(2)} EJ`);
 
         // Add labels
         nodeGroup.append('text')
