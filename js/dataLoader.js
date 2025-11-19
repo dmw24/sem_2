@@ -101,6 +101,11 @@ function transformEndUseEnergyConsData(parsedData) {
     const unitEnergyConsumption = {}; const GJ_PER_TJ = 1000;
     parsedData.forEach(row => {
         const sector = row['Sector']; const subsector = row['Subsector']; const tech = row['Technology']; const fuel = row['Fuel']; const valueTJ = row['2023'];
+
+        if (tech === 'DRI-EAF (H2)') {
+            console.log(`DEBUG (dataLoader): Loading DRI-EAF (H2). Fuel: '${fuel}', ValueTJ: ${valueTJ}`);
+        }
+
         if (sector && subsector && tech && fuel) {
             const valueGJ = (isNaN(valueTJ) ? 0 : valueTJ) * GJ_PER_TJ;
             if (!unitEnergyConsumption[sector]) unitEnergyConsumption[sector] = {}; if (!unitEnergyConsumption[sector][subsector]) unitEnergyConsumption[sector][subsector] = {}; if (!unitEnergyConsumption[sector][subsector][tech]) unitEnergyConsumption[sector][subsector][tech] = {};
@@ -254,7 +259,7 @@ async function loadAndStructureData() {
     const rawData = {};
     const loadPromises = Object.entries(csvFiles).map(async ([key, path]) => { /* ... (fetch/parse logic unchanged) ... */
         try {
-            const response = await fetch(path);
+            const response = await fetch(`${path}?t=${Date.now()}`);
             if (!response.ok) { if (response.status === 404) { console.warn(`File not found: ${path}. Treating as empty.`); rawData[key] = []; return; } throw new Error(`HTTP error! status: ${response.status} for ${path}`); }
             const csvText = await response.text(); rawData[key] = parseCSV(csvText); console.log(`Successfully loaded and parsed: ${path}`);
         } catch (error) { console.error(`Failed to load or parse ${path}:`, error); rawData[key] = []; }

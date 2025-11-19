@@ -14,7 +14,8 @@ const defaultSCurveHydrogenTechs = ['Green'];
 
 // --- Helper Functions ---
 function getValue(obj, keys, defaultValue = 0) { /* ... (unchanged) ... */
-    let current = obj; for (const key of keys) { if (current && typeof current === 'object' && key in current) { current = current[key]; } else { return defaultValue; } } return (current === null || current === undefined) ? defaultValue : current; }
+    let current = obj; for (const key of keys) { if (current && typeof current === 'object' && key in current) { current = current[key]; } else { return defaultValue; } } return (current === null || current === undefined) ? defaultValue : current;
+}
 
 // Basic sigmoid function (Step 1)
 function sigma(t, k, t0) {
@@ -55,22 +56,22 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
 
     // --- Input Validation and Edge Cases ---
     if (isNaN(k) || isNaN(t0) || isNaN(InitialValue) || isNaN(TargetValue)) {
-        console.warn("Invalid input to calculateForcedLogisticShare (NaN). Returning startVal.", {year, kUserInput, t0UserInput, baseYear, startVal, targetYear, targetVal});
+        console.warn("Invalid input to calculateForcedLogisticShare (NaN). Returning startVal.", { year, kUserInput, t0UserInput, baseYear, startVal, targetYear, targetVal });
         return startVal;
     }
-     // If k is effectively zero, return start value (no change)
-     if (Math.abs(k) < 1e-9) {
+    // If k is effectively zero, return start value (no change)
+    if (Math.abs(k) < 1e-9) {
         return InitialValue;
-     }
-     // If start and target values are the same, return that value
-     if (Math.abs(TargetValue - InitialValue) < 0.01) {
-         return InitialValue;
-     }
-     // If start and target times are the same, invalid input
-     if (Math.abs(t_target - t_start) < 0.1) {
-          console.warn("Start year and target year are the same. Returning startVal.", {t_start, t_target});
-          return InitialValue;
-     }
+    }
+    // If start and target values are the same, return that value
+    if (Math.abs(TargetValue - InitialValue) < 0.01) {
+        return InitialValue;
+    }
+    // If start and target times are the same, invalid input
+    if (Math.abs(t_target - t_start) < 0.1) {
+        console.warn("Start year and target year are the same. Returning startVal.", { t_start, t_target });
+        return InitialValue;
+    }
 
     // --- Step 2: Compute σ at start and target points ---
     // Adjust sign of k based on growth/decline for internal sigma calculation consistency if needed
@@ -86,7 +87,7 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
         // This happens if k=0 (handled above) or if t_start/t_target are placed
         // symmetrically around t0 with the same k, or if t_start=t_target (handled above).
         // Indicates parameters might be inconsistent or curve is flat between points.
-        console.warn("Sigma values at start and target are too close; cannot determine asymptotes reliably. Returning linear interpolation or startVal.", {sigma_s, sigma_t, k, t0, t_start, t_target});
+        console.warn("Sigma values at start and target are too close; cannot determine asymptotes reliably. Returning linear interpolation or startVal.", { sigma_s, sigma_t, k, t0, t_start, t_target });
         // Fallback: linear interpolation or just return start/end value
         if (t <= t_start) return InitialValue;
         if (t >= t_target) return TargetValue;
@@ -122,13 +123,14 @@ function calculateForcedLogisticShare(year, kUserInput, t0UserInput, baseYear, s
 
 
 function normalizeShares(sharesObject, force100Tech = null) { /* ... (unchanged) ... */
-    let total = Object.values(sharesObject).reduce((sum, val) => sum + Number(val || 0), 0); const normalized = {}; if (force100Tech && force100Tech in sharesObject && Math.abs(sharesObject[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } return normalized; } if (total <= 0.001) { return sharesObject; } const scaleFactor = 100 / total; for (const key in sharesObject) { normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor; } if (force100Tech && normalized[force100Tech] && Math.abs(normalized[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } } return normalized; }
+    let total = Object.values(sharesObject).reduce((sum, val) => sum + Number(val || 0), 0); const normalized = {}; if (force100Tech && force100Tech in sharesObject && Math.abs(sharesObject[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } return normalized; } if (total <= 0.001) { return sharesObject; } const scaleFactor = 100 / total; for (const key in sharesObject) { normalized[key] = (Number(sharesObject[key] || 0)) * scaleFactor; } if (force100Tech && normalized[force100Tech] && Math.abs(normalized[force100Tech] - 100) < 0.1) { for (const key in sharesObject) { normalized[key] = (key === force100Tech) ? 100 : 0; } } return normalized;
+}
 
 
 // --- CORE MODEL CALCULATION FUNCTION ---
 function runModelCalculation(structuredData, userInputParameters) {
     const {
-        baseActivity = {}, baseDemandTechMix = {}, unitEnergyConsumption = {}, placeholderUsefulEfficiency = {'_default': 0.65},
+        baseActivity = {}, baseDemandTechMix = {}, unitEnergyConsumption = {}, placeholderUsefulEfficiency = { '_default': 0.65 },
         basePowerProdMix = {}, baseHydrogenProdMix = {}, powerTechUnitEnergyCons = {}, hydrogenTechUnitEnergyCons = {},
         otherTechUnitEnergyCons = {}, baseOtherProdMix = {},
         sectors = [], subsectors = {}, technologies = {}, endUseFuels = [], primaryFuels = [],
@@ -136,8 +138,8 @@ function runModelCalculation(structuredData, userInputParameters) {
         startYear, endYear, years
     } = structuredData || {};
 
-     if (!years || !Array.isArray(years) || years.length === 0) { throw new Error("Model Calculation Error: 'years' array is missing or invalid."); }
-     if (!startYear || !endYear) { throw new Error("Model Calculation Error: 'startYear' or 'endYear' is missing."); }
+    if (!years || !Array.isArray(years) || years.length === 0) { throw new Error("Model Calculation Error: 'years' array is missing or invalid."); }
+    if (!startYear || !endYear) { throw new Error("Model Calculation Error: 'startYear' or 'endYear' is missing."); }
 
     const { activityGrowthFactors = {}, techBehaviorsAndParams = {} } = userInputParameters || {};
     const baseYear = startYear;
@@ -147,7 +149,7 @@ function runModelCalculation(structuredData, userInputParameters) {
     for (const year of years) {
         yearlyResults[year] = {};
         // 1. Activity Levels (Unchanged)
-        const currentActivity = {}; if (year === baseYear) { Object.assign(currentActivity, baseActivity); } else { const prevResults = yearlyResults[year - 1]; if (!prevResults || !prevResults.activity) { throw new Error(`Cannot calculate activity for ${year}: Previous year (${year-1}) data missing.`); } const prevActivity = prevResults.activity; sectors.forEach(s => { if(subsectors[s]){ currentActivity[s] = {}; subsectors[s].forEach(b => { const growthInputKey = `${s}|${b}`; const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0; currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor; }); } }); } yearlyResults[year].activity = currentActivity;
+        const currentActivity = {}; if (year === baseYear) { Object.assign(currentActivity, baseActivity); } else { const prevResults = yearlyResults[year - 1]; if (!prevResults || !prevResults.activity) { throw new Error(`Cannot calculate activity for ${year}: Previous year (${year - 1}) data missing.`); } const prevActivity = prevResults.activity; sectors.forEach(s => { if (subsectors[s]) { currentActivity[s] = {}; subsectors[s].forEach(b => { const growthInputKey = `${s}|${b}`; const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0; currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor; }); } }); } yearlyResults[year].activity = currentActivity;
 
         // 2. Technology Mixes
         const calculateMixWithBehavior = (categoryType, categoryKey, techList, baseMixObject) => {
@@ -156,6 +158,12 @@ function runModelCalculation(structuredData, userInputParameters) {
             (techList || []).forEach(t => {
                 const paramKey = `${categoryType}|${categoryKey}|${t}`;
                 const behaviorInfo = techBehaviorsAndParams[paramKey] || { behavior: 'fixed' };
+
+                // DEBUG: Trace Steel Mix
+                if (categoryKey === 'Industry|Steel' && t === 'DRI-EAF (H2)' && year === 2050) {
+                    console.log(`DEBUG (modelLogic): Steel DRI-EAF (H2) ParamKey: '${paramKey}', Behavior:`, behaviorInfo);
+                }
+
                 const baseValue = getValue(baseMix, [t], 0); // Base share % (0-100)
 
                 if (behaviorInfo.behavior === 's-curve') {
@@ -174,7 +182,7 @@ function runModelCalculation(structuredData, userInputParameters) {
                     sCurveTechs.push(t);
                     // Check if target is 100 - needed for normalization override
                     if (Math.abs(behaviorInfo.targetShare - 100) < 0.01 && year >= behaviorInfo.targetYear) {
-                         techTargeting100 = t;
+                        techTargeting100 = t;
                     }
 
                 } else if (behaviorInfo.behavior === 'fixed') {
@@ -184,7 +192,7 @@ function runModelCalculation(structuredData, userInputParameters) {
                     // Or keep previous logic? Let's keep previous logic for now:
                     // It gets scaled down proportionally by normalizeShares if S-curves grow.
                     currentShares[t] = baseValue; declineBaseTotal += baseValue; declineTechs.push(t);
-                 }
+                }
             });
             // Normalize logic remains the same...
             if (techTargeting100) { return normalizeShares(currentShares, techTargeting100); } const availableForFixedAndDecline = Math.max(0, 100 - sCurveTotalShare); const targetFixedTotal = Math.min(fixedBaseTotal, availableForFixedAndDecline); const fixedScaleFactor = (fixedBaseTotal > 0.01) ? targetFixedTotal / fixedBaseTotal : 0; let fixedAllocatedTotal = 0; fixedTechs.forEach(t => { const scaledShare = currentShares[t] * fixedScaleFactor; currentShares[t] = scaledShare; fixedAllocatedTotal += scaledShare; }); const availableForDecline = Math.max(0, availableForFixedAndDecline - fixedAllocatedTotal); const declineScaleFactor = (declineBaseTotal > 0.01) ? availableForDecline / declineBaseTotal : 0; declineTechs.forEach(t => { currentShares[t] *= declineScaleFactor; }); return normalizeShares(currentShares, null);
@@ -194,7 +202,7 @@ function runModelCalculation(structuredData, userInputParameters) {
             // *** DEBUG LOGS from previous step (can be removed if stable) ***
             if (year === baseYear) { console.log(`DEBUG (modelLogic - Base Year ${year}): Received baseDemandTechMix for Steel:`, JSON.stringify(getValue(baseDemandTechMix, ['Industry', 'Steel'], {}))); }
 
-            const currentDemandTechMix = {}; sectors.forEach(s => { if(subsectors[s]){ currentDemandTechMix[s] = {}; subsectors[s].forEach(b => { const base = getValue(baseDemandTechMix, [s, b], {}); const techs = technologies[s]?.[b] || []; currentDemandTechMix[s][b] = calculateMixWithBehavior('Demand', `${s}|${b}`, techs, base); }); } }); yearlyResults[year].demandTechMix = currentDemandTechMix;
+            const currentDemandTechMix = {}; sectors.forEach(s => { if (subsectors[s]) { currentDemandTechMix[s] = {}; subsectors[s].forEach(b => { const base = getValue(baseDemandTechMix, [s, b], {}); const techs = technologies[s]?.[b] || []; currentDemandTechMix[s][b] = calculateMixWithBehavior('Demand', `${s}|${b}`, techs, base); }); } }); yearlyResults[year].demandTechMix = currentDemandTechMix;
             yearlyResults[year].powerProdMix = calculateMixWithBehavior('Power', 'Power', powerTechs, basePowerProdMix);
             yearlyResults[year].hydrogenProdMix = calculateMixWithBehavior('Hydrogen', 'Hydrogen', hydrogenTechs, baseHydrogenProdMix);
 
@@ -203,10 +211,33 @@ function runModelCalculation(structuredData, userInputParameters) {
         } catch (mixError) { console.error(`Error calculating mix for year ${year}:`, mixError); throw mixError; }
 
         // 3. Demand Technology Activity (Unchanged)
-        const currentDemandTechMix_yr = yearlyResults[year].demandTechMix; const currentActivity_yr = yearlyResults[year].activity; const currentDemandTechActivity = {}; sectors.forEach(s => { if(subsectors[s]){ currentDemandTechActivity[s] = {}; subsectors[s].forEach(b => { currentDemandTechActivity[s][b] = {}; const techs = technologies[s]?.[b] || []; techs.forEach(t => { const mixPercent = getValue(currentDemandTechMix_yr, [s, b, t], 0); const mixFraction = mixPercent / 100; const activityLevel = getValue(currentActivity_yr, [s, b], 0); currentDemandTechActivity[s][b][t] = mixFraction * activityLevel; }); }); } }); yearlyResults[year].demandTechActivity = currentDemandTechActivity;
+        const currentDemandTechMix_yr = yearlyResults[year].demandTechMix; const currentActivity_yr = yearlyResults[year].activity; const currentDemandTechActivity = {}; sectors.forEach(s => { if (subsectors[s]) { currentDemandTechActivity[s] = {}; subsectors[s].forEach(b => { currentDemandTechActivity[s][b] = {}; const techs = technologies[s]?.[b] || []; techs.forEach(t => { const mixPercent = getValue(currentDemandTechMix_yr, [s, b, t], 0); const mixFraction = mixPercent / 100; const activityLevel = getValue(currentActivity_yr, [s, b], 0); currentDemandTechActivity[s][b][t] = mixFraction * activityLevel; }); }); } }); yearlyResults[year].demandTechActivity = currentDemandTechActivity;
 
         // 4. FEC and UE (Unchanged)
-        const currentFecDetailed = {}; const currentUeDetailed = {}; const currentFecByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); const currentUeByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); const currentUeBySubsector = {}; sectors.forEach(s => { if(subsectors[s]){ currentFecDetailed[s] = {}; currentUeDetailed[s] = {}; subsectors[s].forEach(b => { currentFecDetailed[s][b] = {}; currentUeDetailed[s][b] = {}; currentUeBySubsector[b] = 0; const techs = technologies[s]?.[b] || []; techs.forEach(t => { currentFecDetailed[s][b][t] = {}; currentUeDetailed[s][b][t] = {}; const techActivity = getValue(currentDemandTechActivity, [s, b, t], 0); const unitConsMap = getValue(unitEnergyConsumption, [s, b, t], {}); Object.keys(unitConsMap).forEach(f => { if (endUseFuels.includes(f)) { const unitCons = unitConsMap[f]; const energyCons = techActivity * unitCons; currentFecDetailed[s][b][t][f] = energyCons; currentFecByFuel[f] += energyCons; const efficiency = getValue(placeholderUsefulEfficiency, [s, b, t, f], getValue(placeholderUsefulEfficiency, [s, b, t], getValue(placeholderUsefulEfficiency, [s, b], getValue(placeholderUsefulEfficiency, '_default', 0.65)))); const usefulEnergy = energyCons * efficiency; currentUeDetailed[s][b][t][f] = usefulEnergy; currentUeByFuel[f] += usefulEnergy; currentUeBySubsector[b] += usefulEnergy; } }); }); }); } }); yearlyResults[year].fecDetailed = currentFecDetailed; yearlyResults[year].ueDetailed = currentUeDetailed; yearlyResults[year].fecByFuel = currentFecByFuel; yearlyResults[year].ueByFuel = currentUeByFuel; yearlyResults[year].ueBySubsector = currentUeBySubsector;
+        const currentFecDetailed = {}; const currentUeDetailed = {}; const currentFecByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); const currentUeByFuel = endUseFuels.reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); const currentUeBySubsector = {}; sectors.forEach(s => {
+            if (subsectors[s]) {
+                currentFecDetailed[s] = {}; currentUeDetailed[s] = {}; subsectors[s].forEach(b => {
+                    currentFecDetailed[s][b] = {}; currentUeDetailed[s][b] = {}; currentUeBySubsector[b] = 0; const techs = technologies[s]?.[b] || []; techs.forEach(t => {
+                        currentFecDetailed[s][b][t] = {}; currentUeDetailed[s][b][t] = {}; const techActivity = getValue(currentDemandTechActivity, [s, b, t], 0); const unitConsMap = getValue(unitEnergyConsumption, [s, b, t], {}); Object.keys(unitConsMap).forEach(f => {
+                            if (endUseFuels.includes(f)) {
+                                const unitCons = unitConsMap[f]; const energyCons = techActivity * unitCons; currentFecDetailed[s][b][t][f] = energyCons; currentFecByFuel[f] += energyCons;
+
+                                // DEBUG: Trace Hydrogen for Steel
+                                if (s === 'Industry' && b === 'Steel' && t === 'DRI-EAF (H2)' && f === 'Hydrogen' && year === 2050) {
+                                    console.log(`DEBUG (modelLogic): Steel DRI-EAF (H2) Hydrogen: Activity=${techActivity}, UnitCons=${unitCons}, EnergyCons=${energyCons}`);
+                                }
+
+                                const efficiency = getValue(placeholderUsefulEfficiency, [s, b, t, f], getValue(placeholderUsefulEfficiency, [s, b, t], getValue(placeholderUsefulEfficiency, [s, b], getValue(placeholderUsefulEfficiency, '_default', 0.65)))); const usefulEnergy = energyCons * efficiency; currentUeDetailed[s][b][t][f] = usefulEnergy; currentUeByFuel[f] += usefulEnergy; currentUeBySubsector[b] += usefulEnergy;
+                            }
+                        });
+                    });
+                });
+            }
+        }); yearlyResults[year].fecDetailed = currentFecDetailed; yearlyResults[year].ueDetailed = currentUeDetailed; yearlyResults[year].fecByFuel = currentFecByFuel; yearlyResults[year].ueByFuel = currentUeByFuel; yearlyResults[year].ueBySubsector = currentUeBySubsector;
+
+        if (year === 2050) {
+            console.log('DEBUG (modelLogic): Final FEC by Fuel 2050:', JSON.stringify(currentFecByFuel));
+        }
 
         // 5. Hydrogen Transformation (Unchanged)
         const currentHydrogenProdMix_yr = yearlyResults[year].hydrogenProdMix; const fecHydrogen = currentFecByFuel['Hydrogen'] || 0; let currentHydrogenInputEnergyByFuel = primaryFuels.concat(endUseFuels).reduce((acc, f) => ({ ...acc, [f]: 0 }), {}); hydrogenTechs.forEach(ht => { const mixPercent = getValue(currentHydrogenProdMix_yr, [ht], 0); const mixFraction = mixPercent / 100; const unitConsMap = getValue(hydrogenTechUnitEnergyCons, [ht], {}); Object.keys(unitConsMap).forEach(f_input => { const unitCons = unitConsMap[f_input]; const demand = fecHydrogen * mixFraction * unitCons; currentHydrogenInputEnergyByFuel[f_input] = (currentHydrogenInputEnergyByFuel[f_input] || 0) + demand; }); }); const currentEcPostHydrogen = { ...currentFecByFuel }; delete currentEcPostHydrogen['Hydrogen']; Object.keys(currentHydrogenInputEnergyByFuel).forEach(f => { if (currentHydrogenInputEnergyByFuel[f] > 0.001) { currentEcPostHydrogen[f] = (currentEcPostHydrogen[f] || 0) + currentHydrogenInputEnergyByFuel[f]; } }); yearlyResults[year].ecPostHydrogen = currentEcPostHydrogen;
