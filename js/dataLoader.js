@@ -12,7 +12,8 @@ const csvFiles = {
     hydrogenTechMix: 'data/Hydrogen_tech_mix.csv',
     hydrogenTechEff: 'data/Hydrogen_tech_eff.csv',
     powerTechEff: 'data/Power_tech_eff.csv',
-    otherTransform: 'data/Other_transform_tech_energy_int.csv'
+    otherTransform: 'data/Other_transform_tech_energy_int.csv',
+    scenarios: 'data/scenarios.csv'
 };
 
 // Define years range (needed by model logic and charting)
@@ -38,7 +39,7 @@ function parseCSV(csvText) {
         const entry = {};
         let isValidEntry = true;
         if (values.length !== headers.length) { isValidEntry = false; }
-        if(isValidEntry){
+        if (isValidEntry) {
             for (let j = 0; j < headers.length; j++) {
                 const header = headers[j];
                 if (header === undefined) continue;
@@ -111,18 +112,29 @@ function transformEndUseEnergyConsData(parsedData) {
 
 function transformUsefulEnergyConvData(parsedData) {
     const placeholderUsefulEfficiency = { '_default': 0.65 };
-    if (!parsedData || parsedData.length === 0) { console.warn("Useful Energy Conversion data is missing or empty. Using default efficiency only."); return { placeholderUsefulEfficiency }; }
+    const usefulEnergyTypeMap = {}; // New map for Type
+
+    if (!parsedData || parsedData.length === 0) { console.warn("Useful Energy Conversion data is missing or empty. Using default efficiency only."); return { placeholderUsefulEfficiency, usefulEnergyTypeMap }; }
     parsedData.forEach(row => {
         const sector = row['Sector']; const subsector = row['Subsector']; const tech = row['Technology']; const fuel = row['Fuel'];
         const valueFraction = row['2023']; // Read the fraction directly (e.g., 0.9)
+        const type = row['Type']; // Read the Type
 
         if (sector && subsector && tech && fuel) {
             if (!placeholderUsefulEfficiency[sector]) placeholderUsefulEfficiency[sector] = {}; if (!placeholderUsefulEfficiency[sector][subsector]) placeholderUsefulEfficiency[sector][subsector] = {}; if (!placeholderUsefulEfficiency[sector][subsector][tech]) placeholderUsefulEfficiency[sector][subsector][tech] = {};
             // *** Store the fraction directly ***
             placeholderUsefulEfficiency[sector][subsector][tech][fuel] = isNaN(valueFraction) ? 0 : valueFraction;
+
+            // *** Store the Type ***
+            if (type) {
+                if (!usefulEnergyTypeMap[sector]) usefulEnergyTypeMap[sector] = {};
+                if (!usefulEnergyTypeMap[sector][subsector]) usefulEnergyTypeMap[sector][subsector] = {};
+                if (!usefulEnergyTypeMap[sector][subsector][tech]) usefulEnergyTypeMap[sector][subsector][tech] = {};
+                usefulEnergyTypeMap[sector][subsector][tech][fuel] = type;
+            }
         }
     });
-    return { placeholderUsefulEfficiency };
+    return { placeholderUsefulEfficiency, usefulEnergyTypeMap };
 }
 
 function transformPowerMixData(parsedData) {
@@ -174,21 +186,21 @@ function transformPowerEffData(parsedData) {
 }
 
 function transformHydrogenEffData(parsedData) {
-     const hydrogenTechUnitEnergyCons = {};
-     parsedData.forEach(row => {
-         const tech = row['Technology']; const fuel = row['Fuel'];
-         const efficiencyFraction = row['2023']; // Read fraction directly (e.g., 0.71)
+    const hydrogenTechUnitEnergyCons = {};
+    parsedData.forEach(row => {
+        const tech = row['Technology']; const fuel = row['Fuel'];
+        const efficiencyFraction = row['2023']; // Read fraction directly (e.g., 0.71)
 
-         if (!fuel && tech) { console.warn(`Missing 'Fuel' column in Hydrogen tech eff data for Tech: ${tech}.`); return; }
-         if (tech && fuel) {
-             // *** Use fraction directly ***
-             const effFrac = isNaN(efficiencyFraction) ? 0 : efficiencyFraction;
-             const unitCons = (effFrac > 0.001) ? 1 / effFrac : 0; // Calculate 1 / efficiency
-             if (!hydrogenTechUnitEnergyCons[tech]) hydrogenTechUnitEnergyCons[tech] = {};
-             hydrogenTechUnitEnergyCons[tech][fuel] = unitCons;
-         }
-     });
-     return { hydrogenTechUnitEnergyCons };
+        if (!fuel && tech) { console.warn(`Missing 'Fuel' column in Hydrogen tech eff data for Tech: ${tech}.`); return; }
+        if (tech && fuel) {
+            // *** Use fraction directly ***
+            const effFrac = isNaN(efficiencyFraction) ? 0 : efficiencyFraction;
+            const unitCons = (effFrac > 0.001) ? 1 / effFrac : 0; // Calculate 1 / efficiency
+            if (!hydrogenTechUnitEnergyCons[tech]) hydrogenTechUnitEnergyCons[tech] = {};
+            hydrogenTechUnitEnergyCons[tech][fuel] = unitCons;
+        }
+    });
+    return { hydrogenTechUnitEnergyCons };
 }
 
 function transformOtherTransformData(parsedData) {
@@ -204,8 +216,33 @@ function transformOtherTransformData(parsedData) {
     });
     if (!otherTechUnitEnergyCons['Biomass']) { otherTechUnitEnergyCons['Biomass'] = { 'Biomass refining': { 'Biomass': 1.1 } }; }
     if (otherTechUnitEnergyCons['Oil'] && otherTechUnitEnergyCons['Oil']['Oil refining']) { if (!otherTechUnitEnergyCons['Oil']['Oil refining']['Gas']) { otherTechUnitEnergyCons['Oil']['Oil refining']['Gas'] = 0.05; } if (!otherTechUnitEnergyCons['Oil']['Oil refining']['Oil']) { otherTechUnitEnergyCons['Oil']['Oil refining']['Oil'] = 1.05; } }
-    const baseOtherProdMix = {}; Object.keys(otherTechUnitEnergyCons).forEach(fuel => { const techs = Object.keys(otherTechUnitEnergyCons[fuel]); if (techs.length > 0) { baseOtherProdMix[fuel] = {}; baseOtherProdMix[fuel][techs[0]] = 100; for(let i = 1; i < techs.length; i++){ baseOtherProdMix[fuel][techs[i]] = 0; } } });
+    const baseOtherProdMix = {}; Object.keys(otherTechUnitEnergyCons).forEach(fuel => { const techs = Object.keys(otherTechUnitEnergyCons[fuel]); if (techs.length > 0) { baseOtherProdMix[fuel] = {}; baseOtherProdMix[fuel][techs[0]] = 100; for (let i = 1; i < techs.length; i++) { baseOtherProdMix[fuel][techs[i]] = 0; } } });
     return { otherTechUnitEnergyCons, baseOtherProdMix };
+}
+
+function transformScenariosData(parsedData) {
+    const scenarios = {};
+    parsedData.forEach(row => {
+        const scenario = row['Scenario'];
+        const paramKey = row['ParameterKey'];
+        const behavior = row['Behavior'];
+        const targetShare = row['TargetShare'];
+        const targetYear = row['TargetYear'];
+        const kValue = row['KValue'];
+        const midpointYear = row['MidpointYear'];
+
+        if (scenario && paramKey && behavior) {
+            if (!scenarios[scenario]) scenarios[scenario] = {};
+            scenarios[scenario][paramKey] = {
+                behavior,
+                targetShare: parseFloat(targetShare) || 0,
+                targetYear: parseInt(targetYear, 10) || 2050,
+                kValue: parseFloat(kValue) || 0.15,
+                midpointYear: parseInt(midpointYear, 10) || 2037
+            };
+        }
+    });
+    return { scenarios };
 }
 // --- End of Transformation Functions ---
 
@@ -230,12 +267,13 @@ async function loadAndStructureData() {
         const { baseActivity, activityUnits } = transformActivityData(rawData.activityLevel || []);
         const { baseDemandTechMix } = transformEndUseMixData(rawData.endUseTechMix || []); // Now stores 0-100
         const { unitEnergyConsumption } = transformEndUseEnergyConsData(rawData.endUseTechEnergyCons || []);
-        const { placeholderUsefulEfficiency } = transformUsefulEnergyConvData(rawData.usefulEnergyConv || []); // Now stores 0-1
+        const { placeholderUsefulEfficiency, usefulEnergyTypeMap } = transformUsefulEnergyConvData(rawData.usefulEnergyConv || []); // Now stores 0-1
         const { basePowerProdMix } = transformPowerMixData(rawData.powerTechMix || []); // Now stores 0-100
         const { baseHydrogenProdMix } = transformHydrogenMixData(rawData.hydrogenTechMix || []); // Now stores 0-100
         const { powerTechUnitEnergyCons } = transformPowerEffData(rawData.powerTechEff || []); // Now uses 0-1 input
         const { hydrogenTechUnitEnergyCons } = transformHydrogenEffData(rawData.hydrogenTechEff || []); // Now uses 0-1 input
         const { otherTechUnitEnergyCons, baseOtherProdMix } = transformOtherTransformData(rawData.otherTransform || []);
+        const { scenarios } = transformScenariosData(rawData.scenarios || []);
 
         // Debug log from previous step (now shows fraction -> percent)
         console.log("DEBUG (dataLoader - loadAndStructureData): Final baseDemandTechMix for Steel:", JSON.stringify(baseDemandTechMix?.Industry?.Steel));
@@ -253,8 +291,9 @@ async function loadAndStructureData() {
         const allEndUseSubsectors = sectors.filter(s => s !== 'Power' && s !== 'Energy industry').flatMap(s => (subsectors[s] || []).map(b => ({ sector: s, subsector: b })));
 
         structuredModelData = {
-            baseActivity, activityUnits, baseDemandTechMix, unitEnergyConsumption, placeholderUsefulEfficiency, basePowerProdMix, baseHydrogenProdMix, powerTechUnitEnergyCons, hydrogenTechUnitEnergyCons, otherTechUnitEnergyCons, baseOtherProdMix,
+            baseActivity, activityUnits, baseDemandTechMix, unitEnergyConsumption, placeholderUsefulEfficiency, usefulEnergyTypeMap, basePowerProdMix, baseHydrogenProdMix, powerTechUnitEnergyCons, hydrogenTechUnitEnergyCons, otherTechUnitEnergyCons, baseOtherProdMix,
             sectors, subsectors, technologies, endUseFuels, primaryFuels, hydrogenTechs, powerTechs, otherConvTechs, allEndUseSubsectors,
+            scenarios,
             startYear, endYear, years
         };
         console.log("Data transformation complete.");

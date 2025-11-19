@@ -1,25 +1,25 @@
 Sector,Subsector,Technology,Fuel,Type,Unit,2023
-Transport,Passenger cars,EV,Electricity,Transport,% efficiency,0.9
-Transport,Passenger cars,ICE,Oil,Transport,% efficiency,0.25
-Transport,Trucks,EV,Electricity,Transport,% efficiency,0.9
-Transport,Trucks,ICE,Oil,Transport,% efficiency,0.25
-Transport,Buses,EV,Electricity,Transport,% efficiency,0.9
-Transport,Buses,ICE,Oil,Transport,% efficiency,0.25
-Transport,2/3 wheelers,EV,Electricity,Transport,% efficiency,0.9
-Transport,2/3 wheelers,ICE,Oil,Transport,% efficiency,0.25
-Transport,Ships,Conventional ship,Oil,Transport,% efficiency,0.25
-Transport,Ships,Ammonia ship,Hydrogen,Transport,% efficiency,0.25
-Transport,Ships,Electric ship,Electricity,Transport,% efficiency,0.8
-Transport,Planes,Conventional plane,Oil,Transport,% efficiency,0.25
-Transport,Planes,Electric plane,Electricity,Transport,% efficiency,0.8
-Transport,Trains,Diesel train,Oil,Transport,% efficiency,0.25
-Transport,Trains,Electric train,Electricity,Transport,% efficiency,0.8
-Transport,Other transport,Conventional,Coal,Transport,% efficiency,0.25
-Transport,Other transport,Conventional,Oil,Transport,% efficiency,0.25
-Transport,Other transport,Conventional,Gas,Transport,% efficiency,0.25
-Transport,Other transport,Conventional,Biomass,Transport,% efficiency,0.25
-Transport,Other transport,Conventional,Electricity,Transport,% efficiency,0.8
-Transport,Other transport,Electrified,Electricity,Transport,% efficiency,0.8
+Transport,Passenger cars,EV,Electricity,Transport service,% efficiency,0.9
+Transport,Passenger cars,ICE,Oil,Transport service,% efficiency,0.25
+Transport,Trucks,EV,Electricity,Transport service,% efficiency,0.9
+Transport,Trucks,ICE,Oil,Transport service,% efficiency,0.25
+Transport,Buses,EV,Electricity,Transport service,% efficiency,0.9
+Transport,Buses,ICE,Oil,Transport service,% efficiency,0.25
+Transport,2/3 wheelers,EV,Electricity,Transport service,% efficiency,0.9
+Transport,2/3 wheelers,ICE,Oil,Transport service,% efficiency,0.25
+Transport,Ships,Conventional ship,Oil,Transport service,% efficiency,0.25
+Transport,Ships,Ammonia ship,Hydrogen,Transport service,% efficiency,0.25
+Transport,Ships,Electric ship,Electricity,Transport service,% efficiency,0.8
+Transport,Planes,Conventional plane,Oil,Transport service,% efficiency,0.25
+Transport,Planes,Electric plane,Electricity,Transport service,% efficiency,0.8
+Transport,Trains,Diesel train,Oil,Transport service,% efficiency,0.25
+Transport,Trains,Electric train,Electricity,Transport service,% efficiency,0.8
+Transport,Other transport,Conventional,Coal,Transport service,% efficiency,0.25
+Transport,Other transport,Conventional,Oil,Transport service,% efficiency,0.25
+Transport,Other transport,Conventional,Gas,Transport service,% efficiency,0.25
+Transport,Other transport,Conventional,Biomass,Transport service,% efficiency,0.25
+Transport,Other transport,Conventional,Electricity,Transport service,% efficiency,0.8
+Transport,Other transport,Electrified,Electricity,Transport service,% efficiency,0.8
 Industry,Steel,BF-BOF,Coal,Feedstock,% efficiency,1.0
 Industry,Steel,BF-BOF,Gas,High T heating,% efficiency,0.5
 Industry,Steel,BF-BOF,Electricity,Stationary power,% efficiency,0.9
@@ -51,7 +51,7 @@ Industry,Other industry - feedstock,Feedstock,Coal,Feedstock,% efficiency,1.0
 Industry,Other industry - feedstock,Feedstock,Oil,Feedstock,% efficiency,1.0
 Industry,Other industry - feedstock,Feedstock,Gas,Feedstock,% efficiency,1.0
 Industry,Other industry - energy,Conventional,Coal,Stationary power,% efficiency,0.25
-Industry,Other industry - energy,Conventional,Oil,Transport,% efficiency,0.25
+Industry,Other industry - energy,Conventional,Oil,Transport service,% efficiency,0.25
 Industry,Other industry - energy,Conventional,Gas,Stationary power,% efficiency,0.25
 Industry,Other industry - energy,Conventional,Biomass,Stationary power,% efficiency,0.25
 Industry,Other industry - energy,Conventional,Electricity,Stationary power,% efficiency,0.9
@@ -71,7 +71,7 @@ Buildings,Residential lighting,Conventional,Electricity,Lighting,% efficiency,0.
 Buildings,Residential lighting,Conventional,Oil,Lighting,% efficiency,0.1
 Buildings,Residential lighting,Full LED,Electricity,Lighting,% efficiency,0.5
 Buildings,Other residential,Conventional,Coal,Low T heating,% efficiency,0.8
-Buildings,Other residential,Conventional,Oil,Transport,% efficiency,0.25
+Buildings,Other residential,Conventional,Oil,Transport service,% efficiency,0.25
 Buildings,Other residential,Conventional,Gas,Stationary power,% efficiency,0.25
 Buildings,Other residential,Conventional,Electricity,Stationary power,% efficiency,0.9
 Buildings,Other residential,Conventional,Biomass,Low T heating,% efficiency,0.2
@@ -88,7 +88,7 @@ Buildings,Commercial lighting,Conventional,Electricity,Lighting,% efficiency,0.5
 Buildings,Commercial lighting,Conventional,Oil,Lighting,% efficiency,0.1
 Buildings,Commercial lighting,Full LED,Electricity,Lighting,% efficiency,0.9
 Buildings,Other commercial,Conventional,Coal,Low T heating,% efficiency,0.5
-Buildings,Other commercial,Conventional,Oil,Transport,% efficiency,0.25
+Buildings,Other commercial,Conventional,Oil,Transport service,% efficiency,0.25
 Buildings,Other commercial,Conventional,Gas,Stationary power,% efficiency,0.25
 Buildings,Other commercial,Conventional,Electricity,Stationary power,% efficiency,0.9
 Buildings,Other commercial,Conventional,Biomass,Low T heating,% efficiency,0.2

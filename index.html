@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,13 +12,21 @@
 
     <link rel="stylesheet" href="css/style.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    </head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Charts -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <!-- D3 and D3-Sankey -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+    <script type="text/javascript" src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+</head>
+
 <body>
     <header class="container">
         <h1>S-Curve Energy Model</h1>
         <p class="disclaimer">
-            Energy system projection model (2023-2050). Define subsector growth and technology behavior (S-Curve, Decline, Fixed).
+            Energy system projection model (2023-2050). Define subsector growth and technology behavior (S-Curve,
+            Decline, Fixed).
         </p>
     </header>
 
@@ -25,64 +34,153 @@
 
         <div id="sidebar">
             <h2>Model Parameters</h2>
+
+            <div style="margin-bottom: 20px;">
+                <label for="selectScenario"
+                    style="display: block; font-weight: 600; color: var(--slate-blue); margin-bottom: 8px;">Select
+                    Preset Scenario:</label>
+                <select id="selectScenario"
+                    style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--grey-blue); font-size: 14px;">
+                    <option value="">-- Custom --</option>
+                </select>
+            </div>
+
             <button type="button" id="runModelBtn">Run Model & Update Charts</button>
             <div id="inputGroupsContainer">
-                </div>
+            </div>
         </div>
 
         <div id="content">
             <h2>Results Projection (2023 - 2050)</h2>
 
             <div id="chartViewSelectorContainer">
-                 <label for="selectChartView">Select Chart View:</label>
-                 <select id="selectChartView">
-                     <option value="subsector" selected>Subsector Details</option>
-                     <option value="balance">Overall Energy Balance</option>
-                     <option value="supply">Supply & Transformations</option>
-                 </select>
+                <label for="selectChartView">Select Chart View:</label>
+                <select id="selectChartView">
+                    <option value="subsector" selected>Subsector Details</option>
+                    <option value="balance">Overall Energy Balance</option>
+                    <option value="supply">Supply & Transformations</option>
+                    <option value="deltas">Deltas (Year-over-Year Changes)</option>
+                    <option value="sankey">Sankey Diagram (Flows)</option>
+                </select>
             </div>
 
             <div id="subsectorSelector">
                 <label for="selectSubsector">View Detailed Charts for Subsector:</label>
                 <select id="selectSubsector">
-                    </select>
+                </select>
+            </div>
+
+            <div id="sankeyControls" class="hidden"
+                style="background: var(--white); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--grey-blue); margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
+                <label for="sankeyYearSlider" style="font-weight: 600; color: var(--slate-blue);">Select Year:</label>
+                <input type="range" id="sankeyYearSlider" min="2023" max="2050" value="2050" step="1"
+                    style="flex-grow: 1; accent-color: var(--ember-green);">
+                <span id="sankeyYearDisplay"
+                    style="font-weight: 700; color: var(--ember-green); min-width: 50px;">2050</span>
+
+                <div
+                    style="display: flex; align-items: center; gap: 8px; margin-left: 15px; border-left: 1px solid #e2e8f0; padding-left: 15px;">
+                    <input type="checkbox" id="toggleSubsectors" checked
+                        style="accent-color: var(--ember-green); width: 16px; height: 16px;">
+                    <label for="toggleSubsectors"
+                        style="font-weight: 600; color: var(--slate-blue); cursor: pointer;">Show Subsectors</label>
+                </div>
             </div>
 
             <section id="subsectorChartsSection">
-                <h3 class="chart-section-heading">Subsector Details: <span id="selectedSubsectorName">Loading...</span></h3>
+                <h3 class="chart-section-heading">Subsector Details: <span id="selectedSubsectorName">Loading...</span>
+                </h3>
                 <div id="subsectorCharts" class="chart-grid">
-                     <div class="chart-box"><h3>Activity by Technology</h3><canvas id="subsectorActivityChart"></canvas></div>
-                     <div class="chart-box"><h3>Final Energy (FEC) by Fuel</h3><canvas id="subsectorFecChart"></canvas></div>
-                     <div class="chart-box"><h3>Useful Energy (UE) by Fuel</h3><canvas id="subsectorUeChart"></canvas></div>
+                    <div class="chart-box">
+                        <h3>Activity by Technology</h3>
+                        <div id="subsectorActivityChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Final Energy (FEC) by Fuel</h3>
+                        <div id="subsectorFecChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Useful Energy (UE) by Fuel</h3>
+                        <div id="subsectorUeChart" class="chart-container"></div>
+                    </div>
                 </div>
             </section>
 
             <section id="balanceChartsSection" class="hidden">
                 <h3 class="chart-section-heading">Overall Energy Balance</h3>
                 <div id="balanceCharts" class="chart-grid">
-                    <div class="chart-box"><h3>Total Final Energy (FEC) by Fuel</h3><canvas id="fecFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Total Primary Energy (PED) by Fuel</h3><canvas id="pedFuelChart"></canvas></div>
-                    <div class="chart-box"><h3>Total Useful Energy (UE) by Fuel</h3><canvas id="ueFuelChart"></canvas></div>
+                    <div class="chart-box">
+                        <h3>Total FEC by Fuel</h3>
+                        <div id="fecFuelChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Total Primary Energy (PED) by Fuel</h3>
+                        <div id="pedFuelChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Total Useful Energy (UE) by Fuel</h3>
+                        <div id="ueFuelChart" class="chart-container"></div>
+                    </div>
                 </div>
             </section>
 
             <section id="supplyChartsSection" class="hidden">
                 <h3 class="chart-section-heading">Energy Supply & Transformations</h3>
                 <div id="supplyCharts" class="chart-grid">
-                    <div class="chart-box"><h3>Power Generation by Technology</h3><canvas id="powerMixChart"></canvas></div>
-                    <div class="chart-box"><h3>Hydrogen Production by Technology</h3><canvas id="hydrogenMixChart"></canvas></div>
+                    <div class="chart-box">
+                        <h3>Power Generation Mix</h3>
+                        <div id="powerMixChart" class="chart-container"></div>
                     </div>
+                    <div class="chart-box">
+                        <h3>Hydrogen Production Mix</h3>
+                        <div id="hydrogenMixChart" class="chart-container"></div>
+                    </div>
+                </div>
             </section>
 
-        </div> </div> <footer>
+            <section id="deltaChartsSection" class="hidden">
+                <h3 class="chart-section-heading">Year-over-Year Changes (Deltas)</h3>
+                <div id="deltaCharts" class="chart-grid">
+                    <div class="chart-box">
+                        <h3>Primary Energy (PED) Delta by Fuel</h3>
+                        <div id="pedDeltaChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Electricity Generation Delta by Technology</h3>
+                        <div id="elecGenDeltaChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Final Energy (FEC) Delta by Fuel</h3>
+                        <div id="fecDeltaChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Useful Energy (UE) Delta by Fuel</h3>
+                        <div id="ueDeltaChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sankeySection" class="hidden">
+                <h3 class="chart-section-heading">Energy Flows (Sankey Diagram)</h3>
+                <div id="sankeyChart"
+                    style="width: 100%; height: 800px; background: var(--white); border: 1px solid var(--grey-blue); border-radius: 12px; box-shadow: var(--shadow-md);">
+                </div>
+            </section>
+
+        </div>
+    </div>
+    <footer>
         S-Curve Energy Model | Projections: 2023-2050 | Data Source: User Provided CSVs
     </footer>
 
     <script src="js/charting.js"></script>
+    <script src="js/sankeyRenderer.js"></script>
     <script src="js/dataLoader.js"></script>
     <script src="js/modelLogic.js"></script>
+    <script src="js/visualEditor.js"></script>
     <script src="js/uiController.js"></script>
     <script src="js/main.js"></script>
 
 </body>
+
 </html>

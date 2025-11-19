@@ -1,0 +1,181 @@
+Scenario,ParameterKey,Behavior,TargetShare,TargetYear,KValue,MidpointYear
+Fast Transition,Demand|Transport|Passenger cars|EV,s-curve,80,2050,0.15,2037
+Fast Transition,Demand|Transport|Passenger cars|ICE,decline,20,2050,0.15,2037
+Fast Transition,Demand|Transport|Trucks|EV,s-curve,75,2050,0.15,2037
+Fast Transition,Demand|Transport|Trucks|ICE,decline,25,2050,0.15,2037
+Fast Transition,Demand|Transport|Buses|EV,s-curve,85,2050,0.15,2037
+Fast Transition,Demand|Transport|Buses|ICE,decline,15,2050,0.15,2037
+Fast Transition,Demand|Transport|2/3 wheelers|EV,s-curve,80,2050,0.15,2037
+Fast Transition,Demand|Transport|2/3 wheelers|ICE,decline,20,2050,0.15,2037
+Fast Transition,Demand|Transport|Ships|Ammonia ship,s-curve,60,2050,0.12,2040
+Fast Transition,Demand|Transport|Ships|Conventional ship,decline,40,2050,0.12,2040
+Fast Transition,Demand|Transport|Planes|Electric plane,s-curve,40,2050,0.1,2040
+Fast Transition,Demand|Transport|Planes|Conventional plane,decline,60,2050,0.1,2040
+Fast Transition,Demand|Transport|Trains|Electric train,s-curve,90,2050,0.18,2035
+Fast Transition,Demand|Transport|Trains|Diesel train,decline,10,2050,0.18,2035
+Fast Transition,Demand|Industry|Steel|DRI-EAF (H2),s-curve,70,2050,0.15,2037
+Fast Transition,Demand|Industry|Steel|BF-BOF,decline,20,2050,0.15,2037
+Fast Transition,Demand|Industry|Steel|EAF,fixed,,,
+Fast Transition,Demand|Industry|Cement|Electric kiln,s-curve,65,2050,0.14,2038
+Fast Transition,Demand|Industry|Cement|Conventional kiln,decline,35,2050,0.14,2038
+Fast Transition,Demand|Industry|Chemicals|Electrified,s-curve,70,2050,0.15,2037
+Fast Transition,Demand|Industry|Chemicals|Conventional,decline,30,2050,0.15,2037
+Fast Transition,Demand|Industry|Low temp. heating|Heat pump,s-curve,75,2050,0.16,2036
+Fast Transition,Demand|Industry|Low temp. heating|Fossil boiler,decline,15,2050,0.16,2036
+Fast Transition,Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
+Fast Transition,Demand|Industry|High temp. heating|Electric furnace,s-curve,65,2050,0.14,2038
+Fast Transition,Demand|Industry|High temp. heating|Fossil furnace,decline,25,2050,0.14,2038
+Fast Transition,Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
+Fast Transition,Demand|Industry|Other industry - energy|Electrified,s-curve,75,2050,0.15,2037
+Fast Transition,Demand|Industry|Other industry - energy|Conventional,decline,25,2050,0.15,2037
+Fast Transition,Demand|Buildings|Residential heating|Heat pump,s-curve,80,2050,0.16,2036
+Fast Transition,Demand|Buildings|Residential heating|Fossil boiler,decline,10,2050,0.16,2036
+Fast Transition,Demand|Buildings|Residential heating|Biomass heating,fixed,,,
+Fast Transition,Demand|Buildings|Residential heating|Electric heating,fixed,,,
+Fast Transition,Demand|Buildings|Residential cooking|Electrified,s-curve,85,2050,0.17,2035
+Fast Transition,Demand|Buildings|Residential cooking|Conventional fossil,decline,10,2050,0.17,2035
+Fast Transition,Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
+Fast Transition,Demand|Buildings|Residential lighting|Full LED,s-curve,95,2050,0.2,2033
+Fast Transition,Demand|Buildings|Residential lighting|Conventional,decline,5,2050,0.2,2033
+Fast Transition,Demand|Buildings|Other residential|Electrified,s-curve,80,2050,0.15,2037
+Fast Transition,Demand|Buildings|Other residential|Conventional,decline,20,2050,0.15,2037
+Fast Transition,Demand|Buildings|Building cooling|High efficiency airco,s-curve,85,2050,0.16,2036
+Fast Transition,Demand|Buildings|Building cooling|Low efficiency airco,decline,15,2050,0.16,2036
+Fast Transition,Demand|Buildings|Commercial heating|Heat pump,s-curve,80,2050,0.16,2036
+Fast Transition,Demand|Buildings|Commercial heating|Fossil boiler,decline,10,2050,0.16,2036
+Fast Transition,Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
+Fast Transition,Demand|Buildings|Commercial heating|Electric heating,fixed,,,
+Fast Transition,Demand|Buildings|Commercial lighting|Full LED,s-curve,95,2050,0.2,2033
+Fast Transition,Demand|Buildings|Commercial lighting|Conventional,decline,5,2050,0.2,2033
+Fast Transition,Demand|Buildings|Other commercial|Electrified,s-curve,80,2050,0.15,2037
+Fast Transition,Demand|Buildings|Other commercial|Conventional,decline,20,2050,0.15,2037
+Fast Transition,Power|Power|Solar PV,s-curve,40,2050,0.18,2035
+Fast Transition,Power|Power|Wind,s-curve,35,2050,0.18,2035
+Fast Transition,Power|Power|Hydro,fixed,,,
+Fast Transition,Power|Power|Nuclear power,fixed,,,
+Fast Transition,Power|Power|Biomass power,fixed,,,
+Fast Transition,Power|Power|Gas power,decline,5,2050,0.18,2035
+Fast Transition,Power|Power|Coal power,decline,2,2050,0.2,2033
+Fast Transition,Power|Power|Oil power,decline,1,2050,0.2,2033
+Fast Transition,Hydrogen|Hydrogen|Green,s-curve,85,2050,0.18,2035
+Fast Transition,Hydrogen|Hydrogen|Blue,decline,15,2050,0.18,2035
+Faster Transition,Demand|Transport|Passenger cars|EV,s-curve,95,2045,0.2,2034
+Faster Transition,Demand|Transport|Passenger cars|ICE,decline,5,2045,0.2,2034
+Faster Transition,Demand|Transport|Trucks|EV,s-curve,90,2045,0.2,2034
+Faster Transition,Demand|Transport|Trucks|ICE,decline,10,2045,0.2,2034
+Faster Transition,Demand|Transport|Buses|EV,s-curve,95,2045,0.2,2034
+Faster Transition,Demand|Transport|Buses|ICE,decline,5,2045,0.2,2034
+Faster Transition,Demand|Transport|2/3 wheelers|EV,s-curve,95,2045,0.2,2034
+Faster Transition,Demand|Transport|2/3 wheelers|ICE,decline,5,2045,0.2,2034
+Faster Transition,Demand|Transport|Ships|Ammonia ship,s-curve,75,2050,0.15,2037
+Faster Transition,Demand|Transport|Ships|Conventional ship,decline,25,2050,0.15,2037
+Faster Transition,Demand|Transport|Planes|Electric plane,s-curve,60,2050,0.13,2038
+Faster Transition,Demand|Transport|Planes|Conventional plane,decline,40,2050,0.13,2038
+Faster Transition,Demand|Transport|Trains|Electric train,s-curve,98,2045,0.22,2033
+Faster Transition,Demand|Transport|Trains|Diesel train,decline,2,2045,0.22,2033
+Faster Transition,Demand|Industry|Steel|DRI-EAF (H2),s-curve,85,2045,0.2,2034
+Faster Transition,Demand|Industry|Steel|BF-BOF,decline,10,2045,0.2,2034
+Faster Transition,Demand|Industry|Steel|EAF,fixed,,,
+Faster Transition,Demand|Industry|Cement|Electric kiln,s-curve,80,2045,0.18,2035
+Faster Transition,Demand|Industry|Cement|Conventional kiln,decline,20,2045,0.18,2035
+Faster Transition,Demand|Industry|Chemicals|Electrified,s-curve,85,2045,0.2,2034
+Faster Transition,Demand|Industry|Chemicals|Conventional,decline,15,2045,0.2,2034
+Faster Transition,Demand|Industry|Low temp. heating|Heat pump,s-curve,90,2045,0.2,2034
+Faster Transition,Demand|Industry|Low temp. heating|Fossil boiler,decline,5,2045,0.2,2034
+Faster Transition,Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
+Faster Transition,Demand|Industry|High temp. heating|Electric furnace,s-curve,80,2045,0.18,2035
+Faster Transition,Demand|Industry|High temp. heating|Fossil furnace,decline,15,2045,0.18,2035
+Faster Transition,Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
+Faster Transition,Demand|Industry|Other industry - energy|Electrified,s-curve,90,2045,0.2,2034
+Faster Transition,Demand|Industry|Other industry - energy|Conventional,decline,10,2045,0.2,2034
+Faster Transition,Demand|Buildings|Residential heating|Heat pump,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Residential heating|Fossil boiler,decline,3,2045,0.2,2034
+Faster Transition,Demand|Buildings|Residential heating|Biomass heating,fixed,,,
+Faster Transition,Demand|Buildings|Residential heating|Electric heating,fixed,,,
+Faster Transition,Demand|Buildings|Residential cooking|Electrified,s-curve,95,2045,0.22,2033
+Faster Transition,Demand|Buildings|Residential cooking|Conventional fossil,decline,3,2045,0.22,2033
+Faster Transition,Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
+Faster Transition,Demand|Buildings|Residential lighting|Full LED,s-curve,98,2045,0.25,2032
+Faster Transition,Demand|Buildings|Residential lighting|Conventional,decline,2,2045,0.25,2032
+Faster Transition,Demand|Buildings|Other residential|Electrified,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Other residential|Conventional,decline,8,2045,0.2,2034
+Faster Transition,Demand|Buildings|Building cooling|High efficiency airco,s-curve,95,2045,0.2,2034
+Faster Transition,Demand|Buildings|Building cooling|Low efficiency airco,decline,5,2045,0.2,2034
+Faster Transition,Demand|Buildings|Commercial heating|Heat pump,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Commercial heating|Fossil boiler,decline,3,2045,0.2,2034
+Faster Transition,Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
+Faster Transition,Demand|Buildings|Commercial heating|Electric heating,fixed,,,
+Faster Transition,Demand|Buildings|Commercial lighting|Full LED,s-curve,98,2045,0.25,2032
+Faster Transition,Demand|Buildings|Commercial lighting|Conventional,decline,2,2045,0.25,2032
+Faster Transition,Demand|Buildings|Other commercial|Electrified,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Other commercial|Conventional,decline,8,2045,0.2,2034
+Faster Transition,Power|Power|Solar PV,s-curve,50,2045,0.22,2033
+Faster Transition,Power|Power|Wind,s-curve,40,2045,0.22,2033
+Faster Transition,Power|Power|Hydro,fixed,,,
+Faster Transition,Power|Power|Nuclear power,fixed,,,
+Faster Transition,Power|Power|Biomass power,fixed,,,
+Faster Transition,Power|Power|Gas power,decline,2,2045,0.22,2033
+Faster Transition,Power|Power|Coal power,decline,0.5,2045,0.25,2032
+Faster Transition,Power|Power|Oil power,decline,0.5,2045,0.25,2032
+Faster Transition,Hydrogen|Hydrogen|Green,s-curve,95,2045,0.22,2033
+Faster Transition,Hydrogen|Hydrogen|Blue,decline,5,2045,0.22,2033
+Net Zero,Demand|Transport|Passenger cars|EV,s-curve,100,2050,0.25,2035
+Net Zero,Demand|Transport|Passenger cars|ICE,decline,0,2050,0.25,2035
+Net Zero,Demand|Transport|Trucks|EV,s-curve,100,2050,0.25,2035
+Net Zero,Demand|Transport|Trucks|ICE,decline,0,2050,0.25,2035
+Net Zero,Demand|Transport|Buses|EV,s-curve,100,2050,0.25,2035
+Net Zero,Demand|Transport|Buses|ICE,decline,0,2050,0.25,2035
+Net Zero,Demand|Transport|2/3 wheelers|EV,s-curve,100,2050,0.25,2035
+Net Zero,Demand|Transport|2/3 wheelers|ICE,decline,0,2050,0.25,2035
+Net Zero,Demand|Transport|Ships|Ammonia ship,s-curve,90,2050,0.18,2037
+Net Zero,Demand|Transport|Ships|Conventional ship,decline,10,2050,0.18,2037
+Net Zero,Demand|Transport|Planes|Electric plane,s-curve,80,2050,0.16,2038
+Net Zero,Demand|Transport|Planes|Conventional plane,decline,20,2050,0.16,2038
+Net Zero,Demand|Transport|Trains|Electric train,s-curve,100,2045,0.25,2033
+Net Zero,Demand|Transport|Trains|Diesel train,decline,0,2045,0.25,2033
+Net Zero,Demand|Industry|Steel|DRI-EAF (H2),s-curve,95,2050,0.22,2035
+Net Zero,Demand|Industry|Steel|BF-BOF,decline,0,2050,0.22,2035
+Net Zero,Demand|Industry|Steel|EAF,fixed,,,
+Net Zero,Demand|Industry|Cement|Electric kiln,s-curve,90,2050,0.2,2036
+Net Zero,Demand|Industry|Cement|Conventional kiln,decline,10,2050,0.2,2036
+Net Zero,Demand|Industry|Chemicals|Electrified,s-curve,95,2050,0.22,2035
+Net Zero,Demand|Industry|Chemicals|Conventional,decline,5,2050,0.22,2035
+Net Zero,Demand|Industry|Low temp. heating|Heat pump,s-curve,95,2050,0.22,2035
+Net Zero,Demand|Industry|Low temp. heating|Fossil boiler,decline,0,2050,0.22,2035
+Net Zero,Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
+Net Zero,Demand|Industry|High temp. heating|Electric furnace,s-curve,90,2050,0.2,2036
+Net Zero,Demand|Industry|High temp. heating|Fossil furnace,decline,5,2050,0.2,2036
+Net Zero,Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
+Net Zero,Demand|Industry|Other industry - energy|Electrified,s-curve,95,2050,0.22,2035
+Net Zero,Demand|Industry|Other industry - energy|Conventional,decline,5,2050,0.22,2035
+Net Zero,Demand|Buildings|Residential heating|Heat pump,s-curve,98,2050,0.23,2034
+Net Zero,Demand|Buildings|Residential heating|Fossil boiler,decline,0,2050,0.23,2034
+Net Zero,Demand|Buildings|Residential heating|Biomass heating,fixed,,,
+Net Zero,Demand|Buildings|Residential heating|Electric heating,fixed,,,
+Net Zero,Demand|Buildings|Residential cooking|Electrified,s-curve,98,2050,0.23,2034
+Net Zero,Demand|Buildings|Residential cooking|Conventional fossil,decline,0,2050,0.23,2034
+Net Zero,Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
+Net Zero,Demand|Buildings|Residential lighting|Full LED,s-curve,100,2045,0.3,2032
+Net Zero,Demand|Buildings|Residential lighting|Conventional,decline,0,2045,0.3,2032
+Net Zero,Demand|Buildings|Other residential|Electrified,s-curve,98,2050,0.23,2034
+Net Zero,Demand|Buildings|Other residential|Conventional,decline,2,2050,0.23,2034
+Net Zero,Demand|Buildings|Building cooling|High efficiency airco,s-curve,98,2050,0.23,2034
+Net Zero,Demand|Buildings|Building cooling|Low efficiency airco,decline,2,2050,0.23,2034
+Net Zero,Demand|Buildings|Commercial heating|Heat pump,s-curve,98,2050,0.23,2034
+Net Zero,Demand|Buildings|Commercial heating|Fossil boiler,decline,0,2050,0.23,2034
+Net Zero,Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
+Net Zero,Demand|Buildings|Commercial heating|Electric heating,fixed,,,
+Net Zero,Demand|Buildings|Commercial lighting|Full LED,s-curve,100,2045,0.3,2032
+Net Zero,Demand|Buildings|Commercial lighting|Conventional,decline,0,2045,0.3,2032
+Net Zero,Demand|Buildings|Other commercial|Electrified,s-curve,98,2050,0.23,2034
+Net Zero,Demand|Buildings|Other commercial|Conventional,decline,2,2050,0.23,2034
+Net Zero,Power|Power|Solar PV,s-curve,55,2050,0.25,2034
+Net Zero,Power|Power|Wind,s-curve,40,2050,0.25,2034
+Net Zero,Power|Power|Hydro,fixed,,,
+Net Zero,Power|Power|Nuclear power,fixed,,,
+Net Zero,Power|Power|Biomass power,fixed,,,
+Net Zero,Power|Power|Gas power,decline,0,2050,0.25,2034
+Net Zero,Power|Power|Coal power,decline,0,2045,0.3,2032
+Net Zero,Power|Power|Oil power,decline,0,2045,0.3,2032
+Net Zero,Hydrogen|Hydrogen|Green,s-curve,100,2050,0.25,2034
+Net Zero,Hydrogen|Hydrogen|Blue,decline,0,2050,0.25,2034
