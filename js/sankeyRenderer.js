@@ -74,6 +74,8 @@ function renderSankey(results, year, structuredData) {
 
             if (columnDefs.sectors.includes(node.name)) {
                 x = 0.50;
+            } else if (node.name === 'Hydrogen Plants') {
+                x = 0.37; // Between Power (0.25) and Sectors (0.50)
             } else if (columnDefs.transformation.includes(node.name)) {
                 x = 0.25;
             } else if (node.name === 'Losses') {
@@ -95,11 +97,13 @@ function renderSankey(results, year, structuredData) {
         const height = 800; // Increased from 800 to accommodate all nodes
         const margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
-        // Create SVG
+        // Create SVG with viewBox for responsiveness
         const svg = d3.select(container)
             .append('svg')
-            .attr('width', width)
-            .attr('height', height);
+            .attr('width', '100%')
+            .attr('height', '100%')
+            .attr('viewBox', `0 0 ${width} ${height}`)
+            .attr('preserveAspectRatio', 'xMidYMid meet');
 
         // Create sankey layout with increased padding to avoid overlaps
         const sankeyLayout = d3.sankey()

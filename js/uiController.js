@@ -235,6 +235,10 @@ function populateScenarioDropdown(structuredData) {
     });
 
     console.log("Scenario dropdown populated.");
+
+    // Set default to Frozen Technology
+    scenarioSelect.value = 'Frozen Technology';
+    applyScenario('Frozen Technology', structuredData);
 }
 
 function applyScenario(scenarioName, structuredData) {
