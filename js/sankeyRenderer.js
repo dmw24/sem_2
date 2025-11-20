@@ -281,19 +281,13 @@ function renderSankey(results, year, structuredData) {
                 // Highlight this node
                 d3.select(this).attr('opacity', 1).attr('stroke-width', 2);
 
-                // Highlight all connected links
+                // Highlight all connected links (only change opacity, not stroke-width)
                 svg.selectAll('.sankey-link')
                     .attr('opacity', link => {
                         if (link.source === d || link.target === d) {
                             return 0.9;
                         }
                         return 0.15;
-                    })
-                    .attr('stroke-width', link => {
-                        if (link.source === d || link.target === d) {
-                            return Math.max(1, link.width * 1.2);
-                        }
-                        return Math.max(1, link.width);
                     });
 
                 // Build tooltip content
@@ -335,10 +329,9 @@ function renderSankey(results, year, structuredData) {
                 // Reset node
                 d3.select(this).attr('opacity', 0.9).attr('stroke-width', 0.5);
 
-                // Reset all links
+                // Reset all links (only reset opacity, stroke-width stays constant)
                 svg.selectAll('.sankey-link')
-                    .attr('opacity', 0.5)
-                    .attr('stroke-width', d => Math.max(1, d.width));
+                    .attr('opacity', 0.5);
 
                 tooltip.style('opacity', 0);
             });
