@@ -35,12 +35,9 @@
         <div id="sidebar">
             <h2>Model Parameters</h2>
 
-            <div style="margin-bottom: 20px;">
-                <label for="selectScenario"
-                    style="display: block; font-weight: 600; color: var(--slate-blue); margin-bottom: 8px;">Select
-                    Preset Scenario:</label>
-                <select id="selectScenario"
-                    style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--grey-blue); font-size: 14px;">
+            <div class="scenario-selector-container">
+                <label for="selectScenario">Select Preset Scenario:</label>
+                <select id="selectScenario">
                     <option value="">-- Custom --</option>
                 </select>
             </div>
@@ -163,22 +160,22 @@
             <section id="sankeySection" class="hidden">
                 <h3 class="chart-section-heading">Energy Flows (Sankey Diagram)</h3>
                 <div id="sankeyChart"
-                    style="width: 100%; height: 800px; background: var(--white); border: 1px solid var(--grey-blue); border-radius: 12px; box-shadow: var(--shadow-md);">
+                    style="width: 100%; height: 1000px; background: var(--white); border: 1px solid var(--grey-blue); border-radius: 12px; box-shadow: var(--shadow-md);">
                 </div>
             </section>
 
         </div>
     </div>
     <footer>
-        S-Curve Energy Model | Projections: 2023-2050 | Data Source: User Provided CSVs
+        Created by Daan Walter, 2025
     </footer>
 
     <script src="js/charting.js"></script>
     <script src="js/sankeyRenderer.js"></script>
-    <script src="js/dataLoader.js"></script>
+    <script src="js/dataLoader.js?v=2"></script>
     <script src="js/modelLogic.js"></script>
     <script src="js/visualEditor.js"></script>
-    <script src="js/uiController.js"></script>
+    <script src="js/uiController.js?v=2"></script>
     <script src="js/main.js"></script>
 
 </body>

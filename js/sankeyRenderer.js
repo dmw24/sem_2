@@ -1,5 +1,33 @@
 // js/sankeyRenderer.js - D3-Sankey Implementation
 
+// Helper function to get color for subsectors based on parent sector
+function getNodeColor(nodeName, structuredData) {
+    // Useful energy blocks should be dark grey
+    const usefulTypes = ['Cooling', 'Feedstock', 'High T heating', 'Lighting', 'Low T heating', 'Stationary power', 'Transport service'];
+    if (usefulTypes.includes(nodeName)) {
+        return '#374151'; // Dark grey
+    }
+    // Check if it's a sector (direct match in getTechColor)
+    const directColor = window.getTechColor(nodeName);
+    if (directColor && directColor !== '#3b82f6') { // #3b82f6 is default blue from fallback
+        return directColor;
+    }
+
+    // Check if it's a subsector - find parent sector
+    const subsectors = structuredData?.subsectors || {};
+    const sectors = ['Buildings', 'Industry', 'Transport'];
+
+    for (const sector of sectors) {
+        if (subsectors[sector] && subsectors[sector].includes(nodeName)) {
+            // Return the parent sector's color
+            return window.getTechColor(sector);
+        }
+    }
+
+    // Fallback to getTechColor
+    return window.getTechColor(nodeName);
+}
+
 function renderSankey(results, year, structuredData) {
     console.log("--- renderSankey (D3) CALLED ---", { year });
 
@@ -94,7 +122,7 @@ function renderSankey(results, year, structuredData) {
 
         // Set up dimensions
         const width = container.offsetWidth || 1000;
-        const height = 800; // Increased from 800 to accommodate all nodes
+        const height = 1000; // Increased to prevent cutoff at bottom
         const margin = { top: 10, right: 10, bottom: 10, left: 10 };
 
         // Create SVG with viewBox for responsiveness
@@ -273,7 +301,7 @@ function renderSankey(results, year, structuredData) {
             .attr('y', d => d.y0)
             .attr('height', d => d.y1 - d.y0)
             .attr('width', d => d.x1 - d.x0)
-            .attr('fill', d => window.getTechColor(d.name) || '#999')
+            .attr('fill', d => getNodeColor(d.name, structuredData) || '#999')
             .attr('stroke', '#000')
             .attr('stroke-width', 0.5)
             .attr('opacity', 0.9)

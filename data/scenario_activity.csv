@@ -1,0 +1,133 @@
+Scenario,Sector,Subsector,CAAGR_2024_2035,CAAGR_2035_2050,GrowthFactor_2024_2035,GrowthFactor_2035_2050
+Fast Transition,Industry,Steel,1.0,0.9,1.010,1.009
+Fast Transition,Industry,Cement,0.6,0.4,1.006,1.004
+Fast Transition,Industry,Chemicals,2.1,1.4,1.021,1.014
+Fast Transition,Industry,Low temp. heating,1.5,1.3,1.015,1.013
+Fast Transition,Industry,High temp. heating,0.8,0.7,1.008,1.007
+Fast Transition,Industry,Other industry - energy,1.5,1.4,1.015,1.014
+Fast Transition,Transport,Passenger cars,2.6,2.3,1.026,1.023
+Fast Transition,Transport,Trucks,2.7,2.2,1.027,1.022
+Fast Transition,Transport,Planes,3.7,2.9,1.037,1.029
+Fast Transition,Transport,Ships,1.6,1.6,1.016,1.016
+Fast Transition,Transport,Buses,2.0,1.8,1.020,1.018
+Fast Transition,Transport,2/3 wheelers,3.0,2.5,1.030,1.025
+Fast Transition,Transport,Trains,2.0,1.8,1.020,1.018
+Fast Transition,Transport,Other transport,2.5,2.1,1.025,1.021
+Fast Transition,Buildings,Residential heating,1.6,1.4,1.016,1.014
+Fast Transition,Buildings,Residential cooking,1.2,1.0,1.012,1.010
+Fast Transition,Buildings,Residential lighting,1.6,1.4,1.016,1.014
+Fast Transition,Buildings,Other residential,1.6,1.4,1.016,1.014
+Fast Transition,Buildings,Building cooling,2.0,1.7,1.020,1.017
+Fast Transition,Buildings,Commercial heating,2.1,1.6,1.021,1.016
+Fast Transition,Buildings,Commercial lighting,2.1,1.6,1.021,1.016
+Fast Transition,Buildings,Other commercial,2.1,1.6,1.021,1.016
+Faster Transition,Industry,Steel,1.0,0.9,1.010,1.009
+Faster Transition,Industry,Cement,0.6,0.4,1.006,1.004
+Faster Transition,Industry,Chemicals,2.1,1.4,1.021,1.014
+Faster Transition,Industry,Low temp. heating,1.5,1.3,1.015,1.013
+Faster Transition,Industry,High temp. heating,0.8,0.7,1.008,1.007
+Faster Transition,Industry,Other industry - energy,1.5,1.4,1.015,1.014
+Faster Transition,Transport,Passenger cars,2.6,2.3,1.026,1.023
+Faster Transition,Transport,Trucks,2.7,2.2,1.027,1.022
+Faster Transition,Transport,Planes,3.7,2.9,1.037,1.029
+Faster Transition,Transport,Ships,1.6,1.6,1.016,1.016
+Faster Transition,Transport,Buses,2.0,1.8,1.020,1.018
+Faster Transition,Transport,2/3 wheelers,3.0,2.5,1.030,1.025
+Faster Transition,Transport,Trains,2.0,1.8,1.020,1.018
+Faster Transition,Transport,Other transport,2.5,2.1,1.025,1.021
+Faster Transition,Buildings,Residential heating,1.6,1.4,1.016,1.014
+Faster Transition,Buildings,Residential cooking,1.2,1.0,1.012,1.010
+Faster Transition,Buildings,Residential lighting,1.6,1.4,1.016,1.014
+Faster Transition,Buildings,Other residential,1.6,1.4,1.016,1.014
+Faster Transition,Buildings,Building cooling,2.0,1.7,1.020,1.017
+Faster Transition,Buildings,Commercial heating,2.1,1.6,1.021,1.016
+Faster Transition,Buildings,Commercial lighting,2.1,1.6,1.021,1.016
+Faster Transition,Buildings,Other commercial,2.1,1.6,1.021,1.016
+IEA NZE (downscaled approx),Industry,Steel,0.3,0.1,1.003,1.001
+IEA NZE (downscaled approx),Industry,Cement,-0.2,-0.4,0.998,0.996
+IEA NZE (downscaled approx),Industry,Chemicals,1.4,0.5,1.014,1.005
+IEA NZE (downscaled approx),Industry,Low temp. heating,0.8,0.4,1.008,1.004
+IEA NZE (downscaled approx),Industry,High temp. heating,0.8,0.4,1.008,1.004
+IEA NZE (downscaled approx),Industry,Other industry - energy,0.8,0.4,1.008,1.004
+IEA NZE (downscaled approx),Transport,Passenger cars,2.1,1.9,1.021,1.019
+IEA NZE (downscaled approx),Transport,Trucks,2.6,2.2,1.026,1.022
+IEA NZE (downscaled approx),Transport,Planes,2.8,1.9,1.028,1.019
+IEA NZE (downscaled approx),Transport,Ships,-0.3,0.3,0.997,1.003
+IEA NZE (downscaled approx),Transport,Buses,2.1,1.9,1.021,1.019
+IEA NZE (downscaled approx),Transport,2/3 wheelers,2.5,2.0,1.025,1.020
+IEA NZE (downscaled approx),Transport,Trains,2.5,2.0,1.025,1.020
+IEA NZE (downscaled approx),Transport,Other transport,2.0,1.5,1.020,1.015
+IEA NZE (downscaled approx),Buildings,Residential heating,1.6,1.4,1.016,1.014
+IEA NZE (downscaled approx),Buildings,Residential cooking,1.2,1.0,1.012,1.010
+IEA NZE (downscaled approx),Buildings,Residential lighting,1.6,1.4,1.016,1.014
+IEA NZE (downscaled approx),Buildings,Other residential,1.6,1.4,1.016,1.014
+IEA NZE (downscaled approx),Buildings,Building cooling,2.5,2.0,1.025,1.020
+IEA NZE (downscaled approx),Buildings,Commercial heating,2.1,1.6,1.021,1.016
+IEA NZE (downscaled approx),Buildings,Commercial lighting,2.1,1.6,1.021,1.016
+IEA NZE (downscaled approx),Buildings,Other commercial,2.1,1.6,1.021,1.016
+IEA CPS (downscaled approx),Industry,Steel,1.0,0.9,1.010,1.009
+IEA CPS (downscaled approx),Industry,Cement,0.6,0.4,1.006,1.004
+IEA CPS (downscaled approx),Industry,Chemicals,2.1,1.4,1.021,1.014
+IEA CPS (downscaled approx),Industry,Low temp. heating,1.5,1.3,1.015,1.013
+IEA CPS (downscaled approx),Industry,High temp. heating,0.8,0.7,1.008,1.007
+IEA CPS (downscaled approx),Industry,Other industry - energy,1.5,1.4,1.015,1.014
+IEA CPS (downscaled approx),Transport,Passenger cars,2.6,2.3,1.026,1.023
+IEA CPS (downscaled approx),Transport,Trucks,2.7,2.2,1.027,1.022
+IEA CPS (downscaled approx),Transport,Planes,3.7,2.9,1.037,1.029
+IEA CPS (downscaled approx),Transport,Ships,1.6,1.6,1.016,1.016
+IEA CPS (downscaled approx),Transport,Buses,2.0,1.8,1.020,1.018
+IEA CPS (downscaled approx),Transport,2/3 wheelers,3.0,2.5,1.030,1.025
+IEA CPS (downscaled approx),Transport,Trains,2.0,1.8,1.020,1.018
+IEA CPS (downscaled approx),Transport,Other transport,2.5,2.1,1.025,1.021
+IEA CPS (downscaled approx),Buildings,Residential heating,1.6,1.4,1.016,1.014
+IEA CPS (downscaled approx),Buildings,Residential cooking,1.2,1.0,1.012,1.010
+IEA CPS (downscaled approx),Buildings,Residential lighting,1.6,1.4,1.016,1.014
+IEA CPS (downscaled approx),Buildings,Other residential,1.6,1.4,1.016,1.014
+IEA CPS (downscaled approx),Buildings,Building cooling,2.0,1.7,1.020,1.017
+IEA CPS (downscaled approx),Buildings,Commercial heating,2.1,1.6,1.021,1.016
+IEA CPS (downscaled approx),Buildings,Commercial lighting,2.1,1.6,1.021,1.016
+IEA CPS (downscaled approx),Buildings,Other commercial,2.1,1.6,1.021,1.016
+Deep electrification,Industry,Steel,1.0,0.9,1.010,1.009
+Deep electrification,Industry,Cement,0.6,0.4,1.006,1.004
+Deep electrification,Industry,Chemicals,2.1,1.4,1.021,1.014
+Deep electrification,Industry,Low temp. heating,1.5,1.3,1.015,1.013
+Deep electrification,Industry,High temp. heating,0.8,0.7,1.008,1.007
+Deep electrification,Industry,Other industry - energy,1.5,1.4,1.015,1.014
+Deep electrification,Transport,Passenger cars,2.6,2.3,1.026,1.023
+Deep electrification,Transport,Trucks,2.7,2.2,1.027,1.022
+Deep electrification,Transport,Planes,3.7,2.9,1.037,1.029
+Deep electrification,Transport,Ships,1.6,1.6,1.016,1.016
+Deep electrification,Transport,Buses,2.0,1.8,1.020,1.018
+Deep electrification,Transport,2/3 wheelers,3.0,2.5,1.030,1.025
+Deep electrification,Transport,Trains,2.0,1.8,1.020,1.018
+Deep electrification,Transport,Other transport,2.5,2.1,1.025,1.021
+Deep electrification,Buildings,Residential heating,1.6,1.4,1.016,1.014
+Deep electrification,Buildings,Residential cooking,1.2,1.0,1.012,1.010
+Deep electrification,Buildings,Residential lighting,1.6,1.4,1.016,1.014
+Deep electrification,Buildings,Other residential,1.6,1.4,1.016,1.014
+Deep electrification,Buildings,Building cooling,2.0,1.7,1.020,1.017
+Deep electrification,Buildings,Commercial heating,2.1,1.6,1.021,1.016
+Deep electrification,Buildings,Commercial lighting,2.1,1.6,1.021,1.016
+Deep electrification,Buildings,Other commercial,2.1,1.6,1.021,1.016
+Frozen Technology,Industry,Steel,1.0,0.9,1.010,1.009
+Frozen Technology,Industry,Cement,0.6,0.4,1.006,1.004
+Frozen Technology,Industry,Chemicals,2.1,1.4,1.021,1.014
+Frozen Technology,Industry,Low temp. heating,1.5,1.3,1.015,1.013
+Frozen Technology,Industry,High temp. heating,0.8,0.7,1.008,1.007
+Frozen Technology,Industry,Other industry - energy,1.5,1.4,1.015,1.014
+Frozen Technology,Transport,Passenger cars,2.6,2.3,1.026,1.023
+Frozen Technology,Transport,Trucks,2.7,2.2,1.027,1.022
+Frozen Technology,Transport,Planes,3.7,2.9,1.037,1.029
+Frozen Technology,Transport,Ships,1.6,1.6,1.016,1.016
+Frozen Technology,Transport,Buses,2.0,1.8,1.020,1.018
+Frozen Technology,Transport,2/3 wheelers,3.0,2.5,1.030,1.025
+Frozen Technology,Transport,Trains,2.0,1.8,1.020,1.018
+Frozen Technology,Transport,Other transport,2.5,2.1,1.025,1.021
+Frozen Technology,Buildings,Residential heating,1.6,1.4,1.016,1.014
+Frozen Technology,Buildings,Residential cooking,1.2,1.0,1.012,1.010
+Frozen Technology,Buildings,Residential lighting,1.6,1.4,1.016,1.014
+Frozen Technology,Buildings,Other residential,1.6,1.4,1.016,1.014
+Frozen Technology,Buildings,Building cooling,2.0,1.7,1.020,1.017
+Frozen Technology,Buildings,Commercial heating,2.1,1.6,1.021,1.016
+Frozen Technology,Buildings,Commercial lighting,2.1,1.6,1.021,1.016
+Frozen Technology,Buildings,Other commercial,2.1,1.6,1.021,1.016

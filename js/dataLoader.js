@@ -13,7 +13,8 @@ const csvFiles = {
     hydrogenTechEff: 'data/Hydrogen_tech_eff.csv',
     powerTechEff: 'data/Power_tech_eff.csv',
     otherTransform: 'data/Other_transform_tech_energy_int.csv',
-    scenarios: 'data/scenarios.csv'
+    scenarios: 'data/scenarios.csv',
+    scenarioActivity: 'data/scenario_activity.csv'
 };
 
 // Define years range (needed by model logic and charting)
@@ -249,6 +250,30 @@ function transformScenariosData(parsedData) {
     });
     return { scenarios };
 }
+
+function transformScenarioActivityData(parsedData) {
+    console.log('DEBUG: transformScenarioActivityData called with', parsedData.length, 'rows');
+    const scenarioActivityGrowth = {};
+    parsedData.forEach(row => {
+        const scenario = row['Scenario'];
+        const sector = row['Sector'];
+        const subsector = row['Subsector'];
+        const growthFactor_p1 = row['GrowthFactor_2024_2035'];
+        const growthFactor_p2 = row['GrowthFactor_2035_2050'];
+
+        if (scenario && sector && subsector) {
+            if (!scenarioActivityGrowth[scenario]) scenarioActivityGrowth[scenario] = {};
+            const key = `${sector}|${subsector}`;
+            scenarioActivityGrowth[scenario][key] = {
+                p1: parseFloat(growthFactor_p1) || 1.0,
+                p2: parseFloat(growthFactor_p2) || 1.0
+            };
+        }
+    });
+    console.log('DEBUG: scenarioActivityGrowth created:', Object.keys(scenarioActivityGrowth));
+    console.log('DEBUG: Fast Transition sample:', scenarioActivityGrowth['Fast Transition']?.['Transport|Passenger cars']);
+    return { scenarioActivityGrowth };
+}
 // --- End of Transformation Functions ---
 
 
@@ -279,6 +304,7 @@ async function loadAndStructureData() {
         const { hydrogenTechUnitEnergyCons } = transformHydrogenEffData(rawData.hydrogenTechEff || []); // Now uses 0-1 input
         const { otherTechUnitEnergyCons, baseOtherProdMix } = transformOtherTransformData(rawData.otherTransform || []);
         const { scenarios } = transformScenariosData(rawData.scenarios || []);
+        const { scenarioActivityGrowth } = transformScenarioActivityData(rawData.scenarioActivity || []);
 
         // Debug log from previous step (now shows fraction -> percent)
         console.log("DEBUG (dataLoader - loadAndStructureData): Final baseDemandTechMix for Steel:", JSON.stringify(baseDemandTechMix?.Industry?.Steel));
@@ -298,7 +324,7 @@ async function loadAndStructureData() {
         structuredModelData = {
             baseActivity, activityUnits, baseDemandTechMix, unitEnergyConsumption, placeholderUsefulEfficiency, usefulEnergyTypeMap, basePowerProdMix, baseHydrogenProdMix, powerTechUnitEnergyCons, hydrogenTechUnitEnergyCons, otherTechUnitEnergyCons, baseOtherProdMix,
             sectors, subsectors, technologies, endUseFuels, primaryFuels, hydrogenTechs, powerTechs, otherConvTechs, allEndUseSubsectors,
-            scenarios,
+            scenarios, scenarioActivityGrowth,
             startYear, endYear, years
         };
         console.log("Data transformation complete.");

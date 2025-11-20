@@ -148,8 +148,44 @@ function runModelCalculation(structuredData, userInputParameters) {
 
     for (const year of years) {
         yearlyResults[year] = {};
-        // 1. Activity Levels (Unchanged)
-        const currentActivity = {}; if (year === baseYear) { Object.assign(currentActivity, baseActivity); } else { const prevResults = yearlyResults[year - 1]; if (!prevResults || !prevResults.activity) { throw new Error(`Cannot calculate activity for ${year}: Previous year (${year - 1}) data missing.`); } const prevActivity = prevResults.activity; sectors.forEach(s => { if (subsectors[s]) { currentActivity[s] = {}; subsectors[s].forEach(b => { const growthInputKey = `${s}|${b}`; const growthFactor = activityGrowthFactors[growthInputKey] !== undefined ? activityGrowthFactors[growthInputKey] : 1.0; currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor; }); } }); } yearlyResults[year].activity = currentActivity;
+        // 1. Activity Levels
+        const currentActivity = {};
+        if (year === baseYear) {
+            Object.assign(currentActivity, baseActivity);
+        } else {
+            const prevResults = yearlyResults[year - 1];
+            if (!prevResults || !prevResults.activity) {
+                throw new Error(`Cannot calculate activity for ${year}: Previous year (${year - 1}) data missing.`);
+            }
+            const prevActivity = prevResults.activity;
+            sectors.forEach(s => {
+                if (subsectors[s]) {
+                    currentActivity[s] = {};
+                    subsectors[s].forEach(b => {
+                        const growthInputKey = `${s}|${b}`;
+                        const growthData = activityGrowthFactors[growthInputKey];
+
+                        let growthFactor = 1.0;
+                        if (growthData) {
+                            if (typeof growthData === 'object') {
+                                // Split growth logic
+                                if (year <= 2035) {
+                                    growthFactor = growthData.p1 || 1.0;
+                                } else {
+                                    growthFactor = growthData.p2 || 1.0;
+                                }
+                            } else {
+                                // Fallback for single value (backward compatibility)
+                                growthFactor = growthData;
+                            }
+                        }
+
+                        currentActivity[s][b] = getValue(prevActivity, [s, b], 0) * growthFactor;
+                    });
+                }
+            });
+        }
+        yearlyResults[year].activity = currentActivity;
 
         // 2. Technology Mixes
         const calculateMixWithBehavior = (categoryType, categoryKey, techList, baseMixObject) => {

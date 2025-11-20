@@ -32,6 +32,11 @@ function toggleSCurveInputs(selectElement, paramKey) {
             }, 10);
         }
     }
+
+    // Trigger auto-recalculation when behavior changes
+    if (typeof debouncedAutoRecalc === 'function') {
+        debouncedAutoRecalc();
+    }
 }
 
 // --- Dynamic Input Creation Helpers ---
@@ -108,6 +113,11 @@ const createSCurveParamInputs = (paramKey, baseValue) => {
         targetYearInput.value = newParams.targetYear;
         kValueInput.value = newParams.kValue;
         midpointYearInput.value = newParams.midpointYear;
+
+        // Trigger auto-recalculation after parameter change
+        if (typeof debouncedAutoRecalc === 'function') {
+            debouncedAutoRecalc();
+        }
     };
 
     // Defer instantiation slightly to ensure container is ready if needed, 
@@ -157,11 +167,69 @@ function initializeSidebarInputs(structuredData) { /* ... (unchanged, uses updat
             const subContentInner = document.createElement('div'); subContentInner.className = 'sub-group-content-inner'; // Wrapper for animation
 
             const activityDiv = document.createElement('div'); activityDiv.className = 'activity-growth-input';
-            const activityLabel = document.createElement('label');
-            const activityInputId = `growth_${sanitizeForId(s)}_${sanitizeForId(b)}`;
-            activityLabel.htmlFor = activityInputId; activityLabel.textContent = `Activity Growth (%/yr):`;
-            const activityInput = document.createElement('input'); activityInput.type = 'number'; activityInput.id = activityInputId; activityInput.value = '0.5'; activityInput.step = '0.1';
-            activityDiv.appendChild(activityLabel); activityDiv.appendChild(activityInput);
+            activityDiv.style.display = 'flex';
+            activityDiv.style.flexDirection = 'column';
+            activityDiv.style.gap = '5px';
+            activityDiv.style.marginBottom = '10px';
+
+            // Period 1: Today - 2035
+            const p1Container = document.createElement('div');
+            p1Container.style.display = 'flex';
+            p1Container.style.justifyContent = 'space-between';
+            p1Container.style.alignItems = 'center';
+            const p1Label = document.createElement('label');
+            const p1InputId = `growth_p1_${sanitizeForId(s)}_${sanitizeForId(b)}`;
+            p1Label.htmlFor = p1InputId;
+            p1Label.textContent = `Activity CAGR to 2035, %/yr:`;
+            p1Label.style.fontSize = '0.9em';
+            p1Label.style.flex = '1';
+            p1Label.style.minWidth = '200px';
+            const p1Input = document.createElement('input');
+            p1Input.type = 'number';
+            p1Input.id = p1InputId;
+            p1Input.value = '0.5';
+            p1Input.step = '0.1';
+            p1Input.style.width = '80px';
+            p1Input.style.flexShrink = '0';
+            // Add auto-recalc on input change
+            p1Input.addEventListener('change', () => {
+                if (typeof debouncedAutoRecalc === 'function') {
+                    debouncedAutoRecalc();
+                }
+            });
+            p1Container.appendChild(p1Label);
+            p1Container.appendChild(p1Input);
+
+            // Period 2: 2035 - 2050
+            const p2Container = document.createElement('div');
+            p2Container.style.display = 'flex';
+            p2Container.style.justifyContent = 'space-between';
+            p2Container.style.alignItems = 'center';
+            const p2Label = document.createElement('label');
+            const p2InputId = `growth_p2_${sanitizeForId(s)}_${sanitizeForId(b)}`;
+            p2Label.htmlFor = p2InputId;
+            p2Label.textContent = `Activity CAGR 2035 onwards, %/yr:`;
+            p2Label.style.fontSize = '0.9em';
+            p2Label.style.flex = '1';
+            p2Label.style.minWidth = '200px';
+            const p2Input = document.createElement('input');
+            p2Input.type = 'number';
+            p2Input.id = p2InputId;
+            p2Input.value = '0.5';
+            p2Input.step = '0.1';
+            p2Input.style.width = '80px';
+            p2Input.style.flexShrink = '0';
+            // Add auto-recalc on input change
+            p2Input.addEventListener('change', () => {
+                if (typeof debouncedAutoRecalc === 'function') {
+                    debouncedAutoRecalc();
+                }
+            });
+            p2Container.appendChild(p2Label);
+            p2Container.appendChild(p2Input);
+
+            activityDiv.appendChild(p1Container);
+            activityDiv.appendChild(p2Container);
             subContentInner.appendChild(activityDiv);
 
             const techs = technologies[s]?.[b] || [];
@@ -244,7 +312,7 @@ function populateScenarioDropdown(structuredData) {
 function applyScenario(scenarioName, structuredData) {
     console.log(`Applying scenario: ${scenarioName}`);
 
-    const { scenarios, sectors, subsectors, technologies, powerTechs, hydrogenTechs } = structuredData;
+    const { scenarios, scenarioActivityGrowth, sectors, subsectors, technologies, powerTechs, hydrogenTechs } = structuredData;
 
     // Handle Frozen Technology (all fixed)
     if (scenarioName === 'Frozen Technology') {
@@ -271,7 +339,38 @@ function applyScenario(scenarioName, structuredData) {
         setAllFixed('Power', 'Power', powerTechs);
         setAllFixed('Hydrogen', 'Hydrogen', hydrogenTechs);
 
-        console.log("Frozen Technology scenario applied.");
+        console.log("Frozen Technology scenario applied (technologies fixed).");
+
+        // Apply activity growth from CSV (same as other scenarios)
+        if (scenarioActivityGrowth && scenarioActivityGrowth['Frozen Technology']) {
+            const activityGrowthData = scenarioActivityGrowth['Frozen Technology'];
+
+            sectors.forEach(s => {
+                if (subsectors[s]) {
+                    subsectors[s].forEach(b => {
+                        const key = `${s}|${b}`;
+                        const growth = activityGrowthData[key];
+
+                        if (growth) {
+                            const sId = sanitizeForId(s);
+                            const bId = sanitizeForId(b);
+
+                            const p1Input = document.getElementById(`growth_p1_${sId}_${bId}`);
+                            const p2Input = document.getElementById(`growth_p2_${sId}_${bId}`);
+
+                            // Convert growth factor to percentage
+                            const p1Percent = ((growth.p1 - 1) * 100).toFixed(1);
+                            const p2Percent = ((growth.p2 - 1) * 100).toFixed(1);
+
+                            if (p1Input) p1Input.value = p1Percent;
+                            if (p2Input) p2Input.value = p2Percent;
+
+                            console.log(`Applied Frozen Technology activity growth for ${key}: p1=${p1Percent}%, p2=${p2Percent}%`);
+                        }
+                    });
+                }
+            });
+        }
         return;
     }
 
@@ -282,7 +381,7 @@ function applyScenario(scenarioName, structuredData) {
         return;
     }
 
-    // Apply each parameter
+    // Apply technology parameters
     Object.entries(scenarioParams).forEach(([paramKey, params]) => {
         const sanitizedParamKey = sanitizeForId(paramKey);
         const behaviorEl = document.getElementById(`behavior_${sanitizedParamKey}`);
@@ -318,6 +417,40 @@ function applyScenario(scenarioName, structuredData) {
         }
     });
 
+    // Apply activity growth factors
+    if (scenarioActivityGrowth && scenarioActivityGrowth[scenarioName]) {
+        const activityGrowthData = scenarioActivityGrowth[scenarioName];
+
+        sectors.forEach(s => {
+            if (subsectors[s]) {
+                subsectors[s].forEach(b => {
+                    const key = `${s}|${b}`;
+                    const growth = activityGrowthData[key];
+
+                    if (growth) {
+                        const sId = sanitizeForId(s);
+                        const bId = sanitizeForId(b);
+
+                        const p1Input = document.getElementById(`growth_p1_${sId}_${bId}`);
+                        const p2Input = document.getElementById(`growth_p2_${sId}_${bId}`);
+
+                        // Convert growth factor to percentage
+                        // e.g., 1.010 -> 1.0%, 1.026 -> 2.6%
+                        const p1Percent = ((growth.p1 - 1) * 100).toFixed(1);
+                        const p2Percent = ((growth.p2 - 1) * 100).toFixed(1);
+
+                        if (p1Input) p1Input.value = p1Percent;
+                        if (p2Input) p2Input.value = p2Percent;
+
+                        console.log(`Applied activity growth for ${key}: p1=${p1Percent}%, p2=${p2Percent}%`);
+                    }
+                });
+            }
+        });
+    } else {
+        console.warn(`No activity growth data found for scenario '${scenarioName}'. Using current input values.`);
+    }
+
     console.log(`Scenario '${scenarioName}' applied.`);
 }
 
@@ -340,8 +473,26 @@ function getUserInputsAndParams(structuredData) {
     };
 
     // Read Activity Growth Rates
-    (allEndUseSubsectors || []).forEach(({ sector, subsector }) => { /* ... (unchanged) ... */
-        const inputId = `growth_${sanitizeForId(sector)}_${sanitizeForId(subsector)}`; const inputElement = document.getElementById(inputId); const growthPercent = inputElement ? parseFloat(inputElement.value) : 0; const growthFactor = isNaN(growthPercent) ? 1.0 : 1 + (growthPercent / 100); userInputParameters.activityGrowthFactors[`${sector}|${subsector}`] = growthFactor;
+    (allEndUseSubsectors || []).forEach(({ sector, subsector }) => {
+        const sId = sanitizeForId(sector);
+        const bId = sanitizeForId(subsector);
+
+        const p1InputId = `growth_p1_${sId}_${bId}`;
+        const p2InputId = `growth_p2_${sId}_${bId}`;
+
+        const p1Element = document.getElementById(p1InputId);
+        const p2Element = document.getElementById(p2InputId);
+
+        const p1Percent = p1Element ? parseFloat(p1Element.value) : 0;
+        const p2Percent = p2Element ? parseFloat(p2Element.value) : 0;
+
+        const p1Factor = isNaN(p1Percent) ? 1.0 : 1 + (p1Percent / 100);
+        const p2Factor = isNaN(p2Percent) ? 1.0 : 1 + (p2Percent / 100);
+
+        userInputParameters.activityGrowthFactors[`${sector}|${subsector}`] = {
+            p1: p1Factor,
+            p2: p2Factor
+        };
     });
 
     // Read Technology Behaviors and S-Curve Parameters
@@ -385,6 +536,27 @@ function getUserInputsAndParams(structuredData) {
     return userInputParameters;
 }
 
+
+// --- Debounce Helper for Auto-Recalculation ---
+let recalcDebounceTimer = null;
+
+function debounceRecalc(callback, delay = 1000) {
+    return function () {
+        clearTimeout(recalcDebounceTimer);
+        recalcDebounceTimer = setTimeout(callback, delay);
+    };
+}
+
+function triggerAutoRecalc() {
+    const runButton = document.getElementById('runModelBtn');
+    if (runButton && !runButton.disabled) {
+        console.log("Auto-triggering recalculation...");
+        runButton.click();
+    }
+}
+
+// Debounced version - will wait 1 second after last input change before recalculating
+const debouncedAutoRecalc = debounceRecalc(triggerAutoRecalc, 1000);
 
 // --- Event Listener Setup ---
 function handleChartViewChange() {
@@ -500,20 +672,58 @@ function setupEventListeners(appState) {
 
     chartViewSelect.onchange = () => {
         handleChartViewChange();
-        // Re-render Sankey if switched to it and data exists
-        if (chartViewSelect.value === 'sankey' && appState.latestResults && typeof renderSankey === 'function') {
-            const year = parseInt(sankeyYearSlider.value, 10);
-            // Small timeout to allow div to become visible for Plotly sizing
-            setTimeout(() => {
+
+        // Timeout to allow div to become visible before resizing
+        // Increased to 100ms to ensure layout is stable
+        setTimeout(() => {
+            // Re-render Sankey if switched to it and data exists
+            if (chartViewSelect.value === 'sankey' && appState.latestResults && typeof renderSankey === 'function') {
+                const year = parseInt(sankeyYearSlider.value, 10);
                 renderSankey(appState.latestResults, year, structuredData);
-            }, 50);
-        }
-        // Update delta charts if switched to deltas view
-        if (chartViewSelect.value === 'deltas' && appState.latestResults && typeof updateDeltaCharts === 'function') {
-            setTimeout(() => {
+            }
+            // Update delta charts if switched to deltas view
+            else if (chartViewSelect.value === 'deltas' && appState.latestResults && typeof updateDeltaCharts === 'function') {
                 updateDeltaCharts(appState.latestResults, structuredData);
-            }, 50);
-        }
+                // Resize delta charts
+                const deltaChartIds = ['pedDeltaChart', 'elecGenDeltaChart', 'fecDeltaChart', 'ueDeltaChart'];
+                deltaChartIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element && element.data) {
+                        Plotly.Plots.resize(element);
+                    }
+                });
+            }
+            // Resize balance charts
+            else if (chartViewSelect.value === 'balance' && appState.latestResults) {
+                const balanceChartIds = ['fecFuelChart', 'pedFuelChart', 'ueFuelChart'];
+                balanceChartIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element && element.data) {
+                        Plotly.Plots.resize(element);
+                    }
+                });
+            }
+            // Resize supply charts
+            else if (chartViewSelect.value === 'supply' && appState.latestResults) {
+                const supplyChartIds = ['powerMixChart', 'hydrogenMixChart'];
+                supplyChartIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element && element.data) {
+                        Plotly.Plots.resize(element);
+                    }
+                });
+            }
+            // Resize subsector charts
+            else if (chartViewSelect.value === 'subsector' && appState.latestResults) {
+                const subsectorChartIds = ['subsectorActivityChart', 'subsectorFecChart', 'subsectorUeChart'];
+                subsectorChartIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element && element.data) {
+                        Plotly.Plots.resize(element);
+                    }
+                });
+            }
+        }, 100);
     };
 
     if (sankeyYearSlider) {
@@ -541,6 +751,10 @@ function setupEventListeners(appState) {
             const scenarioName = e.target.value;
             if (scenarioName) {
                 applyScenario(scenarioName, structuredData);
+                // Trigger auto-recalc after scenario applied
+                if (typeof debouncedAutoRecalc === 'function') {
+                    debouncedAutoRecalc();
+                }
             }
         };
     }

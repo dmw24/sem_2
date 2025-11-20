@@ -114,13 +114,13 @@ const techColors = {
     'Battery Storage': '#4f46e5', // Indigo 600
     'Pumped Hydro': '#1e40af', // Blue 800
 
-    // Sectors (for Sankey)
-    'Buildings': '#64748b',
-    'Industry': '#475569',
-    'Transport': '#334155',
-    'Power': '#2563eb',
-    'Hydrogen Plants': '#9333ea',
-    'Losses': '#e5e7eb'
+    // Sectors (for Sankey) - Distinct colors
+    'Buildings': '#f59e0b', // Amber 500 (warm orange)
+    'Industry': '#3b82f6', // Blue 500 (bright blue)
+    'Transport': '#10b981', // Emerald 500 (green)
+    'Power': '#2563eb', // Blue 600
+    'Hydrogen Plants': '#9333ea', // Purple 600
+    'Losses': '#e5e7eb' // Gray 200
 };
 
 function getTechColor(tech, index = 0) {
@@ -164,6 +164,26 @@ function getValue(obj, path, defaultValue) {
 function drawPlotlyChart(elementId, traces, title, vAxisTitle, isStacked = true) {
     const container = document.getElementById(elementId);
     if (!container) return;
+
+    // --- Persist Legend Selection ---
+    const visibilityMap = {};
+    if (container.data && Array.isArray(container.data)) {
+        container.data.forEach(trace => {
+            if (trace.name) {
+                visibilityMap[trace.name] = trace.visible;
+            }
+        });
+    }
+
+    // Apply persisted visibility to new traces
+    if (traces && Array.isArray(traces)) {
+        traces.forEach(trace => {
+            if (visibilityMap.hasOwnProperty(trace.name)) {
+                trace.visible = visibilityMap[trace.name];
+            }
+        });
+    }
+    // -------------------------------
 
     const layout = {
         title: {

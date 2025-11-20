@@ -237,6 +237,43 @@ header.container p.disclaimer {
     height: auto;
 }
 
+
+/* Scenario Selector Styling */
+.scenario-selector-container {
+    margin-bottom: 20px;
+}
+
+.scenario-selector-container label {
+    display: block;
+    font-weight: 600;
+    color: var(--slate-blue);
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+.scenario-selector-container select {
+    width: 100%;
+    max-width: none;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--grey-blue);
+    font-size: 14px;
+    background-color: var(--white);
+    color: var(--slate-blue);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.scenario-selector-container select:focus {
+    outline: none;
+    border-color: var(--ember-green);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.scenario-selector-container select:hover {
+    border-color: var(--ember-forest);
+}
+
 /* Sidebar Styling */
 #sidebar {
     flex-basis: 30%;
