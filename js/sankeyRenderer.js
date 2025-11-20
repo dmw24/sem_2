@@ -155,7 +155,7 @@ function renderSankey(results, year, structuredData) {
                 const totalPadding = minPadding * (nodesInCol.length - 1);
                 const availableHeight = height - margin.top - margin.bottom;
 
-                // Redistribute
+                // Redistribute nodes
                 let currentY = margin.top;
                 nodesInCol.forEach(node => {
                     const nodeHeight = node.y1 - node.y0;
@@ -166,8 +166,25 @@ function renderSankey(results, year, structuredData) {
             }
         });
 
-        // Recalculate links with new positions
-        sankeyLayout.update(graph);
+        // Recompute link positions based on new node positions
+        // This recalculates link.y0 and link.y1 without changing node positions
+        graph.nodes.forEach(node => {
+            // Calculate link positions for source links (outgoing)
+            node.sourceLinks.sort((a, b) => a.target.y0 - b.target.y0);
+            let y0 = node.y0;
+            node.sourceLinks.forEach(link => {
+                link.y0 = y0 + link.width / 2;
+                y0 += link.width;
+            });
+
+            // Calculate link positions for target links (incoming)
+            node.targetLinks.sort((a, b) => a.source.y0 - b.source.y0);
+            let y1 = node.y0;
+            node.targetLinks.forEach(link => {
+                link.y1 = y1 + link.width / 2;
+                y1 += link.width;
+            });
+        });
 
         // Create gradient definitions
         const defs = svg.append('defs');
@@ -192,27 +209,57 @@ function renderSankey(results, year, structuredData) {
                 .attr('stop-opacity', 0.4);
         });
 
+        // Create tooltip div (reusable HTML tooltip)
+        let tooltip = d3.select('body').select('.sankey-tooltip');
+        if (tooltip.empty()) {
+            tooltip = d3.select('body')
+                .append('div')
+                .attr('class', 'sankey-tooltip')
+                .style('position', 'absolute')
+                .style('background', 'rgba(0, 0, 0, 0.85)')
+                .style('color', '#fff')
+                .style('padding', '10px 14px')
+                .style('border-radius', '8px')
+                .style('font-family', 'Poppins, sans-serif')
+                .style('font-size', '13px')
+                .style('pointer-events', 'none')
+                .style('opacity', 0)
+                .style('z-index', 10000)
+                .style('box-shadow', '0 4px 12px rgba(0,0,0,0.3)');
+        }
+
         // Draw links
-        svg.append('g')
+        const linkGroup = svg.append('g')
             .selectAll('path')
             .data(graph.links)
             .join('path')
+            .attr('class', 'sankey-link')
             .attr('d', d3.sankeyLinkHorizontal())
             .attr('stroke', (d, i) => `url(#gradient-${i})`)
             .attr('stroke-width', d => Math.max(1, d.width))
             .attr('fill', 'none')
             .attr('opacity', 0.5)
-            .on('mouseover', function () {
+            .on('mouseover', function (event, d) {
                 d3.select(this).attr('opacity', 0.8);
+
+                tooltip
+                    .style('opacity', 1)
+                    .html(`
+                        <div style="font-weight: 600; margin-bottom: 4px;">${d.source.name} → ${d.target.name}</div>
+                        <div style="font-size: 14px; color: #a5f3fc;">${(d.value / 1e9).toFixed(2)} EJ</div>
+                    `)
+                    .style('left', (event.pageX + 15) + 'px')
+                    .style('top', (event.pageY - 15) + 'px');
+            })
+            .on('mousemove', function (event) {
+                tooltip
+                    .style('left', (event.pageX + 15) + 'px')
+                    .style('top', (event.pageY - 15) + 'px');
             })
             .on('mouseout', function () {
                 d3.select(this).attr('opacity', 0.5);
+                tooltip.style('opacity', 0);
             });
-
-        // Add tooltips to links
-        svg.selectAll('path')
-            .append('title')
-            .text(d => `${d.source.name} → ${d.target.name}\n${(d.value / 1e9).toFixed(2)} EJ`);
 
         // Draw nodes
         const nodeGroup = svg.append('g')
@@ -221,6 +268,7 @@ function renderSankey(results, year, structuredData) {
             .join('g');
 
         nodeGroup.append('rect')
+            .attr('class', 'sankey-node')
             .attr('x', d => d.x0)
             .attr('y', d => d.y0)
             .attr('height', d => d.y1 - d.y0)
@@ -229,8 +277,71 @@ function renderSankey(results, year, structuredData) {
             .attr('stroke', '#000')
             .attr('stroke-width', 0.5)
             .attr('opacity', 0.9)
-            .append('title') // Add tooltip to node rect
-            .text(d => `${d.name}\n${(d.value / 1e9).toFixed(2)} EJ`);
+            .on('mouseover', function (event, d) {
+                // Highlight this node
+                d3.select(this).attr('opacity', 1).attr('stroke-width', 2);
+
+                // Highlight all connected links
+                svg.selectAll('.sankey-link')
+                    .attr('opacity', link => {
+                        if (link.source === d || link.target === d) {
+                            return 0.9;
+                        }
+                        return 0.15;
+                    })
+                    .attr('stroke-width', link => {
+                        if (link.source === d || link.target === d) {
+                            return Math.max(1, link.width * 1.2);
+                        }
+                        return Math.max(1, link.width);
+                    });
+
+                // Build tooltip content
+                let tooltipContent = `<div style="font-weight: 700; margin-bottom: 8px; font-size: 14px;">${d.name}</div>`;
+                tooltipContent += `<div style="margin-bottom: 8px; color: #a5f3fc; font-size: 15px; font-weight: 600;">${(d.value / 1e9).toFixed(2)} EJ</div>`;
+
+                // Add incoming links
+                if (d.targetLinks && d.targetLinks.length > 0) {
+                    tooltipContent += `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2);">`;
+                    tooltipContent += `<div style="font-weight: 600; font-size: 11px; color: #94a3b8; margin-bottom: 4px;">INCOMING</div>`;
+                    d.targetLinks.forEach(link => {
+                        tooltipContent += `<div style="font-size: 12px; margin-bottom: 2px;">← ${link.source.name}: <span style="color: #6ee7b7;">${(link.value / 1e9).toFixed(2)} EJ</span></div>`;
+                    });
+                    tooltipContent += `</div>`;
+                }
+
+                // Add outgoing links
+                if (d.sourceLinks && d.sourceLinks.length > 0) {
+                    tooltipContent += `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.2);">`;
+                    tooltipContent += `<div style="font-weight: 600; font-size: 11px; color: #94a3b8; margin-bottom: 4px;">OUTGOING</div>`;
+                    d.sourceLinks.forEach(link => {
+                        tooltipContent += `<div style="font-size: 12px; margin-bottom: 2px;">→ ${link.target.name}: <span style="color: #fbbf24;">${(link.value / 1e9).toFixed(2)} EJ</span></div>`;
+                    });
+                    tooltipContent += `</div>`;
+                }
+
+                tooltip
+                    .style('opacity', 1)
+                    .html(tooltipContent)
+                    .style('left', (event.pageX + 15) + 'px')
+                    .style('top', (event.pageY - 15) + 'px');
+            })
+            .on('mousemove', function (event) {
+                tooltip
+                    .style('left', (event.pageX + 15) + 'px')
+                    .style('top', (event.pageY - 15) + 'px');
+            })
+            .on('mouseout', function () {
+                // Reset node
+                d3.select(this).attr('opacity', 0.9).attr('stroke-width', 0.5);
+
+                // Reset all links
+                svg.selectAll('.sankey-link')
+                    .attr('opacity', 0.5)
+                    .attr('stroke-width', d => Math.max(1, d.width));
+
+                tooltip.style('opacity', 0);
+            });
 
         // Add labels
         nodeGroup.append('text')
