@@ -109,6 +109,10 @@ const techColors = {
     'Biomass Gasification': '#16a34a', // Green
     'Biomass Gasification CCS': '#14532d', // Dark Green
     'Methane Pyrolysis': '#ea580c', // Orange 600
+    'BF-BOF + CCS': '#111827', // Dark Gray (Coal-like)
+    'Conventional + CCS': '#374151', // Gray 700
+    'Furnace + CCS': '#78350f', // Dark Brown
+    'District heating': '#ef4444', // Red 500 (Matches District Heat fuel)
 
     // Storage
     'Battery Storage': '#4f46e5', // Indigo 600
@@ -461,6 +465,129 @@ function updateDeltaCharts(yearlyResults, chartConfigData) {
     }
 }
 
+function updateEmissionsCharts(yearlyResults, chartConfigData) {
+    if (!yearlyResults || Object.keys(yearlyResults).length === 0) return;
+    if (!chartConfigData) return;
+
+    const { years, primaryFuels } = chartConfigData;
+
+    // 1. Global Emissions Chart
+    // We want to show Net Emissions by Fuel (Stacked Bar)
+    // And Captured Emissions (Line or separate trace)
+
+    // Filter fuels that have emissions
+    const activeEmissionFuels = primaryFuels.filter(fuel => {
+        return years.some(y => {
+            const val = getValue(yearlyResults, [y, 'emissions', 'byFuel', fuel], 0);
+            return Math.abs(val) > 1e-3;
+        });
+    });
+
+    const traces = [];
+
+    // Net Emissions by Fuel (Approximation: We show Gross by Fuel stacked, and then a negative bar for captured? 
+    // Or just show Net? 
+    // The logic in modelLogic calculates 'net' total, but 'byFuel' is gross.
+    // Let's show Gross Emissions by Fuel as stacked bars.
+    // And then show "Captured" as a separate trace (maybe a line or a negative bar?).
+    // If we want "Net" to be the visual total, we should subtract captured from the stack?
+    // But captured isn't easily attributed to a specific fuel in the aggregate 'captured' number without more logic.
+    // Let's show Gross Emissions Stacked, and a Line for "Net Emissions".
+    // AND a Line for "Captured Emissions".
+
+    // Trace 1..N: Gross Emissions by Fuel (Stacked Bar)
+    activeEmissionFuels.forEach((fuel, index) => {
+        const xValues = [];
+        const yValues = [];
+        years.forEach(year => {
+            xValues.push(year);
+            yValues.push(getValue(yearlyResults, [year, 'emissions', 'byFuel', fuel], 0));
+        });
+
+        traces.push({
+            x: xValues,
+            y: yValues,
+            name: fuel,
+            type: 'bar',
+            marker: { color: getTechColor(fuel, index) }
+        });
+    });
+
+    // Trace N+1: Captured Emissions (Negative Bar)
+    const capturedX = [];
+    const capturedY = [];
+    years.forEach(year => {
+        capturedX.push(year);
+        // Make negative for display
+        capturedY.push(-getValue(yearlyResults, [year, 'emissions', 'captured'], 0));
+    });
+
+    traces.push({
+        x: capturedX,
+        y: capturedY,
+        name: 'Captured (CCS)',
+        type: 'bar',
+        marker: { color: '#10b981' } // Green
+    });
+
+    // Trace N+2: Net Emissions (Line)
+    const netX = [];
+    const netY = [];
+    years.forEach(year => {
+        netX.push(year);
+        netY.push(getValue(yearlyResults, [year, 'emissions', 'net'], 0));
+    });
+
+    traces.push({
+        x: netX,
+        y: netY,
+        name: 'Net Emissions',
+        type: 'scatter',
+        mode: 'lines',
+        line: { color: '#000000', width: 4 }, // Black solid line
+        visible: true
+    });
+
+    drawPlotlyChart('globalEmissionsChart', traces, '', 'Emissions (Mt CO2)', true);
+
+    // 2. CCS by Subsector Chart
+    // We want to show which sectors are capturing emissions
+    // Stacked bar chart of captured emissions (positive values here for clarity)
+
+    // Identify active subsectors for CCS
+    const allSubsectors = new Set();
+    years.forEach(y => {
+        const subMap = getValue(yearlyResults, [y, 'emissions', 'capturedBySubsector'], {});
+        Object.keys(subMap).forEach(k => allSubsectors.add(k));
+    });
+    const activeCcsSubsectors = Array.from(allSubsectors);
+
+    if (activeCcsSubsectors.length > 0) {
+        const ccsTraces = [];
+        activeCcsSubsectors.forEach((sub, index) => {
+            const xVals = [];
+            const yVals = [];
+            years.forEach(year => {
+                xVals.push(year);
+                yVals.push(getValue(yearlyResults, [year, 'emissions', 'capturedBySubsector', sub], 0));
+            });
+
+            ccsTraces.push({
+                x: xVals,
+                y: yVals,
+                name: sub,
+                type: 'bar',
+                // Use a distinct color palette or reuse tech colors if applicable
+                marker: { color: getTechColor(sub, index) }
+            });
+        });
+        drawPlotlyChart('ccsBySubsectorChart', ccsTraces, '', 'Captured Emissions (Mt CO2)', true);
+    } else {
+        document.getElementById('ccsBySubsectorChart').innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No Captured Emissions (CCS) active</div>';
+    }
+}
+
 window.updateCharts = updateCharts;
 window.updateDeltaCharts = updateDeltaCharts;
+window.updateEmissionsCharts = updateEmissionsCharts;
 window.chartTypes = chartTypes;

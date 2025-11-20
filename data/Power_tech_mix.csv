@@ -3,7 +3,9 @@ Power,Electricity,Solar PV,Solar,% share,0.05
 Power,Electricity,Wind,Wind,% share,0.08
 Power,Electricity,Hydro,Hydro,% share,0.15
 Power,Electricity,Gas power,Gas,% share,0.22
+Power,Electricity,Gas CCS,Gas,% share,0.0
 Power,Electricity,Coal power,Coal,% share,0.36
+Power,Electricity,Coal CCS,Coal,% share,0.0
 Power,Electricity,Oil power,Oil,% share,0.03
 Power,Electricity,Nuclear power,Uranium,% share,0.09
 Power,Electricity,Biomass power,Biomass,% share,0.02

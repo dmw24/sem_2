@@ -3,7 +3,9 @@ Power,Electricity,Solar PV,Solar,% efficiency,1.0
 Power,Electricity,Wind,Wind,% efficiency,1.0
 Power,Electricity,Hydro,Hydro,% efficiency,1.0
 Power,Electricity,Gas power,Gas,% efficiency,0.35
+Power,Electricity,Gas CCS,Gas,% efficiency,0.28
 Power,Electricity,Coal power,Coal,% efficiency,0.3
+Power,Electricity,Coal CCS,Coal,% efficiency,0.22
 Power,Electricity,Oil power,Oil,% efficiency,0.3
 Power,Electricity,Nuclear power,Uranium,% efficiency,0.33
 Power,Electricity,Biomass power,Biomass,% efficiency,0.35

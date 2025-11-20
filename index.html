@@ -25,8 +25,7 @@
     <header class="container">
         <h1>S-Curve Energy Model</h1>
         <p class="disclaimer">
-            Energy system projection model (2023-2050). Define subsector growth and technology behavior (S-Curve,
-            Decline, Fixed).
+            Simple energy system projection model (2023-2050).
         </p>
     </header>
 
@@ -55,9 +54,10 @@
                 <select id="selectChartView">
                     <option value="subsector" selected>Subsector Details</option>
                     <option value="balance">Overall Energy Balance</option>
-                    <option value="supply">Supply & Transformations</option>
-                    <option value="deltas">Deltas (Year-over-Year Changes)</option>
-                    <option value="sankey">Sankey Diagram (Flows)</option>
+                    <option value="supply">Energy Supply</option>
+                    <option value="emissions">Global Emissions</option>
+                    <option value="deltas">Deltas (Change vs Previous Year)</option>
+                    <option value="sankey">Sankey Diagram</option>
                 </select>
             </div>
 
@@ -131,6 +131,20 @@
                     <div class="chart-box">
                         <h3>Hydrogen Production Mix</h3>
                         <div id="hydrogenMixChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="emissionsChartsSection" class="hidden">
+                <h3 class="chart-section-heading">Global Emissions</h3>
+                <div id="emissionsCharts" class="chart-grid">
+                    <div class="chart-box full-width">
+                        <h3>Total Emissions by Fuel</h3>
+                        <div id="globalEmissionsChart" class="chart-container"></div>
+                    </div>
+                    <div class="chart-box full-width">
+                        <h3>Captured Emissions by Subsector</h3>
+                        <div id="ccsBySubsectorChart" class="chart-container"></div>
                     </div>
                 </div>
             </section>

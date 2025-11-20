@@ -23,6 +23,7 @@ Transport,Other transport,Electrified,Electricity,TJ/Unitless (2023=1),5500000
 Industry,Steel,BF-BOF,Coal,TJ/mt steel,20000
 Industry,Steel,BF-BOF,Gas,TJ/mt steel,600
 Industry,Steel,BF-BOF,Electricity,TJ/mt steel,1500
+Industry,Steel,BF-BOF + CCS,Coal,TJ/mt steel,24000
 Industry,Steel,EAF,Electricity,TJ/mt steel,3500
 Industry,Steel,DRI-EAF (H2),Hydrogen,TJ/mt steel,4000
 Industry,Steel,DRI-EAF (H2),Electricity,TJ/mt steel,3500
@@ -30,12 +31,14 @@ Industry,Cement,Conventional kiln,Coal,TJ/mt cement,2400
 Industry,Cement,Conventional kiln,Oil,TJ/mt cement,100
 Industry,Cement,Conventional kiln,Gas,TJ/mt cement,300
 Industry,Cement,Conventional kiln,Biomass,TJ/mt cement,60
+Industry,Cement,Conventional + CCS,Coal,TJ/mt cement,3200
 Industry,Cement,Electric kiln,Electricity,TJ/mt cement,2200
 Industry,Chemicals,Conventional,Coal,TJ/mt chemicals,1090
 Industry,Chemicals,Conventional,Oil,TJ/mt chemicals,30
 Industry,Chemicals,Conventional,Gas,TJ/mt chemicals,1660
 Industry,Chemicals,Conventional,Biomass,TJ/mt chemicals,-
 Industry,Chemicals,Conventional,Electricity,TJ/mt chemicals,220
+Industry,Chemicals,Conventional + CCS,Gas,TJ/mt chemicals,2100
 Industry,Chemicals,Electrified,Electricity,TJ/mt chemicals,2444
 Industry,Low temp. heating,Fossil boiler,Coal,TJ/PJ_heat,300
 Industry,Low temp. heating,Fossil boiler,Oil,TJ/PJ_heat,300
@@ -45,6 +48,7 @@ Industry,Low temp. heating,Heat pump,Electricity,TJ/PJ_heat,1050
 Industry,High temp. heating,Fossil furnace,Coal,TJ/PJ_heat,440
 Industry,High temp. heating,Fossil furnace,Oil,TJ/PJ_heat,220
 Industry,High temp. heating,Fossil furnace,Gas,TJ/PJ_heat,440
+Industry,High temp. heating,Furnace + CCS,Gas,TJ/PJ_heat,550
 Industry,High temp. heating,Biomass furnace,Biomass,TJ/PJ_heat,1100
 Industry,High temp. heating,Electric furnace,Electricity,TJ/PJ_heat,1050
 Industry,Other industry - feedstock,Feedstock,Coal,TJ/Unitless (2023=1),3000000
@@ -62,6 +66,7 @@ Buildings,Residential heating,Fossil boiler,Gas,TJ/PJ_heat,875
 Buildings,Residential heating,Biomass heating,Biomass,TJ/PJ_heat,5000
 Buildings,Residential heating,Heat pump,Electricity,TJ/PJ_heat,333.3
 Buildings,Residential heating,Electric heating,Electricity,TJ/PJ_heat,1111.1
+Buildings,Residential heating,District heating,District heat,TJ/PJ_heat,1000
 Buildings,Residential cooking,Conventional fossil,Coal,TJ/PJ_heat,333.3
 Buildings,Residential cooking,Conventional fossil,Oil,TJ/PJ_heat,500
 Buildings,Residential cooking,Conventional fossil,Gas,TJ/PJ_heat,833.3
@@ -84,6 +89,7 @@ Buildings,Commercial heating,Fossil boiler,Gas,TJ/PJ_heat,875
 Buildings,Commercial heating,Biomass heating,Biomass,TJ/PJ_heat,5000
 Buildings,Commercial heating,Heat pump,Electricity,TJ/PJ_heat,333.3
 Buildings,Commercial heating,Electric heating,Electricity,TJ/PJ_heat,1111.1
+Buildings,Commercial heating,District heating,District heat,TJ/PJ_heat,1000
 Buildings,Commercial lighting,Conventional,Electricity,TJ/billion lumen,0.24
 Buildings,Commercial lighting,Conventional,Oil,TJ/billion lumen,-
 Buildings,Commercial lighting,Full LED,Electricity,TJ/billion lumen,0.04

@@ -19,16 +19,20 @@ Transport,Trains,Electrified,Stock,% mix,0.0
 Transport,Other transport,Conventional,Stock,% mix,1.0
 Transport,Other transport,Electrified,Stock,% mix,0.0
 Industry,Steel,BF-BOF,Stock,% mix,0.7
+Industry,Steel,BF-BOF + CCS,Stock,% mix,0.0
 Industry,Steel,EAF,Stock,% mix,0.3
 Industry,Steel,DRI-EAF (H2),Stock,% mix,0.0
 Industry,Cement,Conventional kiln,Stock,% mix,1.0
+Industry,Cement,Conventional + CCS,Stock,% mix,0.0
 Industry,Cement,Electric kiln,Stock,% mix,0.0
 Industry,Chemicals,Conventional,Stock,% mix,1.0
+Industry,Chemicals,Conventional + CCS,Stock,% mix,0.0
 Industry,Chemicals,Electrified,Stock,% mix,0.0
 Industry,Low temp. heating,Fossil boiler,Stock,% mix,0.7
 Industry,Low temp. heating,Biomass boiler,Stock,% mix,0.25
 Industry,Low temp. heating,Heat pump,Stock,% mix,0.05
 Industry,High temp. heating,Fossil furnace,Stock,% mix,0.85
+Industry,High temp. heating,Furnace + CCS,Stock,% mix,0.0
 Industry,High temp. heating,Biomass furnace,Stock,% mix,0.15
 Industry,High temp. heating,Electric furnace,Stock,% mix,0.0
 Industry,Other industry - feedstock,Feedstock,Stock,% mix,1.0
@@ -38,6 +42,7 @@ Buildings,Residential heating,Fossil boiler,Stock,% mix,0.8
 Buildings,Residential heating,Biomass heating,Stock,% mix,0.1
 Buildings,Residential heating,Heat pump,Stock,% mix,0.05
 Buildings,Residential heating,Electric heating,Stock,% mix,0.05
+Buildings,Residential heating,District heating,Stock,% mix,0.0
 Buildings,Residential cooking,Conventional fossil,Stock,% mix,0.4
 Buildings,Residential cooking,Biomass cooking,Stock,% mix,0.4
 Buildings,Residential cooking,Electrified,Stock,% mix,0.2
@@ -51,6 +56,7 @@ Buildings,Commercial heating,Fossil boiler,Stock,% mix,0.8
 Buildings,Commercial heating,Biomass heating,Stock,% mix,0.1
 Buildings,Commercial heating,Heat pump,Stock,% mix,0.0
 Buildings,Commercial heating,Electric heating,Stock,% mix,0.1
+Buildings,Commercial heating,District heating,Stock,% mix,0.0
 Buildings,Commercial lighting,Conventional,Stock,% mix,1.0
 Buildings,Commercial lighting,Full LED,Stock,% mix,0.0
 Buildings,Other commercial,Conventional,Stock,% mix,1.0

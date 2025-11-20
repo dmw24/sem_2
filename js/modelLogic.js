@@ -287,6 +287,156 @@ function runModelCalculation(structuredData, userInputParameters) {
         // 8. Calculate PED (Unchanged)
         const currentPedByFuel = primaryFuels.reduce((acc, p) => ({ ...acc, [p]: 0 }), {}); Object.keys(currentOtherInputEnergyByFuel).forEach(p => { if (p in currentPedByFuel) { currentPedByFuel[p] += currentOtherInputEnergyByFuel[p]; } }); Object.keys(currentEcPostPower).forEach(f => { if (primaryFuels.includes(f)) { let isInputToOther = (f in currentOtherFuelDemand); if (!isInputToOther && currentEcPostPower[f] > 0.001) { currentPedByFuel[f] = (currentPedByFuel[f] || 0) + currentEcPostPower[f]; } } }); yearlyResults[year].pedByFuel = currentPedByFuel;
 
+        // 9. Emissions Calculation
+        const EMISSION_FACTORS = {
+            'Coal': 95, // kg CO2 / GJ
+            'Oil': 73,
+            'Gas': 56,
+            'Natural Gas': 56,
+            'Biomass': 0, // Assumed neutral
+            'Uranium': 0,
+            'Solar': 0,
+            'Wind': 0,
+            'Hydro': 0,
+            'Other': 0
+        };
+
+        const CCS_CAPTURE_RATES = {
+            'default': 0.90 // 90% capture rate for CCS technologies
+        };
+
+        const isCCSTech = (techName) => techName && (techName.includes('CCS') || techName.includes('BECCS'));
+
+        // Calculate Gross Emissions from Primary Energy Demand (PED)
+        // We use PED by fuel to avoid double counting, assuming all fossil PED eventually combusts or releases CO2
+        // unless captured.
+        // Note: Non-energy use (feedstocks) might be an exception, but for this high-level model, we assume combustion.
+        let grossEmissions = 0;
+        const emissionsByFuel = {};
+        Object.keys(yearlyResults[year].pedByFuel).forEach(fuel => {
+            const energy = yearlyResults[year].pedByFuel[fuel]; // GJ
+            const factor = EMISSION_FACTORS[fuel] || 0;
+            const fuelEmissions = (energy * factor) / 1000; // tonnes CO2 (kg/GJ * GJ = kg -> /1000 = tonnes)
+            // Actually, let's stick to Mt CO2 for global scale? 
+            // Energy is in GJ. 1 EJ = 1e9 GJ.
+            // If we want Mt CO2:
+            // (GJ * kg/GJ) = kg CO2. 
+            // 1 Mt = 1e9 kg.
+            // So (Energy_GJ * Factor) / 1e9 = Mt CO2.
+            const emissionsMt = (energy * factor) / 1e9;
+            emissionsByFuel[fuel] = emissionsMt;
+            grossEmissions += emissionsMt;
+        });
+
+        // Calculate Captured Emissions
+        // We need to look at the activity (energy consumption) of CCS technologies.
+        // 1. Power Sector CCS
+        let capturedEmissions = 0;
+        const capturedBySubsector = {}; // Track captured emissions by subsector
+
+        // Power Input Energy by Tech
+        // We need to reconstruct input energy per tech to apply capture rate to the *input* fuel emissions.
+        // yearlyResults[year].powerProdMix gives output shares.
+        // We have powerTechUnitEnergyCons.
+        const totalElec = yearlyResults[year].ecPostHydrogen['Electricity'] || 0;
+
+        powerTechs.forEach(pt => {
+            if (isCCSTech(pt)) {
+                const mixPercent = getValue(yearlyResults[year].powerProdMix, [pt], 0);
+                const mixFraction = mixPercent / 100;
+                const unitConsMap = getValue(powerTechUnitEnergyCons, [pt], {});
+
+                // Calculate input energy for this tech
+                Object.keys(unitConsMap).forEach(fuel => {
+                    const unitCons = unitConsMap[fuel];
+                    const inputEnergy = totalElec * mixFraction * unitCons; // GJ input
+                    const factor = EMISSION_FACTORS[fuel] || 0;
+                    const potentialEmissionsMt = (inputEnergy * factor) / 1e9;
+
+                    const captureRate = CCS_CAPTURE_RATES['default'];
+                    const captured = potentialEmissionsMt * captureRate;
+                    capturedEmissions += captured;
+
+                    // Track by subsector
+                    capturedBySubsector['Power'] = (capturedBySubsector['Power'] || 0) + captured;
+                });
+            }
+        });
+
+        // 2. Hydrogen Sector CCS
+        const totalH2 = yearlyResults[year].fecByFuel['Hydrogen'] || 0;
+        hydrogenTechs.forEach(ht => {
+            if (isCCSTech(ht)) {
+                const mixPercent = getValue(yearlyResults[year].hydrogenProdMix, [ht], 0);
+                const mixFraction = mixPercent / 100;
+                const unitConsMap = getValue(hydrogenTechUnitEnergyCons, [ht], {});
+
+                Object.keys(unitConsMap).forEach(fuel => {
+                    const unitCons = unitConsMap[fuel];
+                    const inputEnergy = totalH2 * mixFraction * unitCons;
+                    const factor = EMISSION_FACTORS[fuel] || 0;
+                    const potentialEmissionsMt = (inputEnergy * factor) / 1e9;
+
+                    const captureRate = CCS_CAPTURE_RATES['default'];
+                    const captured = potentialEmissionsMt * captureRate;
+                    capturedEmissions += captured;
+
+                    // Track by subsector
+                    capturedBySubsector['Hydrogen'] = (capturedBySubsector['Hydrogen'] || 0) + captured;
+                });
+            }
+        });
+
+        // 3. Industry CCS (e.g., Cement, Steel, Chemicals)
+        // We need to iterate through demand sectors.
+        sectors.forEach(s => {
+            if (subsectors[s]) {
+                subsectors[s].forEach(b => {
+                    const techs = technologies[s]?.[b] || [];
+                    techs.forEach(t => {
+                        if (isCCSTech(t)) {
+                            // Find input fuel for this tech
+                            // yearlyResults[year].fecDetailed[s][b][t][fuel] gives Energy Consumption (Input)
+                            const techFecMap = getValue(yearlyResults[year].fecDetailed, [s, b, t], {});
+                            Object.keys(techFecMap).forEach(fuel => {
+                                const inputEnergy = techFecMap[fuel];
+                                const factor = EMISSION_FACTORS[fuel] || 0;
+                                const potentialEmissionsMt = (inputEnergy * factor) / 1e9;
+
+                                const captureRate = CCS_CAPTURE_RATES['default'];
+                                const captured = potentialEmissionsMt * captureRate;
+                                capturedEmissions += captured;
+
+                                // Track by subsector
+                                const subsectorKey = `${s}|${b}`; // e.g. Industry|Steel
+                                capturedBySubsector[subsectorKey] = (capturedBySubsector[subsectorKey] || 0) + captured;
+                            });
+                        }
+                    });
+                });
+            }
+        });
+
+        // Process Emissions (Cement) - Special Case if needed, but for now we stick to fuel-based + generic CCS.
+        // If "Conventional kiln" has process emissions, they aren't captured by fuel factors.
+        // For simplicity in this iteration, we assume the emission factors cover the main sources or we add a buffer?
+        // Let's stick to the user request: "at the primary level by setting emission factors".
+        // So we ignore process emissions for now unless they are modeled as a "fuel" or we add a specific factor.
+        // However, CCS in cement *does* capture process emissions. 
+        // To be clever: We could assume a higher "effective" emission factor for Coal/Gas in Cement?
+        // Or just accept this limitation for now. 
+        // Let's proceed with fuel-based only as per "primary level" instruction.
+
+        const netEmissions = grossEmissions - capturedEmissions;
+
+        yearlyResults[year].emissions = {
+            gross: grossEmissions,
+            captured: capturedEmissions,
+            net: netEmissions,
+            byFuel: emissionsByFuel,
+            capturedBySubsector: capturedBySubsector
+        };
+
     } // --- End of year loop ---
 
     console.log("Model calculation complete.");

@@ -565,11 +565,12 @@ function handleChartViewChange() {
     const subsectorChartsSection = document.getElementById('subsectorChartsSection');
     const balanceChartsSection = document.getElementById('balanceChartsSection');
     const supplyChartsSection = document.getElementById('supplyChartsSection');
+    const emissionsChartsSection = document.getElementById('emissionsChartsSection');
     const deltaChartsSection = document.getElementById('deltaChartsSection');
     const sankeySection = document.getElementById('sankeySection');
     const sankeyControls = document.getElementById('sankeyControls');
 
-    if (!chartViewSelect || !subsectorSelectorDiv || !subsectorChartsSection || !balanceChartsSection || !supplyChartsSection) {
+    if (!chartViewSelect || !subsectorSelectorDiv || !subsectorChartsSection || !balanceChartsSection || !supplyChartsSection || !emissionsChartsSection) {
         console.error("One or more chart view elements not found!");
         return;
     }
@@ -586,6 +587,7 @@ function handleChartViewChange() {
     subsectorChartsSection.classList.toggle('hidden', selectedView !== 'subsector');
     balanceChartsSection.classList.toggle('hidden', selectedView !== 'balance');
     supplyChartsSection.classList.toggle('hidden', selectedView !== 'supply');
+    emissionsChartsSection.classList.toggle('hidden', selectedView !== 'emissions');
     if (deltaChartsSection) deltaChartsSection.classList.toggle('hidden', selectedView !== 'deltas');
     if (sankeySection) sankeySection.classList.toggle('hidden', selectedView !== 'sankey');
     if (sankeyControls) sankeyControls.classList.toggle('hidden', selectedView !== 'sankey');
@@ -635,6 +637,9 @@ function setupEventListeners(appState) {
             // Update all charts
             if (typeof updateCharts === 'function') {
                 updateCharts(appState.latestResults, structuredData);
+            }
+            if (typeof updateEmissionsCharts === 'function') {
+                updateEmissionsCharts(appState.latestResults, structuredData);
             }
 
             // Update delta charts
@@ -707,6 +712,16 @@ function setupEventListeners(appState) {
             else if (chartViewSelect.value === 'supply' && appState.latestResults) {
                 const supplyChartIds = ['powerMixChart', 'hydrogenMixChart'];
                 supplyChartIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element && element.data) {
+                        Plotly.Plots.resize(element);
+                    }
+                });
+            }
+            // Resize emissions charts
+            else if (chartViewSelect.value === 'emissions' && appState.latestResults) {
+                const emissionChartIds = ['globalEmissionsChart', 'ccsBySubsectorChart'];
+                emissionChartIds.forEach(id => {
                     const element = document.getElementById(id);
                     if (element && element.data) {
                         Plotly.Plots.resize(element);
