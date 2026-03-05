@@ -8,17 +8,14 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/style.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Charts -->
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
     <!-- D3 and D3-Sankey -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
-    <script type="text/javascript" src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 </head>
 
 <body>
@@ -67,20 +64,14 @@
                 </select>
             </div>
 
-            <div id="sankeyControls" class="hidden"
-                style="background: var(--white); padding: 15px 20px; border-radius: 12px; border: 1px solid var(--grey-blue); margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
-                <label for="sankeyYearSlider" style="font-weight: 600; color: var(--slate-blue);">Select Year:</label>
-                <input type="range" id="sankeyYearSlider" min="2023" max="2050" value="2050" step="1"
-                    style="flex-grow: 1; accent-color: var(--ember-green);">
-                <span id="sankeyYearDisplay"
-                    style="font-weight: 700; color: var(--ember-green); min-width: 50px;">2050</span>
+            <div id="sankeyControls" class="hidden">
+                <label for="sankeyYearSlider">Select Year:</label>
+                <input type="range" id="sankeyYearSlider" min="2023" max="2050" value="2050" step="1">
+                <span id="sankeyYearDisplay">2050</span>
 
-                <div
-                    style="display: flex; align-items: center; gap: 8px; margin-left: 15px; border-left: 1px solid #e2e8f0; padding-left: 15px;">
-                    <input type="checkbox" id="toggleSubsectors" checked
-                        style="accent-color: var(--ember-green); width: 16px; height: 16px;">
-                    <label for="toggleSubsectors"
-                        style="font-weight: 600; color: var(--slate-blue); cursor: pointer;">Show Subsectors</label>
+                <div class="sankey-toggle-group" style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+                    <input type="checkbox" id="toggleSubsectors" checked>
+                    <label for="toggleSubsectors" style="cursor:pointer;">Show Subsectors</label>
                 </div>
             </div>
 
@@ -173,8 +164,7 @@
 
             <section id="sankeySection" class="hidden">
                 <h3 class="chart-section-heading">Energy Flows (Sankey Diagram)</h3>
-                <div id="sankeyChart"
-                    style="width: 100%; height: 1000px; background: var(--white); border: 1px solid var(--grey-blue); border-radius: 12px; box-shadow: var(--shadow-md);">
+                <div id="sankeyChart">
                 </div>
             </section>
 

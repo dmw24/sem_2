@@ -7,56 +7,68 @@ Fast Transition,Demand|Transport|Buses|EV,s-curve,85,2050,0.15,2037
 Fast Transition,Demand|Transport|Buses|ICE,decline,15,2050,0.15,2037
 Fast Transition,Demand|Transport|2/3 wheelers|EV,s-curve,80,2050,0.15,2037
 Fast Transition,Demand|Transport|2/3 wheelers|ICE,decline,20,2050,0.15,2037
-Fast Transition,Demand|Transport|Ships|Ammonia ship,s-curve,60,2050,0.12,2040
 Fast Transition,Demand|Transport|Ships|Conventional ship,decline,40,2050,0.12,2040
-Fast Transition,Demand|Transport|Planes|Electric plane,s-curve,40,2050,0.1,2040
+Fast Transition,Demand|Transport|Ships|Ammonia ship,s-curve,60,2050,0.12,2040
+Fast Transition,Demand|Transport|Ships|Electric ship,fixed,0,,,
 Fast Transition,Demand|Transport|Planes|Conventional plane,decline,60,2050,0.1,2040
-Fast Transition,Demand|Transport|Trains|Electric train,s-curve,90,2050,0.18,2035
+Fast Transition,Demand|Transport|Planes|Electric plane,s-curve,40,2050,0.1,2040
 Fast Transition,Demand|Transport|Trains|Diesel train,decline,10,2050,0.18,2035
-Fast Transition,Demand|Industry|Steel|DRI-EAF (H2),s-curve,70,2050,0.15,2037
+Fast Transition,Demand|Transport|Trains|Electric train,s-curve,90,2050,0.18,2035
+Fast Transition,Demand|Transport|Other transport|Conventional,fixed,100,,,
+Fast Transition,Demand|Transport|Other transport|Electrified,fixed,0,,,
 Fast Transition,Demand|Industry|Steel|BF-BOF,decline,20,2050,0.15,2037
-Fast Transition,Demand|Industry|Steel|EAF,fixed,,,
-Fast Transition,Demand|Industry|Cement|Electric kiln,s-curve,65,2050,0.14,2038
+Fast Transition,Demand|Industry|Steel|BF-BOF + CCS,fixed,0,,,
+Fast Transition,Demand|Industry|Steel|EAF,fixed,10,,,
+Fast Transition,Demand|Industry|Steel|DRI-EAF (H2),s-curve,70,2050,0.15,2037
 Fast Transition,Demand|Industry|Cement|Conventional kiln,decline,35,2050,0.14,2038
-Fast Transition,Demand|Industry|Chemicals|Electrified,s-curve,70,2050,0.15,2037
+Fast Transition,Demand|Industry|Cement|Conventional + CCS,fixed,0,,,
+Fast Transition,Demand|Industry|Cement|Electric kiln,s-curve,65,2050,0.14,2038
 Fast Transition,Demand|Industry|Chemicals|Conventional,decline,30,2050,0.15,2037
-Fast Transition,Demand|Industry|Low temp. heating|Heat pump,s-curve,75,2050,0.16,2036
+Fast Transition,Demand|Industry|Chemicals|Conventional + CCS,fixed,0,,,
+Fast Transition,Demand|Industry|Chemicals|Electrified,s-curve,70,2050,0.15,2037
 Fast Transition,Demand|Industry|Low temp. heating|Fossil boiler,decline,15,2050,0.16,2036
-Fast Transition,Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
-Fast Transition,Demand|Industry|High temp. heating|Electric furnace,s-curve,65,2050,0.14,2038
+Fast Transition,Demand|Industry|Low temp. heating|Biomass boiler,fixed,10,,,
+Fast Transition,Demand|Industry|Low temp. heating|Heat pump,s-curve,75,2050,0.16,2036
 Fast Transition,Demand|Industry|High temp. heating|Fossil furnace,decline,25,2050,0.14,2038
-Fast Transition,Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
-Fast Transition,Demand|Industry|Other industry - energy|Electrified,s-curve,75,2050,0.15,2037
+Fast Transition,Demand|Industry|High temp. heating|Furnace + CCS,fixed,0,,,
+Fast Transition,Demand|Industry|High temp. heating|Biomass furnace,fixed,10,,,
+Fast Transition,Demand|Industry|High temp. heating|Electric furnace,s-curve,65,2050,0.14,2038
+Fast Transition,Demand|Industry|Other industry - feedstock|Feedstock,fixed,100,,,
 Fast Transition,Demand|Industry|Other industry - energy|Conventional,decline,25,2050,0.15,2037
-Fast Transition,Demand|Buildings|Residential heating|Heat pump,s-curve,80,2050,0.16,2036
+Fast Transition,Demand|Industry|Other industry - energy|Electrified,s-curve,75,2050,0.15,2037
 Fast Transition,Demand|Buildings|Residential heating|Fossil boiler,decline,10,2050,0.16,2036
-Fast Transition,Demand|Buildings|Residential heating|Biomass heating,fixed,,,
-Fast Transition,Demand|Buildings|Residential heating|Electric heating,fixed,,,
-Fast Transition,Demand|Buildings|Residential cooking|Electrified,s-curve,85,2050,0.17,2035
+Fast Transition,Demand|Buildings|Residential heating|Biomass heating,fixed,6.666667,,,
+Fast Transition,Demand|Buildings|Residential heating|Heat pump,s-curve,80,2050,0.16,2036
+Fast Transition,Demand|Buildings|Residential heating|Electric heating,fixed,3.333333,,,
+Fast Transition,Demand|Buildings|Residential heating|District heating,fixed,0,,,
 Fast Transition,Demand|Buildings|Residential cooking|Conventional fossil,decline,10,2050,0.17,2035
-Fast Transition,Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
-Fast Transition,Demand|Buildings|Residential lighting|Full LED,s-curve,95,2050,0.2,2033
+Fast Transition,Demand|Buildings|Residential cooking|Biomass cooking,fixed,5,,,
+Fast Transition,Demand|Buildings|Residential cooking|Electrified,s-curve,85,2050,0.17,2035
 Fast Transition,Demand|Buildings|Residential lighting|Conventional,decline,5,2050,0.2,2033
-Fast Transition,Demand|Buildings|Other residential|Electrified,s-curve,80,2050,0.15,2037
+Fast Transition,Demand|Buildings|Residential lighting|Full LED,s-curve,95,2050,0.2,2033
 Fast Transition,Demand|Buildings|Other residential|Conventional,decline,20,2050,0.15,2037
-Fast Transition,Demand|Buildings|Building cooling|High efficiency airco,s-curve,85,2050,0.16,2036
+Fast Transition,Demand|Buildings|Other residential|Electrified,s-curve,80,2050,0.15,2037
 Fast Transition,Demand|Buildings|Building cooling|Low efficiency airco,decline,15,2050,0.16,2036
-Fast Transition,Demand|Buildings|Commercial heating|Heat pump,s-curve,80,2050,0.16,2036
+Fast Transition,Demand|Buildings|Building cooling|High efficiency airco,s-curve,85,2050,0.16,2036
 Fast Transition,Demand|Buildings|Commercial heating|Fossil boiler,decline,10,2050,0.16,2036
-Fast Transition,Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
-Fast Transition,Demand|Buildings|Commercial heating|Electric heating,fixed,,,
-Fast Transition,Demand|Buildings|Commercial lighting|Full LED,s-curve,95,2050,0.2,2033
+Fast Transition,Demand|Buildings|Commercial heating|Biomass heating,fixed,5,,,
+Fast Transition,Demand|Buildings|Commercial heating|Heat pump,s-curve,80,2050,0.16,2036
+Fast Transition,Demand|Buildings|Commercial heating|Electric heating,fixed,5,,,
+Fast Transition,Demand|Buildings|Commercial heating|District heating,fixed,0,,,
 Fast Transition,Demand|Buildings|Commercial lighting|Conventional,decline,5,2050,0.2,2033
-Fast Transition,Demand|Buildings|Other commercial|Electrified,s-curve,80,2050,0.15,2037
+Fast Transition,Demand|Buildings|Commercial lighting|Full LED,s-curve,95,2050,0.2,2033
 Fast Transition,Demand|Buildings|Other commercial|Conventional,decline,20,2050,0.15,2037
+Fast Transition,Demand|Buildings|Other commercial|Electrified,s-curve,80,2050,0.15,2037
 Fast Transition,Power|Power|Solar PV,s-curve,40,2050,0.18,2035
 Fast Transition,Power|Power|Wind,s-curve,35,2050,0.18,2035
-Fast Transition,Power|Power|Hydro,fixed,,,
-Fast Transition,Power|Power|Nuclear power,fixed,,,
-Fast Transition,Power|Power|Biomass power,fixed,,,
+Fast Transition,Power|Power|Hydro,fixed,9.807692,,,
 Fast Transition,Power|Power|Gas power,decline,5,2050,0.18,2035
+Fast Transition,Power|Power|Gas CCS,fixed,0,,,
 Fast Transition,Power|Power|Coal power,decline,2,2050,0.2,2033
+Fast Transition,Power|Power|Coal CCS,fixed,0,,,
 Fast Transition,Power|Power|Oil power,decline,1,2050,0.2,2033
+Fast Transition,Power|Power|Nuclear power,fixed,5.884615,,,
+Fast Transition,Power|Power|Biomass power,fixed,1.307692,,,
 Fast Transition,Hydrogen|Hydrogen|Green,s-curve,85,2050,0.18,2035
 Fast Transition,Hydrogen|Hydrogen|Blue,decline,15,2050,0.18,2035
 Faster Transition,Demand|Transport|Passenger cars|EV,s-curve,95,2045,0.2,2034
@@ -67,56 +79,68 @@ Faster Transition,Demand|Transport|Buses|EV,s-curve,95,2045,0.2,2034
 Faster Transition,Demand|Transport|Buses|ICE,decline,5,2045,0.2,2034
 Faster Transition,Demand|Transport|2/3 wheelers|EV,s-curve,95,2045,0.2,2034
 Faster Transition,Demand|Transport|2/3 wheelers|ICE,decline,5,2045,0.2,2034
-Faster Transition,Demand|Transport|Ships|Ammonia ship,s-curve,75,2050,0.15,2037
 Faster Transition,Demand|Transport|Ships|Conventional ship,decline,25,2050,0.15,2037
-Faster Transition,Demand|Transport|Planes|Electric plane,s-curve,60,2050,0.13,2038
+Faster Transition,Demand|Transport|Ships|Ammonia ship,s-curve,75,2050,0.15,2037
+Faster Transition,Demand|Transport|Ships|Electric ship,fixed,0,,,
 Faster Transition,Demand|Transport|Planes|Conventional plane,decline,40,2050,0.13,2038
-Faster Transition,Demand|Transport|Trains|Electric train,s-curve,98,2045,0.22,2033
+Faster Transition,Demand|Transport|Planes|Electric plane,s-curve,60,2050,0.13,2038
 Faster Transition,Demand|Transport|Trains|Diesel train,decline,2,2045,0.22,2033
-Faster Transition,Demand|Industry|Steel|DRI-EAF (H2),s-curve,85,2045,0.2,2034
+Faster Transition,Demand|Transport|Trains|Electric train,s-curve,98,2045,0.22,2033
+Faster Transition,Demand|Transport|Other transport|Conventional,fixed,100,,,
+Faster Transition,Demand|Transport|Other transport|Electrified,fixed,0,,,
 Faster Transition,Demand|Industry|Steel|BF-BOF,decline,10,2045,0.2,2034
-Faster Transition,Demand|Industry|Steel|EAF,fixed,,,
-Faster Transition,Demand|Industry|Cement|Electric kiln,s-curve,80,2045,0.18,2035
+Faster Transition,Demand|Industry|Steel|BF-BOF + CCS,fixed,0,,,
+Faster Transition,Demand|Industry|Steel|EAF,fixed,5,,,
+Faster Transition,Demand|Industry|Steel|DRI-EAF (H2),s-curve,85,2045,0.2,2034
 Faster Transition,Demand|Industry|Cement|Conventional kiln,decline,20,2045,0.18,2035
-Faster Transition,Demand|Industry|Chemicals|Electrified,s-curve,85,2045,0.2,2034
+Faster Transition,Demand|Industry|Cement|Conventional + CCS,fixed,0,,,
+Faster Transition,Demand|Industry|Cement|Electric kiln,s-curve,80,2045,0.18,2035
 Faster Transition,Demand|Industry|Chemicals|Conventional,decline,15,2045,0.2,2034
-Faster Transition,Demand|Industry|Low temp. heating|Heat pump,s-curve,90,2045,0.2,2034
+Faster Transition,Demand|Industry|Chemicals|Conventional + CCS,fixed,0,,,
+Faster Transition,Demand|Industry|Chemicals|Electrified,s-curve,85,2045,0.2,2034
 Faster Transition,Demand|Industry|Low temp. heating|Fossil boiler,decline,5,2045,0.2,2034
-Faster Transition,Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
-Faster Transition,Demand|Industry|High temp. heating|Electric furnace,s-curve,80,2045,0.18,2035
+Faster Transition,Demand|Industry|Low temp. heating|Biomass boiler,fixed,5,,,
+Faster Transition,Demand|Industry|Low temp. heating|Heat pump,s-curve,90,2045,0.2,2034
 Faster Transition,Demand|Industry|High temp. heating|Fossil furnace,decline,15,2045,0.18,2035
-Faster Transition,Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
-Faster Transition,Demand|Industry|Other industry - energy|Electrified,s-curve,90,2045,0.2,2034
+Faster Transition,Demand|Industry|High temp. heating|Furnace + CCS,fixed,0,,,
+Faster Transition,Demand|Industry|High temp. heating|Biomass furnace,fixed,5,,,
+Faster Transition,Demand|Industry|High temp. heating|Electric furnace,s-curve,80,2045,0.18,2035
+Faster Transition,Demand|Industry|Other industry - feedstock|Feedstock,fixed,100,,,
 Faster Transition,Demand|Industry|Other industry - energy|Conventional,decline,10,2045,0.2,2034
-Faster Transition,Demand|Buildings|Residential heating|Heat pump,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Industry|Other industry - energy|Electrified,s-curve,90,2045,0.2,2034
 Faster Transition,Demand|Buildings|Residential heating|Fossil boiler,decline,3,2045,0.2,2034
-Faster Transition,Demand|Buildings|Residential heating|Biomass heating,fixed,,,
-Faster Transition,Demand|Buildings|Residential heating|Electric heating,fixed,,,
-Faster Transition,Demand|Buildings|Residential cooking|Electrified,s-curve,95,2045,0.22,2033
+Faster Transition,Demand|Buildings|Residential heating|Biomass heating,fixed,3.333333,,,
+Faster Transition,Demand|Buildings|Residential heating|Heat pump,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Residential heating|Electric heating,fixed,1.666667,,,
+Faster Transition,Demand|Buildings|Residential heating|District heating,fixed,0,,,
 Faster Transition,Demand|Buildings|Residential cooking|Conventional fossil,decline,3,2045,0.22,2033
-Faster Transition,Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
-Faster Transition,Demand|Buildings|Residential lighting|Full LED,s-curve,98,2045,0.25,2032
+Faster Transition,Demand|Buildings|Residential cooking|Biomass cooking,fixed,2,,,
+Faster Transition,Demand|Buildings|Residential cooking|Electrified,s-curve,95,2045,0.22,2033
 Faster Transition,Demand|Buildings|Residential lighting|Conventional,decline,2,2045,0.25,2032
-Faster Transition,Demand|Buildings|Other residential|Electrified,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Residential lighting|Full LED,s-curve,98,2045,0.25,2032
 Faster Transition,Demand|Buildings|Other residential|Conventional,decline,8,2045,0.2,2034
-Faster Transition,Demand|Buildings|Building cooling|High efficiency airco,s-curve,95,2045,0.2,2034
+Faster Transition,Demand|Buildings|Other residential|Electrified,s-curve,92,2045,0.2,2034
 Faster Transition,Demand|Buildings|Building cooling|Low efficiency airco,decline,5,2045,0.2,2034
-Faster Transition,Demand|Buildings|Commercial heating|Heat pump,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Building cooling|High efficiency airco,s-curve,95,2045,0.2,2034
 Faster Transition,Demand|Buildings|Commercial heating|Fossil boiler,decline,3,2045,0.2,2034
-Faster Transition,Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
-Faster Transition,Demand|Buildings|Commercial heating|Electric heating,fixed,,,
-Faster Transition,Demand|Buildings|Commercial lighting|Full LED,s-curve,98,2045,0.25,2032
+Faster Transition,Demand|Buildings|Commercial heating|Biomass heating,fixed,2.5,,,
+Faster Transition,Demand|Buildings|Commercial heating|Heat pump,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Commercial heating|Electric heating,fixed,2.5,,,
+Faster Transition,Demand|Buildings|Commercial heating|District heating,fixed,0,,,
 Faster Transition,Demand|Buildings|Commercial lighting|Conventional,decline,2,2045,0.25,2032
-Faster Transition,Demand|Buildings|Other commercial|Electrified,s-curve,92,2045,0.2,2034
+Faster Transition,Demand|Buildings|Commercial lighting|Full LED,s-curve,98,2045,0.25,2032
 Faster Transition,Demand|Buildings|Other commercial|Conventional,decline,8,2045,0.2,2034
+Faster Transition,Demand|Buildings|Other commercial|Electrified,s-curve,92,2045,0.2,2034
 Faster Transition,Power|Power|Solar PV,s-curve,50,2045,0.22,2033
 Faster Transition,Power|Power|Wind,s-curve,40,2045,0.22,2033
-Faster Transition,Power|Power|Hydro,fixed,,,
-Faster Transition,Power|Power|Nuclear power,fixed,,,
-Faster Transition,Power|Power|Biomass power,fixed,,,
+Faster Transition,Power|Power|Hydro,fixed,4.038462,,,
 Faster Transition,Power|Power|Gas power,decline,2,2045,0.22,2033
+Faster Transition,Power|Power|Gas CCS,fixed,0,,,
 Faster Transition,Power|Power|Coal power,decline,0.5,2045,0.25,2032
+Faster Transition,Power|Power|Coal CCS,fixed,0,,,
 Faster Transition,Power|Power|Oil power,decline,0.5,2045,0.25,2032
+Faster Transition,Power|Power|Nuclear power,fixed,2.423077,,,
+Faster Transition,Power|Power|Biomass power,fixed,0.538462,,,
 Faster Transition,Hydrogen|Hydrogen|Green,s-curve,95,2045,0.22,2033
 Faster Transition,Hydrogen|Hydrogen|Blue,decline,5,2045,0.22,2033
 IEA NZE (downscaled approx),Demand|Transport|Passenger cars|EV,s-curve,95,2050,0.40,2032
@@ -127,56 +151,68 @@ IEA NZE (downscaled approx),Demand|Transport|Buses|EV,s-curve,98,2050,0.40,2032
 IEA NZE (downscaled approx),Demand|Transport|Buses|ICE,decline,2,2050,0.40,2032
 IEA NZE (downscaled approx),Demand|Transport|2/3 wheelers|EV,s-curve,99,2050,0.40,2030
 IEA NZE (downscaled approx),Demand|Transport|2/3 wheelers|ICE,decline,1,2050,0.40,2030
-IEA NZE (downscaled approx),Demand|Transport|Ships|Ammonia ship,s-curve,85,2050,0.25,2038
 IEA NZE (downscaled approx),Demand|Transport|Ships|Conventional ship,decline,15,2050,0.25,2038
-IEA NZE (downscaled approx),Demand|Transport|Planes|Electric plane,s-curve,75,2050,0.25,2040
+IEA NZE (downscaled approx),Demand|Transport|Ships|Ammonia ship,s-curve,85,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Transport|Ships|Electric ship,fixed,0,,,
 IEA NZE (downscaled approx),Demand|Transport|Planes|Conventional plane,decline,25,2050,0.25,2040
-IEA NZE (downscaled approx),Demand|Transport|Trains|Electric train,s-curve,95,2050,0.40,2030
+IEA NZE (downscaled approx),Demand|Transport|Planes|Electric plane,s-curve,75,2050,0.25,2040
 IEA NZE (downscaled approx),Demand|Transport|Trains|Diesel train,decline,5,2050,0.40,2030
-IEA NZE (downscaled approx),Demand|Industry|Steel|DRI-EAF (H2),s-curve,60,2050,0.25,2038
-IEA NZE (downscaled approx),Demand|Industry|Steel|BF-BOF,decline,40,2050,0.25,2038
-IEA NZE (downscaled approx),Demand|Industry|Steel|EAF,fixed,,,
-IEA NZE (downscaled approx),Demand|Industry|Cement|Electric kiln,s-curve,90,2050,0.23,2040
-IEA NZE (downscaled approx),Demand|Industry|Cement|Conventional kiln,decline,10,2050,0.23,2040
-IEA NZE (downscaled approx),Demand|Industry|Chemicals|Electrified,s-curve,80,2050,0.23,2040
-IEA NZE (downscaled approx),Demand|Industry|Chemicals|Conventional,decline,20,2050,0.23,2040
-IEA NZE (downscaled approx),Demand|Industry|Low temp. heating|Heat pump,s-curve,70,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Transport|Trains|Electric train,s-curve,95,2050,0.40,2030
+IEA NZE (downscaled approx),Demand|Transport|Other transport|Conventional,fixed,100,,,
+IEA NZE (downscaled approx),Demand|Transport|Other transport|Electrified,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Industry|Steel|BF-BOF,decline,30.769231,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Industry|Steel|BF-BOF + CCS,s-curve,23.076923,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Industry|Steel|EAF,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Industry|Steel|DRI-EAF (H2),s-curve,46.153846,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Industry|Cement|Conventional kiln,decline,5.555556,2050,0.23,2040
+IEA NZE (downscaled approx),Demand|Industry|Cement|Conventional + CCS,s-curve,44.444444,2050,0.23,2040
+IEA NZE (downscaled approx),Demand|Industry|Cement|Electric kiln,s-curve,50,2050,0.23,2040
+IEA NZE (downscaled approx),Demand|Industry|Chemicals|Conventional,decline,13.333333,2050,0.23,2040
+IEA NZE (downscaled approx),Demand|Industry|Chemicals|Conventional + CCS,s-curve,33.333333,2050,0.23,2038
+IEA NZE (downscaled approx),Demand|Industry|Chemicals|Electrified,s-curve,53.333333,2050,0.23,2040
 IEA NZE (downscaled approx),Demand|Industry|Low temp. heating|Fossil boiler,decline,30,2050,0.25,2038
-IEA NZE (downscaled approx),Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
-IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Electric furnace,s-curve,60,2050,0.23,2040
-IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Fossil furnace,decline,40,2050,0.23,2040
-IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
-IEA NZE (downscaled approx),Demand|Industry|Other industry - energy|Electrified,s-curve,70,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Industry|Low temp. heating|Biomass boiler,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Industry|Low temp. heating|Heat pump,s-curve,70,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Fossil furnace,decline,28.571429,2050,0.23,2040
+IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Furnace + CCS,s-curve,28.571429,2050,0.23,2038
+IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Biomass furnace,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Electric furnace,s-curve,42.857143,2050,0.23,2040
+IEA NZE (downscaled approx),Demand|Industry|Other industry - feedstock|Feedstock,fixed,100,,,
 IEA NZE (downscaled approx),Demand|Industry|Other industry - energy|Conventional,decline,30,2050,0.25,2038
-IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Heat pump,s-curve,45,2050,0.30,2036
-IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Fossil boiler,decline,55,2050,0.30,2036
-IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Biomass heating,fixed,,,
-IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Electric heating,fixed,,,
-IEA NZE (downscaled approx),Demand|Buildings|Residential cooking|Electrified,s-curve,70,2050,0.30,2034
+IEA NZE (downscaled approx),Demand|Industry|Other industry - energy|Electrified,s-curve,70,2050,0.25,2038
+IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Fossil boiler,decline,49.107143,2050,0.30,2036
+IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Biomass heating,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Heat pump,s-curve,40.178571,2050,0.30,2036
+IEA NZE (downscaled approx),Demand|Buildings|Residential heating|Electric heating,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Buildings|Residential heating|District heating,s-curve,10.714286,2050,0.22,2036
 IEA NZE (downscaled approx),Demand|Buildings|Residential cooking|Conventional fossil,decline,30,2050,0.30,2034
-IEA NZE (downscaled approx),Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
-IEA NZE (downscaled approx),Demand|Buildings|Residential lighting|Full LED,s-curve,100,2045,0.3,2032
+IEA NZE (downscaled approx),Demand|Buildings|Residential cooking|Biomass cooking,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Buildings|Residential cooking|Electrified,s-curve,70,2050,0.30,2034
 IEA NZE (downscaled approx),Demand|Buildings|Residential lighting|Conventional,decline,0,2045,0.3,2032
-IEA NZE (downscaled approx),Demand|Buildings|Other residential|Electrified,s-curve,70,2050,0.30,2034
+IEA NZE (downscaled approx),Demand|Buildings|Residential lighting|Full LED,s-curve,100,2045,0.3,2032
 IEA NZE (downscaled approx),Demand|Buildings|Other residential|Conventional,decline,30,2050,0.30,2034
-IEA NZE (downscaled approx),Demand|Buildings|Building cooling|High efficiency airco,s-curve,80,2050,0.30,2034
+IEA NZE (downscaled approx),Demand|Buildings|Other residential|Electrified,s-curve,70,2050,0.30,2034
 IEA NZE (downscaled approx),Demand|Buildings|Building cooling|Low efficiency airco,decline,20,2050,0.30,2034
-IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Heat pump,s-curve,50,2050,0.30,2036
-IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Fossil boiler,decline,50,2050,0.30,2036
-IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
-IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Electric heating,fixed,,,
-IEA NZE (downscaled approx),Demand|Buildings|Commercial lighting|Full LED,s-curve,100,2045,0.3,2032
+IEA NZE (downscaled approx),Demand|Buildings|Building cooling|High efficiency airco,s-curve,80,2050,0.30,2034
+IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Fossil boiler,decline,43.478261,2050,0.30,2036
+IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Biomass heating,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Heat pump,s-curve,43.478261,2050,0.30,2036
+IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|Electric heating,fixed,0,,,
+IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|District heating,s-curve,13.043478,2050,0.22,2036
 IEA NZE (downscaled approx),Demand|Buildings|Commercial lighting|Conventional,decline,0,2045,0.3,2032
-IEA NZE (downscaled approx),Demand|Buildings|Other commercial|Electrified,s-curve,80,2050,0.30,2034
+IEA NZE (downscaled approx),Demand|Buildings|Commercial lighting|Full LED,s-curve,100,2045,0.3,2032
 IEA NZE (downscaled approx),Demand|Buildings|Other commercial|Conventional,decline,20,2050,0.30,2034
+IEA NZE (downscaled approx),Demand|Buildings|Other commercial|Electrified,s-curve,80,2050,0.30,2034
 IEA NZE (downscaled approx),Power|Power|Solar PV,s-curve,40,2050,0.30,2035
 IEA NZE (downscaled approx),Power|Power|Wind,s-curve,30,2050,0.28,2035
-IEA NZE (downscaled approx),Power|Power|Hydro,fixed,,,
-IEA NZE (downscaled approx),Power|Power|Nuclear power,fixed,,,
-IEA NZE (downscaled approx),Power|Power|Biomass power,fixed,,,
+IEA NZE (downscaled approx),Power|Power|Hydro,fixed,16.730769,,,
 IEA NZE (downscaled approx),Power|Power|Gas power,decline,0,2050,0.30,2035
+IEA NZE (downscaled approx),Power|Power|Gas CCS,s-curve,0.8,2050,0.22,2036
 IEA NZE (downscaled approx),Power|Power|Coal power,decline,0,2045,0.3,2032
+IEA NZE (downscaled approx),Power|Power|Coal CCS,s-curve,0.2,2050,0.18,2038
 IEA NZE (downscaled approx),Power|Power|Oil power,decline,0,2045,0.3,2032
+IEA NZE (downscaled approx),Power|Power|Nuclear power,fixed,10.038462,,,
+IEA NZE (downscaled approx),Power|Power|Biomass power,fixed,2.230769,,,
 IEA NZE (downscaled approx),Hydrogen|Hydrogen|Green,s-curve,70,2050,0.32,2038
 IEA NZE (downscaled approx),Hydrogen|Hydrogen|Blue,decline,30,2050,0.32,2038
 IEA CPS (downscaled approx),Demand|Transport|Passenger cars|EV,s-curve,35,2050,0.1,2038
@@ -187,56 +223,68 @@ IEA CPS (downscaled approx),Demand|Transport|Buses|EV,s-curve,25,2050,0.09,2040
 IEA CPS (downscaled approx),Demand|Transport|Buses|ICE,decline,75,2050,0.09,2040
 IEA CPS (downscaled approx),Demand|Transport|2/3 wheelers|EV,s-curve,30,2050,0.1,2040
 IEA CPS (downscaled approx),Demand|Transport|2/3 wheelers|ICE,decline,70,2050,0.1,2040
-IEA CPS (downscaled approx),Demand|Transport|Ships|Ammonia ship,s-curve,15,2050,0.08,2042
 IEA CPS (downscaled approx),Demand|Transport|Ships|Conventional ship,decline,85,2050,0.08,2042
-IEA CPS (downscaled approx),Demand|Transport|Planes|Electric plane,s-curve,5,2050,0.06,2045
+IEA CPS (downscaled approx),Demand|Transport|Ships|Ammonia ship,s-curve,15,2050,0.08,2042
+IEA CPS (downscaled approx),Demand|Transport|Ships|Electric ship,fixed,0,,,
 IEA CPS (downscaled approx),Demand|Transport|Planes|Conventional plane,decline,95,2050,0.06,2045
-IEA CPS (downscaled approx),Demand|Transport|Trains|Electric train,s-curve,65,2050,0.12,2038
+IEA CPS (downscaled approx),Demand|Transport|Planes|Electric plane,s-curve,5,2050,0.06,2045
 IEA CPS (downscaled approx),Demand|Transport|Trains|Diesel train,decline,35,2050,0.12,2038
-IEA CPS (downscaled approx),Demand|Industry|Steel|DRI-EAF (H2),s-curve,20,2050,0.09,2040
+IEA CPS (downscaled approx),Demand|Transport|Trains|Electric train,s-curve,65,2050,0.12,2038
+IEA CPS (downscaled approx),Demand|Transport|Other transport|Conventional,fixed,100,,,
+IEA CPS (downscaled approx),Demand|Transport|Other transport|Electrified,fixed,0,,,
 IEA CPS (downscaled approx),Demand|Industry|Steel|BF-BOF,decline,70,2050,0.09,2040
-IEA CPS (downscaled approx),Demand|Industry|Steel|EAF,fixed,,,
-IEA CPS (downscaled approx),Demand|Industry|Cement|Electric kiln,s-curve,15,2050,0.08,2042
+IEA CPS (downscaled approx),Demand|Industry|Steel|BF-BOF + CCS,fixed,0,,,
+IEA CPS (downscaled approx),Demand|Industry|Steel|EAF,fixed,10,,,
+IEA CPS (downscaled approx),Demand|Industry|Steel|DRI-EAF (H2),s-curve,20,2050,0.09,2040
 IEA CPS (downscaled approx),Demand|Industry|Cement|Conventional kiln,decline,85,2050,0.08,2042
-IEA CPS (downscaled approx),Demand|Industry|Chemicals|Electrified,s-curve,18,2050,0.09,2042
+IEA CPS (downscaled approx),Demand|Industry|Cement|Conventional + CCS,fixed,0,,,
+IEA CPS (downscaled approx),Demand|Industry|Cement|Electric kiln,s-curve,15,2050,0.08,2042
 IEA CPS (downscaled approx),Demand|Industry|Chemicals|Conventional,decline,82,2050,0.09,2042
-IEA CPS (downscaled approx),Demand|Industry|Low temp. heating|Heat pump,s-curve,25,2050,0.09,2040
+IEA CPS (downscaled approx),Demand|Industry|Chemicals|Conventional + CCS,fixed,0,,,
+IEA CPS (downscaled approx),Demand|Industry|Chemicals|Electrified,s-curve,18,2050,0.09,2042
 IEA CPS (downscaled approx),Demand|Industry|Low temp. heating|Fossil boiler,decline,60,2050,0.09,2040
-IEA CPS (downscaled approx),Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
-IEA CPS (downscaled approx),Demand|Industry|High temp. heating|Electric furnace,s-curve,15,2050,0.08,2042
+IEA CPS (downscaled approx),Demand|Industry|Low temp. heating|Biomass boiler,fixed,15,,,
+IEA CPS (downscaled approx),Demand|Industry|Low temp. heating|Heat pump,s-curve,25,2050,0.09,2040
 IEA CPS (downscaled approx),Demand|Industry|High temp. heating|Fossil furnace,decline,75,2050,0.08,2042
-IEA CPS (downscaled approx),Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
-IEA CPS (downscaled approx),Demand|Industry|Other industry - energy|Electrified,s-curve,20,2050,0.09,2042
+IEA CPS (downscaled approx),Demand|Industry|High temp. heating|Furnace + CCS,fixed,0,,,
+IEA CPS (downscaled approx),Demand|Industry|High temp. heating|Biomass furnace,fixed,10,,,
+IEA CPS (downscaled approx),Demand|Industry|High temp. heating|Electric furnace,s-curve,15,2050,0.08,2042
+IEA CPS (downscaled approx),Demand|Industry|Other industry - feedstock|Feedstock,fixed,100,,,
 IEA CPS (downscaled approx),Demand|Industry|Other industry - energy|Conventional,decline,80,2050,0.09,2042
-IEA CPS (downscaled approx),Demand|Buildings|Residential heating|Heat pump,s-curve,30,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Industry|Other industry - energy|Electrified,s-curve,20,2050,0.09,2042
 IEA CPS (downscaled approx),Demand|Buildings|Residential heating|Fossil boiler,decline,55,2050,0.1,2040
-IEA CPS (downscaled approx),Demand|Buildings|Residential heating|Biomass heating,fixed,,,
-IEA CPS (downscaled approx),Demand|Buildings|Residential heating|Electric heating,fixed,,,
-IEA CPS (downscaled approx),Demand|Buildings|Residential cooking|Electrified,s-curve,40,2050,0.11,2038
+IEA CPS (downscaled approx),Demand|Buildings|Residential heating|Biomass heating,fixed,6.666667,,,
+IEA CPS (downscaled approx),Demand|Buildings|Residential heating|Heat pump,s-curve,30,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Buildings|Residential heating|Electric heating,fixed,3.333333,,,
+IEA CPS (downscaled approx),Demand|Buildings|Residential heating|District heating,fixed,5,,,
 IEA CPS (downscaled approx),Demand|Buildings|Residential cooking|Conventional fossil,decline,45,2050,0.11,2038
-IEA CPS (downscaled approx),Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
-IEA CPS (downscaled approx),Demand|Buildings|Residential lighting|Full LED,s-curve,75,2050,0.14,2035
+IEA CPS (downscaled approx),Demand|Buildings|Residential cooking|Biomass cooking,fixed,15,,,
+IEA CPS (downscaled approx),Demand|Buildings|Residential cooking|Electrified,s-curve,40,2050,0.11,2038
 IEA CPS (downscaled approx),Demand|Buildings|Residential lighting|Conventional,decline,25,2050,0.14,2035
-IEA CPS (downscaled approx),Demand|Buildings|Other residential|Electrified,s-curve,35,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Buildings|Residential lighting|Full LED,s-curve,75,2050,0.14,2035
 IEA CPS (downscaled approx),Demand|Buildings|Other residential|Conventional,decline,65,2050,0.1,2040
-IEA CPS (downscaled approx),Demand|Buildings|Building cooling|High efficiency airco,s-curve,40,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Buildings|Other residential|Electrified,s-curve,35,2050,0.1,2040
 IEA CPS (downscaled approx),Demand|Buildings|Building cooling|Low efficiency airco,decline,60,2050,0.1,2040
-IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|Heat pump,s-curve,30,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Buildings|Building cooling|High efficiency airco,s-curve,40,2050,0.1,2040
 IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|Fossil boiler,decline,55,2050,0.1,2040
-IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
-IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|Electric heating,fixed,,,
-IEA CPS (downscaled approx),Demand|Buildings|Commercial lighting|Full LED,s-curve,75,2050,0.14,2035
+IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|Biomass heating,fixed,5,,,
+IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|Heat pump,s-curve,30,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|Electric heating,fixed,5,,,
+IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|District heating,fixed,5,,,
 IEA CPS (downscaled approx),Demand|Buildings|Commercial lighting|Conventional,decline,25,2050,0.14,2035
-IEA CPS (downscaled approx),Demand|Buildings|Other commercial|Electrified,s-curve,35,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Buildings|Commercial lighting|Full LED,s-curve,75,2050,0.14,2035
 IEA CPS (downscaled approx),Demand|Buildings|Other commercial|Conventional,decline,65,2050,0.1,2040
+IEA CPS (downscaled approx),Demand|Buildings|Other commercial|Electrified,s-curve,35,2050,0.1,2040
 IEA CPS (downscaled approx),Power|Power|Solar PV,s-curve,25,2050,0.12,2038
 IEA CPS (downscaled approx),Power|Power|Wind,s-curve,20,2050,0.12,2038
-IEA CPS (downscaled approx),Power|Power|Hydro,fixed,,,
-IEA CPS (downscaled approx),Power|Power|Nuclear power,fixed,,,
-IEA CPS (downscaled approx),Power|Power|Biomass power,fixed,,,
+IEA CPS (downscaled approx),Power|Power|Hydro,fixed,2.307692,,,
 IEA CPS (downscaled approx),Power|Power|Gas power,decline,30,2050,0.08,2042
+IEA CPS (downscaled approx),Power|Power|Gas CCS,fixed,0,,,
 IEA CPS (downscaled approx),Power|Power|Coal power,decline,18,2050,0.1,2040
+IEA CPS (downscaled approx),Power|Power|Coal CCS,fixed,0,,,
 IEA CPS (downscaled approx),Power|Power|Oil power,decline,3,2050,0.12,2038
+IEA CPS (downscaled approx),Power|Power|Nuclear power,fixed,1.384615,,,
+IEA CPS (downscaled approx),Power|Power|Biomass power,fixed,0.307692,,,
 IEA CPS (downscaled approx),Hydrogen|Hydrogen|Green,s-curve,60,2050,0.12,2038
 IEA CPS (downscaled approx),Hydrogen|Hydrogen|Blue,decline,40,2050,0.12,2038
 Deep electrification,Demand|Transport|Passenger cars|EV,s-curve,100,2045,0.25,2033
@@ -247,57 +295,68 @@ Deep electrification,Demand|Transport|Buses|EV,s-curve,100,2045,0.25,2033
 Deep electrification,Demand|Transport|Buses|ICE,decline,0,2045,0.25,2033
 Deep electrification,Demand|Transport|2/3 wheelers|EV,s-curve,100,2045,0.25,2033
 Deep electrification,Demand|Transport|2/3 wheelers|ICE,decline,0,2045,0.25,2033
+Deep electrification,Demand|Transport|Ships|Conventional ship,decline,5,2050,0.18,2037
 Deep electrification,Demand|Transport|Ships|Ammonia ship,s-curve,85,2050,0.18,2037
 Deep electrification,Demand|Transport|Ships|Electric ship,s-curve,10,2050,0.15,2040
-Deep electrification,Demand|Transport|Ships|Conventional ship,decline,5,2050,0.18,2037
-Deep electrification,Demand|Transport|Planes|Electric plane,s-curve,60,2050,0.14,2038
 Deep electrification,Demand|Transport|Planes|Conventional plane,decline,40,2050,0.14,2038
-Deep electrification,Demand|Transport|Trains|Electrified,s-curve,100,2040,0.28,2032
-Deep electrification,Demand|Transport|Trains|Conventional,decline,0,2040,0.28,2032
-Deep electrification,Demand|Industry|Steel|DRI-EAF (H2),s-curve,55,2050,0.2,2035
+Deep electrification,Demand|Transport|Planes|Electric plane,s-curve,60,2050,0.14,2038
+Deep electrification,Demand|Transport|Trains|Diesel train,decline,0,2040,0.28,2032
+Deep electrification,Demand|Transport|Trains|Electric train,s-curve,100,2040,0.28,2032
+Deep electrification,Demand|Transport|Other transport|Conventional,fixed,100,,,
+Deep electrification,Demand|Transport|Other transport|Electrified,fixed,0,,,
 Deep electrification,Demand|Industry|Steel|BF-BOF,decline,0,2050,0.2,2035
+Deep electrification,Demand|Industry|Steel|BF-BOF + CCS,fixed,0,,,
 Deep electrification,Demand|Industry|Steel|EAF,s-curve,45,2050,0.2,2035
-Deep electrification,Demand|Industry|Cement|Electric kiln,s-curve,95,2050,0.22,2035
+Deep electrification,Demand|Industry|Steel|DRI-EAF (H2),s-curve,55,2050,0.2,2035
 Deep electrification,Demand|Industry|Cement|Conventional kiln,decline,5,2050,0.22,2035
-Deep electrification,Demand|Industry|Chemicals|Electrified,s-curve,98,2050,0.23,2034
+Deep electrification,Demand|Industry|Cement|Conventional + CCS,fixed,0,,,
+Deep electrification,Demand|Industry|Cement|Electric kiln,s-curve,95,2050,0.22,2035
 Deep electrification,Demand|Industry|Chemicals|Conventional,decline,2,2050,0.23,2034
-Deep electrification,Demand|Industry|Low temp. heating|Heat pump,s-curve,98,2050,0.23,2034
+Deep electrification,Demand|Industry|Chemicals|Conventional + CCS,fixed,0,,,
+Deep electrification,Demand|Industry|Chemicals|Electrified,s-curve,98,2050,0.23,2034
 Deep electrification,Demand|Industry|Low temp. heating|Fossil boiler,decline,0,2050,0.23,2034
-Deep electrification,Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
-Deep electrification,Demand|Industry|High temp. heating|Electric furnace,s-curve,95,2050,0.22,2035
+Deep electrification,Demand|Industry|Low temp. heating|Biomass boiler,fixed,2,,,
+Deep electrification,Demand|Industry|Low temp. heating|Heat pump,s-curve,98,2050,0.23,2034
 Deep electrification,Demand|Industry|High temp. heating|Fossil furnace,decline,3,2050,0.22,2035
-Deep electrification,Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
-Deep electrification,Demand|Industry|Other industry - energy|Electrified,s-curve,98,2050,0.23,2034
+Deep electrification,Demand|Industry|High temp. heating|Furnace + CCS,fixed,0,,,
+Deep electrification,Demand|Industry|High temp. heating|Biomass furnace,fixed,2,,,
+Deep electrification,Demand|Industry|High temp. heating|Electric furnace,s-curve,95,2050,0.22,2035
+Deep electrification,Demand|Industry|Other industry - feedstock|Feedstock,fixed,100,,,
 Deep electrification,Demand|Industry|Other industry - energy|Conventional,decline,2,2050,0.23,2034
-Deep electrification,Demand|Buildings|Residential heating|Heat pump,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Industry|Other industry - energy|Electrified,s-curve,98,2050,0.23,2034
 Deep electrification,Demand|Buildings|Residential heating|Fossil boiler,decline,0,2045,0.25,2033
-Deep electrification,Demand|Buildings|Residential heating|Biomass heating,fixed,,,
-Deep electrification,Demand|Buildings|Residential heating|Electric heating,fixed,,,
-Deep electrification,Demand|Buildings|Residential cooking|Electrified,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Buildings|Residential heating|Biomass heating,fixed,0,,,
+Deep electrification,Demand|Buildings|Residential heating|Heat pump,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Buildings|Residential heating|Electric heating,fixed,0,,,
+Deep electrification,Demand|Buildings|Residential heating|District heating,fixed,0,,,
 Deep electrification,Demand|Buildings|Residential cooking|Conventional fossil,decline,0,2045,0.25,2033
-Deep electrification,Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
-Deep electrification,Demand|Buildings|Residential lighting|Full LED,s-curve,100,2040,0.3,2030
+Deep electrification,Demand|Buildings|Residential cooking|Biomass cooking,fixed,0,,,
+Deep electrification,Demand|Buildings|Residential cooking|Electrified,s-curve,100,2045,0.25,2033
 Deep electrification,Demand|Buildings|Residential lighting|Conventional,decline,0,2040,0.3,2030
-Deep electrification,Demand|Buildings|Other residential|Electrified,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Buildings|Residential lighting|Full LED,s-curve,100,2040,0.3,2030
 Deep electrification,Demand|Buildings|Other residential|Conventional,decline,0,2045,0.25,2033
-Deep electrification,Demand|Buildings|Building cooling|High efficiency airco,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Buildings|Other residential|Electrified,s-curve,100,2045,0.25,2033
 Deep electrification,Demand|Buildings|Building cooling|Low efficiency airco,decline,0,2045,0.25,2033
-Deep electrification,Demand|Buildings|Commercial heating|Heat pump,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Buildings|Building cooling|High efficiency airco,s-curve,100,2045,0.25,2033
 Deep electrification,Demand|Buildings|Commercial heating|Fossil boiler,decline,0,2045,0.25,2033
-Deep electrification,Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
-Deep electrification,Demand|Buildings|Commercial heating|Electric heating,fixed,,,
-Deep electrification,Demand|Buildings|Commercial lighting|Full LED,s-curve,100,2040,0.3,2030
+Deep electrification,Demand|Buildings|Commercial heating|Biomass heating,fixed,0,,,
+Deep electrification,Demand|Buildings|Commercial heating|Heat pump,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Buildings|Commercial heating|Electric heating,fixed,0,,,
+Deep electrification,Demand|Buildings|Commercial heating|District heating,fixed,0,,,
 Deep electrification,Demand|Buildings|Commercial lighting|Conventional,decline,0,2040,0.3,2030
-Deep electrification,Demand|Buildings|Other commercial|Electrified,s-curve,100,2045,0.25,2033
+Deep electrification,Demand|Buildings|Commercial lighting|Full LED,s-curve,100,2040,0.3,2030
 Deep electrification,Demand|Buildings|Other commercial|Conventional,decline,0,2045,0.25,2033
+Deep electrification,Demand|Buildings|Other commercial|Electrified,s-curve,100,2045,0.25,2033
 Deep electrification,Power|Power|Solar PV,s-curve,60,2050,0.25,2034
 Deep electrification,Power|Power|Wind,s-curve,35,2050,0.25,2034
-Deep electrification,Power|Power|Hydro,fixed,,,
-Deep electrification,Power|Power|Nuclear power,fixed,,,
-Deep electrification,Power|Power|Biomass power,fixed,,,
+Deep electrification,Power|Power|Hydro,fixed,2.884615,,,
 Deep electrification,Power|Power|Gas power,decline,0,2045,0.28,2032
+Deep electrification,Power|Power|Gas CCS,fixed,0,,,
 Deep electrification,Power|Power|Coal power,decline,0,2040,0.3,2030
+Deep electrification,Power|Power|Coal CCS,fixed,0,,,
 Deep electrification,Power|Power|Oil power,decline,0,2040,0.3,2030
+Deep electrification,Power|Power|Nuclear power,fixed,1.730769,,,
+Deep electrification,Power|Power|Biomass power,fixed,0.384615,,,
 Deep electrification,Hydrogen|Hydrogen|Green,s-curve,100,2045,0.25,2033
 Deep electrification,Hydrogen|Hydrogen|Blue,decline,0,2045,0.25,2033
 IEA STEPS (downscaled approx),Demand|Transport|Passenger cars|EV,s-curve,60,2050,0.25,2035
@@ -308,81 +367,67 @@ IEA STEPS (downscaled approx),Demand|Transport|Buses|EV,s-curve,75,2050,0.27,203
 IEA STEPS (downscaled approx),Demand|Transport|Buses|ICE,decline,25,2050,0.27,2034
 IEA STEPS (downscaled approx),Demand|Transport|2/3 wheelers|EV,s-curve,90,2050,0.30,2032
 IEA STEPS (downscaled approx),Demand|Transport|2/3 wheelers|ICE,decline,10,2050,0.30,2032
-IEA STEPS (downscaled approx),Demand|Transport|Ships|Ammonia ship,s-curve,35,2050,0.20,2040
 IEA STEPS (downscaled approx),Demand|Transport|Ships|Conventional ship,decline,65,2050,0.20,2040
-IEA STEPS (downscaled approx),Demand|Transport|Planes|Electric plane,s-curve,25,2050,0.20,2040
+IEA STEPS (downscaled approx),Demand|Transport|Ships|Ammonia ship,s-curve,35,2050,0.20,2040
+IEA STEPS (downscaled approx),Demand|Transport|Ships|Electric ship,fixed,0,,,
 IEA STEPS (downscaled approx),Demand|Transport|Planes|Conventional plane,decline,75,2050,0.20,2040
-IEA STEPS (downscaled approx),Demand|Transport|Trains|Electric train,s-curve,85,2050,0.28,2032
+IEA STEPS (downscaled approx),Demand|Transport|Planes|Electric plane,s-curve,25,2050,0.20,2040
 IEA STEPS (downscaled approx),Demand|Transport|Trains|Diesel train,decline,15,2050,0.28,2032
-IEA STEPS (downscaled approx),Demand|Industry|Steel|DRI-EAF (H2),s-curve,25,2050,0.20,2040
-IEA STEPS (downscaled approx),Demand|Industry|Steel|BF-BOF,decline,75,2050,0.20,2040
-IEA STEPS (downscaled approx),Demand|Industry|Steel|EAF,fixed,,,
-IEA STEPS (downscaled approx),Demand|Industry|Cement|Electric kiln,s-curve,50,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|Cement|Conventional kiln,decline,50,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|Chemicals|Electrified,s-curve,35,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|Chemicals|Conventional,decline,65,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|Low temp. heating|Heat pump,s-curve,45,2050,0.22,2038
+IEA STEPS (downscaled approx),Demand|Transport|Trains|Electric train,s-curve,85,2050,0.28,2032
+IEA STEPS (downscaled approx),Demand|Transport|Other transport|Conventional,fixed,100,,,
+IEA STEPS (downscaled approx),Demand|Transport|Other transport|Electrified,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Industry|Steel|BF-BOF,decline,62.5,2050,0.20,2040
+IEA STEPS (downscaled approx),Demand|Industry|Steel|BF-BOF + CCS,s-curve,16.666667,2050,0.20,2040
+IEA STEPS (downscaled approx),Demand|Industry|Steel|EAF,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Industry|Steel|DRI-EAF (H2),s-curve,20.833333,2050,0.20,2040
+IEA STEPS (downscaled approx),Demand|Industry|Cement|Conventional kiln,decline,38.461538,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|Cement|Conventional + CCS,s-curve,23.076923,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|Cement|Electric kiln,s-curve,38.461538,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|Chemicals|Conventional,decline,54.166667,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|Chemicals|Conventional + CCS,s-curve,16.666667,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|Chemicals|Electrified,s-curve,29.166667,2050,0.18,2042
 IEA STEPS (downscaled approx),Demand|Industry|Low temp. heating|Fossil boiler,decline,55,2050,0.22,2038
-IEA STEPS (downscaled approx),Demand|Industry|Low temp. heating|Biomass boiler,fixed,,,
-IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Electric furnace,s-curve,30,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Fossil furnace,decline,70,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Biomass furnace,fixed,,,
-IEA STEPS (downscaled approx),Demand|Industry|Other industry - energy|Electrified,s-curve,40,2050,0.24,2038
+IEA STEPS (downscaled approx),Demand|Industry|Low temp. heating|Biomass boiler,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Industry|Low temp. heating|Heat pump,s-curve,45,2050,0.22,2038
+IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Fossil furnace,decline,58.333333,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Furnace + CCS,s-curve,16.666667,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Biomass furnace,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Electric furnace,s-curve,25,2050,0.18,2042
+IEA STEPS (downscaled approx),Demand|Industry|Other industry - feedstock|Feedstock,fixed,100,,,
 IEA STEPS (downscaled approx),Demand|Industry|Other industry - energy|Conventional,decline,60,2050,0.24,2038
-IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Heat pump,s-curve,30,2050,0.22,2038
-IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Fossil boiler,decline,70,2050,0.22,2038
-IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Biomass heating,fixed,,,
-IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Electric heating,fixed,,,
-IEA STEPS (downscaled approx),Demand|Buildings|Residential cooking|Electrified,s-curve,58,2050,0.22,2035
+IEA STEPS (downscaled approx),Demand|Industry|Other industry - energy|Electrified,s-curve,40,2050,0.24,2038
+IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Fossil boiler,decline,64.814815,2050,0.22,2038
+IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Biomass heating,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Heat pump,s-curve,27.777778,2050,0.22,2038
+IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|Electric heating,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|District heating,s-curve,7.407407,2050,0.18,2038
 IEA STEPS (downscaled approx),Demand|Buildings|Residential cooking|Conventional fossil,decline,42,2050,0.22,2035
-IEA STEPS (downscaled approx),Demand|Buildings|Residential cooking|Biomass cooking,fixed,,,
-IEA STEPS (downscaled approx),Demand|Buildings|Residential lighting|Full LED,s-curve,85,2050,0.20,2035
+IEA STEPS (downscaled approx),Demand|Buildings|Residential cooking|Biomass cooking,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Buildings|Residential cooking|Electrified,s-curve,58,2050,0.22,2035
 IEA STEPS (downscaled approx),Demand|Buildings|Residential lighting|Conventional,decline,15,2050,0.20,2035
-IEA STEPS (downscaled approx),Demand|Buildings|Other residential|Electrified,s-curve,55,2050,0.22,2038
+IEA STEPS (downscaled approx),Demand|Buildings|Residential lighting|Full LED,s-curve,85,2050,0.20,2035
 IEA STEPS (downscaled approx),Demand|Buildings|Other residential|Conventional,decline,45,2050,0.22,2038
-IEA STEPS (downscaled approx),Demand|Buildings|Building cooling|High efficiency airco,s-curve,70,2050,0.25,2035
+IEA STEPS (downscaled approx),Demand|Buildings|Other residential|Electrified,s-curve,55,2050,0.22,2038
 IEA STEPS (downscaled approx),Demand|Buildings|Building cooling|Low efficiency airco,decline,30,2050,0.25,2035
-IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Heat pump,s-curve,35,2050,0.22,2038
-IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Fossil boiler,decline,65,2050,0.22,2038
-IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Biomass heating,fixed,,,
-IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Electric heating,fixed,,,
-IEA STEPS (downscaled approx),Demand|Buildings|Commercial lighting|Full LED,s-curve,85,2050,0.20,2035
+IEA STEPS (downscaled approx),Demand|Buildings|Building cooling|High efficiency airco,s-curve,70,2050,0.25,2035
+IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Fossil boiler,decline,59.090909,2050,0.22,2038
+IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Biomass heating,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Heat pump,s-curve,31.818182,2050,0.22,2038
+IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|Electric heating,fixed,0,,,
+IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|District heating,s-curve,9.090909,2050,0.18,2038
 IEA STEPS (downscaled approx),Demand|Buildings|Commercial lighting|Conventional,decline,15,2050,0.20,2035
-IEA STEPS (downscaled approx),Demand|Buildings|Other commercial|Electrified,s-curve,65,2050,0.24,2035
+IEA STEPS (downscaled approx),Demand|Buildings|Commercial lighting|Full LED,s-curve,85,2050,0.20,2035
 IEA STEPS (downscaled approx),Demand|Buildings|Other commercial|Conventional,decline,35,2050,0.24,2035
+IEA STEPS (downscaled approx),Demand|Buildings|Other commercial|Electrified,s-curve,65,2050,0.24,2035
 IEA STEPS (downscaled approx),Power|Power|Solar PV,s-curve,25,2050,0.25,2035
 IEA STEPS (downscaled approx),Power|Power|Wind,s-curve,20,2050,0.23,2035
-IEA STEPS (downscaled approx),Power|Power|Hydro,fixed,,,
-IEA STEPS (downscaled approx),Power|Power|Nuclear power,fixed,,,
-IEA STEPS (downscaled approx),Power|Power|Biomass power,fixed,,,
+IEA STEPS (downscaled approx),Power|Power|Hydro,fixed,11.25,,,
 IEA STEPS (downscaled approx),Power|Power|Gas power,decline,25,2050,0.15,2040
+IEA STEPS (downscaled approx),Power|Power|Gas CCS,s-curve,0.4,2050,0.18,2040
 IEA STEPS (downscaled approx),Power|Power|Coal power,decline,8,2050,0.18,2038
+IEA STEPS (downscaled approx),Power|Power|Coal CCS,s-curve,0.1,2050,0.15,2040
 IEA STEPS (downscaled approx),Power|Power|Oil power,decline,2,2050,0.20,2035
+IEA STEPS (downscaled approx),Power|Power|Nuclear power,fixed,6.75,,,
+IEA STEPS (downscaled approx),Power|Power|Biomass power,fixed,1.5,,,
 IEA STEPS (downscaled approx),Hydrogen|Hydrogen|Green,s-curve,20,2050,0.25,2040
 IEA STEPS (downscaled approx),Hydrogen|Hydrogen|Blue,decline,80,2050,0.20,2040
-
-IEA NZE (downscaled approx),Demand|Industry|Steel|BF-BOF + CCS,s-curve,30,2050,0.25,2038
-IEA NZE (downscaled approx),Demand|Industry|Cement|Conventional + CCS,s-curve,80,2050,0.23,2040
-IEA NZE (downscaled approx),Demand|Industry|Chemicals|Conventional + CCS,s-curve,50,2050,0.23,2038
-IEA NZE (downscaled approx),Demand|Industry|High temp. heating|Furnace + CCS,s-curve,40,2050,0.23,2038
-IEA NZE (downscaled approx),Demand|Buildings|Residential heating|District heating,s-curve,12,2050,0.22,2036
-IEA NZE (downscaled approx),Demand|Buildings|Commercial heating|District heating,s-curve,15,2050,0.22,2036
-IEA NZE (downscaled approx),Power|Power|Coal CCS,s-curve,0.2,2050,0.18,2038
-IEA NZE (downscaled approx),Power|Power|Gas CCS,s-curve,0.8,2050,0.22,2036
-IEA CPS (downscaled approx),Demand|Industry|Steel|BF-BOF + CCS,fixed,0,,
-IEA CPS (downscaled approx),Demand|Industry|Cement|Conventional + CCS,fixed,0,,
-IEA CPS (downscaled approx),Demand|Industry|Chemicals|Conventional + CCS,fixed,0,,
-IEA CPS (downscaled approx),Demand|Industry|High temp. heating|Furnace + CCS,fixed,0,,
-IEA CPS (downscaled approx),Demand|Buildings|Residential heating|District heating,fixed,5,,
-IEA CPS (downscaled approx),Demand|Buildings|Commercial heating|District heating,fixed,5,,
-IEA CPS (downscaled approx),Power|Power|Coal CCS,fixed,0,,
-IEA CPS (downscaled approx),Power|Power|Gas CCS,fixed,0,,
-
-IEA STEPS (downscaled approx),Demand|Industry|Steel|BF-BOF + CCS,s-curve,20,2050,0.20,2040
-IEA STEPS (downscaled approx),Demand|Industry|Cement|Conventional + CCS,s-curve,30,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|Chemicals|Conventional + CCS,s-curve,20,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Industry|High temp. heating|Furnace + CCS,s-curve,20,2050,0.18,2042
-IEA STEPS (downscaled approx),Demand|Buildings|Residential heating|District heating,s-curve,8,2050,0.18,2038
-IEA STEPS (downscaled approx),Demand|Buildings|Commercial heating|District heating,s-curve,10,2050,0.18,2038
-IEA STEPS (downscaled approx),Power|Power|Coal CCS,s-curve,0.1,2050,0.15,2040
-IEA STEPS (downscaled approx),Power|Power|Gas CCS,s-curve,0.4,2050,0.18,2040

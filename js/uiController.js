@@ -177,19 +177,21 @@ function initializeSidebarInputs(structuredData) { /* ... (unchanged, uses updat
             p1Container.style.display = 'flex';
             p1Container.style.justifyContent = 'space-between';
             p1Container.style.alignItems = 'center';
+            p1Container.style.gap = '10px';
             const p1Label = document.createElement('label');
             const p1InputId = `growth_p1_${sanitizeForId(s)}_${sanitizeForId(b)}`;
             p1Label.htmlFor = p1InputId;
             p1Label.textContent = `Activity CAGR to 2035, %/yr:`;
-            p1Label.style.fontSize = '0.9em';
-            p1Label.style.flex = '1';
-            p1Label.style.minWidth = '200px';
+            p1Label.style.fontSize = '0.8em';
+            p1Label.style.flex = '1 1 auto';
+            p1Label.style.minWidth = '0';
+            p1Label.style.lineHeight = '1.25';
             const p1Input = document.createElement('input');
             p1Input.type = 'number';
             p1Input.id = p1InputId;
             p1Input.value = '0.5';
             p1Input.step = '0.1';
-            p1Input.style.width = '80px';
+            p1Input.style.width = '72px';
             p1Input.style.flexShrink = '0';
             // Add auto-recalc on input change
             p1Input.addEventListener('change', () => {
@@ -205,19 +207,21 @@ function initializeSidebarInputs(structuredData) { /* ... (unchanged, uses updat
             p2Container.style.display = 'flex';
             p2Container.style.justifyContent = 'space-between';
             p2Container.style.alignItems = 'center';
+            p2Container.style.gap = '10px';
             const p2Label = document.createElement('label');
             const p2InputId = `growth_p2_${sanitizeForId(s)}_${sanitizeForId(b)}`;
             p2Label.htmlFor = p2InputId;
             p2Label.textContent = `Activity CAGR 2035 onwards, %/yr:`;
-            p2Label.style.fontSize = '0.9em';
-            p2Label.style.flex = '1';
-            p2Label.style.minWidth = '200px';
+            p2Label.style.fontSize = '0.8em';
+            p2Label.style.flex = '1 1 auto';
+            p2Label.style.minWidth = '0';
+            p2Label.style.lineHeight = '1.25';
             const p2Input = document.createElement('input');
             p2Input.type = 'number';
             p2Input.id = p2InputId;
             p2Input.value = '0.5';
             p2Input.step = '0.1';
-            p2Input.style.width = '80px';
+            p2Input.style.width = '72px';
             p2Input.style.flexShrink = '0';
             // Add auto-recalc on input change
             p2Input.addEventListener('change', () => {
@@ -390,27 +394,33 @@ function applyScenario(scenarioName, structuredData) {
             behaviorEl.value = params.behavior;
             toggleSCurveInputs(behaviorEl, paramKey);
 
+            // Update hidden inputs only when scenario data provides a value.
+            const targetEl = document.getElementById(`sCurveTarget_${sanitizedParamKey}`);
+            const targetYearEl = document.getElementById(`sCurveTargetYear_${sanitizedParamKey}`);
+            const kValueEl = document.getElementById(`sCurveKValue_${sanitizedParamKey}`);
+            const midpointYearEl = document.getElementById(`sCurveMidpointYear_${sanitizedParamKey}`);
+            const hasTargetShare = params.targetShare !== null && params.targetShare !== undefined;
+            const hasTargetYear = params.targetYear !== null && params.targetYear !== undefined;
+            const hasKValue = params.kValue !== null && params.kValue !== undefined;
+            const hasMidpointYear = params.midpointYear !== null && params.midpointYear !== undefined;
+
+            if (targetEl && hasTargetShare) targetEl.value = params.targetShare;
+            if (targetYearEl && hasTargetYear) targetYearEl.value = params.targetYear;
+            if (kValueEl && hasKValue) kValueEl.value = params.kValue;
+            if (midpointYearEl && hasMidpointYear) midpointYearEl.value = params.midpointYear;
+
+            // Update visual editor for behaviors that use curve parameters.
             if (params.behavior === 's-curve' || params.behavior === 'decline') {
-                // Update hidden inputs
-                const targetEl = document.getElementById(`sCurveTarget_${sanitizedParamKey}`);
-                const targetYearEl = document.getElementById(`sCurveTargetYear_${sanitizedParamKey}`);
-                const kValueEl = document.getElementById(`sCurveKValue_${sanitizedParamKey}`);
-                const midpointYearEl = document.getElementById(`sCurveMidpointYear_${sanitizedParamKey}`);
-
-                if (targetEl) targetEl.value = params.targetShare;
-                if (targetYearEl) targetYearEl.value = params.targetYear;
-                if (kValueEl) kValueEl.value = params.kValue;
-                if (midpointYearEl) midpointYearEl.value = params.midpointYear;
-
-                // Update visual editor
                 const sCurveInputsDiv = document.getElementById(`sCurveInputs_${sanitizedParamKey}`);
                 if (sCurveInputsDiv && sCurveInputsDiv._visualEditor) {
                     const editor = sCurveInputsDiv._visualEditor;
-                    editor.params.targetShare = params.targetShare;
-                    editor.params.targetYear = params.targetYear;
-                    editor.params.kValue = params.kValue;
-                    editor.params.midpointYear = params.midpointYear;
-                    editor.kSlider.value = params.kValue;
+                    if (hasTargetShare) editor.params.targetShare = Number(params.targetShare);
+                    if (hasTargetYear) editor.params.targetYear = Number(params.targetYear);
+                    if (hasKValue) {
+                        editor.params.kValue = Number(params.kValue);
+                        editor.kSlider.value = Number(params.kValue);
+                    }
+                    if (hasMidpointYear) editor.params.midpointYear = Number(params.midpointYear);
                     editor.draw();
                 }
             }
@@ -504,18 +514,22 @@ function getUserInputsAndParams(structuredData) {
             const behavior = behaviorEl ? behaviorEl.value : 'fixed';
             const techParams = { behavior: behavior };
 
+            const targetEl = document.getElementById(`sCurveTarget_${sanitizedParamKey}`);
+            const targetYearEl = document.getElementById(`sCurveTargetYear_${sanitizedParamKey}`);
+            const kValueEl = document.getElementById(`sCurveKValue_${sanitizedParamKey}`);
+            const midpointYearEl = document.getElementById(`sCurveMidpointYear_${sanitizedParamKey}`);
+
+            const targetShareParsed = targetEl ? parseFloat(targetEl.value) : NaN;
+            const targetYearParsed = targetYearEl ? parseInt(targetYearEl.value, 10) : NaN;
+            const kValueParsed = kValueEl ? parseFloat(kValueEl.value) : NaN;
+            const midpointYearParsed = midpointYearEl ? parseInt(midpointYearEl.value, 10) : NaN;
+
+            if (!isNaN(targetShareParsed)) techParams.targetShare = targetShareParsed;
+            if (!isNaN(targetYearParsed)) techParams.targetYear = targetYearParsed;
+            if (!isNaN(kValueParsed)) techParams.kValue = kValueParsed;
+            if (!isNaN(midpointYearParsed)) techParams.midpointYear = midpointYearParsed;
+
             if (behavior === 's-curve') {
-                const targetEl = document.getElementById(`sCurveTarget_${sanitizedParamKey}`);
-                const targetYearEl = document.getElementById(`sCurveTargetYear_${sanitizedParamKey}`);
-                // *** Read BOTH k and t0 ***
-                const kValueEl = document.getElementById(`sCurveKValue_${sanitizedParamKey}`);
-                const midpointYearEl = document.getElementById(`sCurveMidpointYear_${sanitizedParamKey}`);
-
-                techParams.targetShare = targetEl ? parseFloat(targetEl.value) : 0;
-                techParams.targetYear = targetYearEl ? parseInt(targetYearEl.value, 10) : endYear;
-                techParams.kValue = kValueEl ? parseFloat(kValueEl.value) : 0.15; // Read k
-                techParams.midpointYear = midpointYearEl ? parseInt(midpointYearEl.value, 10) : Math.round(startYear + (endYear - startYear) / 2); // Read t0
-
                 // Basic validation/defaults
                 if (isNaN(techParams.targetShare)) techParams.targetShare = 0;
                 if (isNaN(techParams.targetYear)) techParams.targetYear = endYear;
@@ -689,54 +703,38 @@ function setupEventListeners(appState) {
             // Update delta charts if switched to deltas view
             else if (chartViewSelect.value === 'deltas' && appState.latestResults && typeof updateDeltaCharts === 'function') {
                 updateDeltaCharts(appState.latestResults, structuredData);
-                // Resize delta charts
                 const deltaChartIds = ['pedDeltaChart', 'elecGenDeltaChart', 'fecDeltaChart', 'ueDeltaChart'];
-                deltaChartIds.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element && element.data) {
-                        Plotly.Plots.resize(element);
-                    }
-                });
+                if (typeof resizeEnergyCharts === 'function') {
+                    resizeEnergyCharts(deltaChartIds);
+                }
             }
             // Resize balance charts
             else if (chartViewSelect.value === 'balance' && appState.latestResults) {
                 const balanceChartIds = ['fecFuelChart', 'pedFuelChart', 'ueFuelChart'];
-                balanceChartIds.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element && element.data) {
-                        Plotly.Plots.resize(element);
-                    }
-                });
+                if (typeof resizeEnergyCharts === 'function') {
+                    resizeEnergyCharts(balanceChartIds);
+                }
             }
             // Resize supply charts
             else if (chartViewSelect.value === 'supply' && appState.latestResults) {
                 const supplyChartIds = ['powerMixChart', 'hydrogenMixChart'];
-                supplyChartIds.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element && element.data) {
-                        Plotly.Plots.resize(element);
-                    }
-                });
+                if (typeof resizeEnergyCharts === 'function') {
+                    resizeEnergyCharts(supplyChartIds);
+                }
             }
             // Resize emissions charts
             else if (chartViewSelect.value === 'emissions' && appState.latestResults) {
                 const emissionChartIds = ['globalEmissionsChart', 'ccsBySubsectorChart'];
-                emissionChartIds.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element && element.data) {
-                        Plotly.Plots.resize(element);
-                    }
-                });
+                if (typeof resizeEnergyCharts === 'function') {
+                    resizeEnergyCharts(emissionChartIds);
+                }
             }
             // Resize subsector charts
             else if (chartViewSelect.value === 'subsector' && appState.latestResults) {
                 const subsectorChartIds = ['subsectorActivityChart', 'subsectorFecChart', 'subsectorUeChart'];
-                subsectorChartIds.forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element && element.data) {
-                        Plotly.Plots.resize(element);
-                    }
-                });
+                if (typeof resizeEnergyCharts === 'function') {
+                    resizeEnergyCharts(subsectorChartIds);
+                }
             }
         }, 100);
     };

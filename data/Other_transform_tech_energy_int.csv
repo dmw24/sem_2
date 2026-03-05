@@ -8,3 +8,4 @@ Energy industry,Oil processing,Oil refining,Coal,GJ_consumed/GJ_refined,-
 Energy industry,Coal processing,Coal refining,Coal,GJ_consumed/GJ_refined,0.1
 Energy industry,Coal processing,Coal refining,Gas,GJ_consumed/GJ_refined,-
 Energy industry,Coal processing,Coal refining,Oil,GJ_consumed/GJ_refined,-
+Energy industry,District heat processing,District heat plant,Gas,GJ_consumed/GJ_refined,1.15

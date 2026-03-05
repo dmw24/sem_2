@@ -214,7 +214,12 @@ function transformOtherTransformData(parsedData) {
     const otherTechUnitEnergyCons = {};
     parsedData.forEach(row => {
         const subsector = row['Subsector']; const tech = row['Technology']; const primaryFuel = row['Fuel']; const valueGJconsumedPerGJrefined = row['2023'];
-        let endUseFuel = null; if (subsector && subsector.toLowerCase().includes('gas')) endUseFuel = 'Gas'; else if (subsector && subsector.toLowerCase().includes('oil')) endUseFuel = 'Oil'; else if (subsector && subsector.toLowerCase().includes('coal')) endUseFuel = 'Coal'; else if (subsector && subsector.toLowerCase().includes('biomass')) endUseFuel = 'Biomass';
+        let endUseFuel = null;
+        if (subsector && subsector.toLowerCase().includes('district heat')) endUseFuel = 'District heat';
+        else if (subsector && subsector.toLowerCase().includes('gas')) endUseFuel = 'Gas';
+        else if (subsector && subsector.toLowerCase().includes('oil')) endUseFuel = 'Oil';
+        else if (subsector && subsector.toLowerCase().includes('coal')) endUseFuel = 'Coal';
+        else if (subsector && subsector.toLowerCase().includes('biomass')) endUseFuel = 'Biomass';
         if (endUseFuel && tech && primaryFuel) {
             const consumedPerRefined = isNaN(valueGJconsumedPerGJrefined) ? 0 : valueGJconsumedPerGJrefined; let unitCons = (primaryFuel === endUseFuel) ? 1 + consumedPerRefined : consumedPerRefined;
             if (unitCons > 0.0001) { if (!otherTechUnitEnergyCons[endUseFuel]) otherTechUnitEnergyCons[endUseFuel] = {}; if (!otherTechUnitEnergyCons[endUseFuel][tech]) otherTechUnitEnergyCons[endUseFuel][tech] = {}; otherTechUnitEnergyCons[endUseFuel][tech][primaryFuel] = unitCons; }
@@ -228,6 +233,20 @@ function transformOtherTransformData(parsedData) {
 
 function transformScenariosData(parsedData) {
     const scenarios = {};
+    const parseNullableFloat = (value) => {
+        if (value === undefined || value === null) return null;
+        const trimmed = String(value).trim();
+        if (trimmed === '') return null;
+        const parsed = parseFloat(trimmed);
+        return isNaN(parsed) ? null : parsed;
+    };
+    const parseNullableInt = (value) => {
+        if (value === undefined || value === null) return null;
+        const trimmed = String(value).trim();
+        if (trimmed === '') return null;
+        const parsed = parseInt(trimmed, 10);
+        return isNaN(parsed) ? null : parsed;
+    };
     parsedData.forEach(row => {
         const scenario = row['Scenario'];
         const paramKey = row['ParameterKey'];
@@ -241,10 +260,10 @@ function transformScenariosData(parsedData) {
             if (!scenarios[scenario]) scenarios[scenario] = {};
             scenarios[scenario][paramKey] = {
                 behavior,
-                targetShare: parseFloat(targetShare) || 0,
-                targetYear: parseInt(targetYear, 10) || 2050,
-                kValue: parseFloat(kValue) || 0.15,
-                midpointYear: parseInt(midpointYear, 10) || 2037
+                targetShare: parseNullableFloat(targetShare),
+                targetYear: parseNullableInt(targetYear),
+                kValue: parseNullableFloat(kValue),
+                midpointYear: parseNullableInt(midpointYear)
             };
         }
     });
@@ -317,7 +336,7 @@ async function loadAndStructureData() {
         allSectors.add('Energy industry'); allSubsectors['Energy industry'] = new Set(['Hydrogen']); allTechnologies['Energy industry'] = { 'Hydrogen': new Set(Object.keys(baseHydrogenProdMix)) };
         const sectors = Array.from(allSectors); const subsectors = {}; sectors.forEach(s => { subsectors[s] = Array.from(allSubsectors[s] || new Set()); }); const technologies = {}; sectors.forEach(s => { technologies[s] = {}; (subsectors[s] || []).forEach(b => { technologies[s][b] = Array.from(allTechnologies[s]?.[b] || new Set()); }); });
 
-        const endUseFuels = ["Biomass", "Coal", "Electricity", "Gas", "Hydrogen", "Oil"]; const primaryFuels = ["Biomass", "Coal", "Gas", "Hydro", "Oil", "Other", "Solar", "Uranium", "Wind"];
+        const endUseFuels = ["Biomass", "Coal", "District heat", "Electricity", "Gas", "Hydrogen", "Oil"]; const primaryFuels = ["Biomass", "Coal", "Gas", "Hydro", "Oil", "Other", "Solar", "Uranium", "Wind"];
         const hydrogenTechs = Object.keys(baseHydrogenProdMix); const powerTechs = Object.keys(basePowerProdMix); const otherConvTechs = {}; Object.keys(otherTechUnitEnergyCons).forEach(fuel => { otherConvTechs[fuel] = Object.keys(otherTechUnitEnergyCons[fuel]); });
         const allEndUseSubsectors = sectors.filter(s => s !== 'Power' && s !== 'Energy industry').flatMap(s => (subsectors[s] || []).map(b => ({ sector: s, subsector: b })));
 

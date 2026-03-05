@@ -247,9 +247,9 @@ function renderSankey(results, year, structuredData) {
                 .style('background', 'rgba(0, 0, 0, 0.85)')
                 .style('color', '#fff')
                 .style('padding', '10px 14px')
-                .style('border-radius', '8px')
-                .style('font-family', 'Poppins, sans-serif')
-                .style('font-size', '13px')
+                .style('border-radius', '0')
+                .style('font-family', 'Inter, sans-serif')
+                .style('font-size', '12px')
                 .style('pointer-events', 'none')
                 .style('opacity', 0)
                 .style('z-index', 10000)
@@ -301,10 +301,12 @@ function renderSankey(results, year, structuredData) {
             .attr('y', d => d.y0)
             .attr('height', d => d.y1 - d.y0)
             .attr('width', d => d.x1 - d.x0)
+            .attr('rx', 0)
+            .attr('ry', 0)
             .attr('fill', d => getNodeColor(d.name, structuredData) || '#999')
-            .attr('stroke', '#000')
-            .attr('stroke-width', 0.5)
-            .attr('opacity', 0.9)
+            .attr('stroke', 'rgba(15, 23, 42, 0.4)')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.95)
             .on('mouseover', function (event, d) {
                 // Highlight this node
                 d3.select(this).attr('opacity', 1).attr('stroke-width', 2);
@@ -370,9 +372,9 @@ function renderSankey(results, year, structuredData) {
             .attr('y', d => (d.y1 + d.y0) / 2)
             .attr('dy', '0.35em')
             .attr('text-anchor', d => d.x0 < width / 2 ? 'start' : 'end')
-            .attr('font-family', 'Poppins, sans-serif')
+            .attr('font-family', 'Inter, sans-serif')
             .attr('font-size', '10px')
-            .attr('fill', '#333')
+            .attr('fill', '#234736')
             .text(d => d.name);
 
     } catch (e) {
@@ -539,7 +541,7 @@ function buildSankeyRows(results, year, structuredData, registerNode, showSubsec
                     const uVals = ueDetailed[sector]?.[sub]?.[tech] || {};
 
                     Object.entries(uVals).forEach(([fuel, ueValue]) => {
-                        if (ueValue <= 0.001) return;
+                        if (typeof ueValue !== 'number' || !Number.isFinite(ueValue) || ueValue <= 0.001) return;
                         subsectorUe += ueValue;
 
                         const type = getValue(usefulEnergyTypeMap, [sector, sub, tech, fuel], 'Other');
@@ -547,7 +549,9 @@ function buildSankeyRows(results, year, structuredData, registerNode, showSubsec
                         sectorUsefulByType[type] = (sectorUsefulByType[type] || 0) + ueValue;
                     });
 
-                    Object.values(fVals).forEach(v => subsectorFec += v);
+                    Object.values(fVals).forEach(v => {
+                        if (typeof v === 'number' && Number.isFinite(v)) subsectorFec += v;
+                    });
                 });
 
                 const losses = subsectorFec - subsectorUe;

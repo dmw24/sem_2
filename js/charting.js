@@ -1,10 +1,12 @@
 // js/charting.js
 
-// We don't need to load Google Charts anymore. Plotly is loaded in index.html.
+// High-end chart rendering uses Apache ECharts (loaded in index.html).
 
-// State for chart types (default to 'bar' which is ColumnChart equivalent)
-// Options: 'bar' (Stack), 'area' (Scatter with stackgroup), 'line' (Scatter)
+// State for chart types
+// Options: 'bar' (stacked bars), 'area' (stacked area), 'line' (line)
 const chartTypes = {};
+const chartInstances = {};
+const legendSelectionState = {};
 
 // Color palette (same as before)
 // Color palette (Semantic Grouping)
@@ -63,6 +65,7 @@ const techColors = {
 
     // Heat (Red/Orange)
     'District Heat': '#ef4444', // Red 500
+    'District heat': '#ef4444', // Alias used in fuel tables
     'Gas Boiler': '#f97316', // Orange 500
     'Oil Boiler': '#991b1b', // Red 800
     'Biomass Boiler': '#16a34a', // Green 600
@@ -144,8 +147,8 @@ function getTechColor(tech, index = 0) {
     if (lowerTech.includes('hydrogen') || lowerTech.includes('h2')) return techColors['Hydrogen'];
 
     const palette = [
-        '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-        '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#84cc16'
+        '#13ce74', '#0f9a56', '#3a7d65', '#f59e0b', '#0ea5e9',
+        '#2b6cb0', '#d97706', '#16a34a', '#0d9488', '#84cc16'
     ];
     return palette[index % palette.length];
 }
@@ -162,70 +165,230 @@ function getValue(obj, path, defaultValue) {
     return current !== undefined ? current : defaultValue;
 }
 
-/**
- * Draws a Plotly Chart.
- */
-function drawPlotlyChart(elementId, traces, title, vAxisTitle, isStacked = true) {
+function getOrCreateChartInstance(elementId) {
+    if (typeof echarts === 'undefined') return null;
+    const container = document.getElementById(elementId);
+    if (!container) return null;
+
+    let chart = echarts.getInstanceByDom(container);
+    if (!chart) {
+        chart = echarts.init(container, null, { renderer: 'canvas' });
+    }
+
+    chartInstances[elementId] = chart;
+
+    if (!chart.__legendListenerAttached) {
+        chart.on('legendselectchanged', (event) => {
+            legendSelectionState[elementId] = { ...event.selected };
+        });
+        chart.__legendListenerAttached = true;
+    }
+
+    return chart;
+}
+
+function disposeChartInstance(elementId) {
+    if (typeof echarts === 'undefined') return;
     const container = document.getElementById(elementId);
     if (!container) return;
-
-    // --- Persist Legend Selection ---
-    const visibilityMap = {};
-    if (container.data && Array.isArray(container.data)) {
-        container.data.forEach(trace => {
-            if (trace.name) {
-                visibilityMap[trace.name] = trace.visible;
-            }
-        });
+    const chart = echarts.getInstanceByDom(container);
+    if (chart && !chart.isDisposed()) {
+        chart.dispose();
     }
+    delete chartInstances[elementId];
+}
 
-    // Apply persisted visibility to new traces
-    if (traces && Array.isArray(traces)) {
-        traces.forEach(trace => {
-            if (visibilityMap.hasOwnProperty(trace.name)) {
-                trace.visible = visibilityMap[trace.name];
-            }
-        });
-    }
-    // -------------------------------
+function showChartMessage(elementId, message) {
+    disposeChartInstance(elementId);
+    const container = document.getElementById(elementId);
+    if (!container) return;
+    container.innerHTML = `<div style="padding:20px; text-align:center; color:#3f5f54;">${message}</div>`;
+}
 
-    const layout = {
-        title: {
-            text: title,
-            font: { size: 16, family: 'Poppins', weight: 'bold', color: '#1e293b' }
-        },
-        font: { family: 'Poppins' },
-        paper_bgcolor: 'transparent',
-        plot_bgcolor: 'transparent',
-        xaxis: {
-            title: { text: '' },
-            tickangle: -45,
-            automargin: true, // Fixes cutoff labels automatically
-            gridcolor: '#f1f5f9'
-        },
-        yaxis: {
-            title: { text: vAxisTitle, font: { weight: 'bold' } },
-            gridcolor: '#e2e8f0',
-            zerolinecolor: '#e2e8f0'
-        },
-        barmode: isStacked ? 'relative' : 'group', // 'relative' handles mixed positive/negative stacking correctly
-        margin: { l: 60, r: 20, t: 40, b: 80 }, // Generous margins, but automargin helps too
+function resizeEnergyCharts(ids) {
+    if (typeof echarts === 'undefined') return;
+    const targetIds = Array.isArray(ids) && ids.length > 0 ? ids : Object.keys(chartInstances);
+    targetIds.forEach((id) => {
+        const container = document.getElementById(id);
+        if (!container) return;
+        const chart = echarts.getInstanceByDom(container) || chartInstances[id];
+        if (chart && !chart.isDisposed()) {
+            chart.resize();
+        }
+    });
+}
+
+window.resizeEnergyCharts = resizeEnergyCharts;
+if (!window.__energyChartsWindowResizeBound) {
+    window.addEventListener('resize', () => resizeEnergyCharts());
+    window.__energyChartsWindowResizeBound = true;
+}
+
+/**
+ * Draws charts with ECharts. Kept as drawPlotlyChart to avoid touching all call-sites.
+ */
+function drawPlotlyChart(elementId, traces, title, vAxisTitle, isStacked = true) {
+    const chart = getOrCreateChartInstance(elementId);
+    if (!chart) return;
+
+    const safeTraces = Array.isArray(traces) ? traces : [];
+    const xCategories = safeTraces.length > 0 && Array.isArray(safeTraces[0].x)
+        ? safeTraces[0].x.map((x) => String(x))
+        : [];
+    const categoryIndex = new Map(xCategories.map((x, idx) => [x, idx]));
+
+    const selectedMap = { ...(legendSelectionState[elementId] || {}) };
+
+    const series = safeTraces.map((trace, index) => {
+        const traceName = trace.name || `Series ${index + 1}`;
+        if (selectedMap[traceName] === undefined) {
+            selectedMap[traceName] = trace.visible !== false && trace.visible !== 'legendonly';
+        }
+
+        const data = new Array(xCategories.length).fill(0);
+        if (Array.isArray(trace.x) && Array.isArray(trace.y)) {
+            trace.x.forEach((xVal, i) => {
+                const idx = categoryIndex.get(String(xVal));
+                if (idx !== undefined) data[idx] = trace.y[i];
+            });
+        } else if (Array.isArray(trace.y)) {
+            trace.y.forEach((value, i) => {
+                if (i < data.length) data[i] = value;
+            });
+        }
+
+        const hasStackGroup = Boolean(trace.stackgroup);
+        const isArea = trace.fill === 'tonexty' || hasStackGroup;
+        const isLine = trace.type === 'line' || trace.type === 'scatter' || isArea;
+        const baseColor = trace.marker?.color || trace.line?.color || getTechColor(traceName, index);
+
+        if (isLine) {
+            return {
+                name: traceName,
+                type: 'line',
+                smooth: true,
+                symbol: 'none',
+                stack: hasStackGroup ? 'area-stack' : undefined,
+                lineStyle: {
+                    width: trace.line?.width || 2.5,
+                    color: baseColor
+                },
+                areaStyle: isArea ? { opacity: 0.2, color: baseColor } : undefined,
+                itemStyle: { color: baseColor },
+                emphasis: { focus: 'series' },
+                data
+            };
+        }
+
+        return {
+            name: traceName,
+            type: 'bar',
+            stack: isStacked ? 'bar-stack' : undefined,
+            barMaxWidth: 28,
+            itemStyle: {
+                color: baseColor,
+                borderRadius: 0
+            },
+            emphasis: { focus: 'series' },
+            data
+        };
+    });
+
+    const hasMainTitle = Boolean(title);
+    const hasMetricLabel = Boolean(vAxisTitle);
+    const topPadding = hasMetricLabel ? 58 : (hasMainTitle ? 42 : 24);
+    const hasBarSeries = series.some((s) => s.type === 'bar');
+
+    const option = {
+        animationDuration: 500,
+        backgroundColor: 'transparent',
+        title: [
+            ...(hasMainTitle ? [{
+                text: title,
+                left: 8,
+                top: 4,
+                textStyle: {
+                    color: '#0a2416',
+                    fontFamily: 'Inter',
+                    fontWeight: 600,
+                    fontSize: 14
+                }
+            }] : []),
+            ...(hasMetricLabel ? [{
+                text: vAxisTitle,
+                left: 8,
+                top: hasMainTitle ? 24 : 8,
+                textStyle: {
+                    color: '#1f3f33',
+                    fontFamily: 'Inter',
+                    fontWeight: 500,
+                    fontSize: 15
+                }
+            }] : [])
+        ],
         legend: {
-            orientation: 'h', // Horizontal legend
-            y: -0.3, // Move below chart
-            x: 0.5,
-            xanchor: 'center',
-            font: { size: 12 }
+            type: 'scroll',
+            right: 8,
+            top: hasMetricLabel ? 34 : 8,
+            itemWidth: 10,
+            itemHeight: 10,
+            textStyle: {
+                color: '#3f5f54',
+                fontFamily: 'Inter',
+                fontSize: 11
+            },
+            selected: selectedMap
         },
-        hovermode: 'x unified' // Nice tooltip behavior
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: hasBarSeries ? 'shadow' : 'line'
+            },
+            backgroundColor: 'rgba(255, 255, 255, 0.97)',
+            borderColor: '#bfd8c8',
+            borderWidth: 1,
+            textStyle: {
+                color: '#0a2416',
+                fontFamily: 'Inter',
+                fontSize: 12
+            }
+        },
+        grid: {
+            top: topPadding,
+            right: 18,
+            bottom: 42,
+            left: 56
+        },
+        xAxis: {
+            type: 'category',
+            data: xCategories,
+            axisLine: { lineStyle: { color: '#8ea79b', width: 1 } },
+            axisTick: { show: false },
+            axisLabel: {
+                color: '#2e4d40',
+                fontFamily: 'Inter',
+                fontSize: 11,
+                rotate: 0,
+                hideOverlap: true
+            }
+        },
+        yAxis: {
+            type: 'value',
+            name: '',
+            splitLine: { lineStyle: { color: '#d7e5dc', width: 1 } },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            axisLabel: {
+                color: '#2e4d40',
+                fontFamily: 'Inter',
+                fontSize: 11
+            }
+        },
+        series
     };
 
-    const config = {
-        responsive: true,
-        displayModeBar: false // Hide the toolbar for a cleaner look
-    };
-
-    Plotly.newPlot(elementId, traces, layout, config);
+    chart.setOption(option, true);
+    chart.resize();
 }
 
 /**
@@ -298,7 +461,7 @@ function updateCharts(yearlyResults, chartConfigData) {
                 );
                 drawPlotlyChart('subsectorActivityChart', traces, '', `Activity (${activityUnit})`, true);
             } else {
-                document.getElementById('subsectorActivityChart').innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No activity data to display</div>';
+                showChartMessage('subsectorActivityChart', 'No activity data to display');
             }
 
             // 2. FEC
@@ -318,7 +481,7 @@ function updateCharts(yearlyResults, chartConfigData) {
                 }, 'bar');
                 drawPlotlyChart('subsectorFecChart', traces, '', 'FEC (EJ)', true);
             } else {
-                document.getElementById('subsectorFecChart').innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No FEC data to display</div>';
+                showChartMessage('subsectorFecChart', 'No FEC data to display');
             }
 
             // 3. UE
@@ -338,7 +501,7 @@ function updateCharts(yearlyResults, chartConfigData) {
                 }, 'bar');
                 drawPlotlyChart('subsectorUeChart', traces, '', 'Useful Energy (EJ)', true);
             } else {
-                document.getElementById('subsectorUeChart').innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No Useful Energy data to display</div>';
+                showChartMessage('subsectorUeChart', 'No Useful Energy data to display');
             }
         }
 
@@ -396,8 +559,7 @@ function updateCharts(yearlyResults, chartConfigData) {
             }, 'bar');
             drawPlotlyChart('hydrogenMixChart', h2MixData, '', 'Hydrogen Production (EJ)', true);
         } else {
-            // console.warn('DEBUG: No active hydrogen techs found, skipping chart.');
-            document.getElementById('hydrogenMixChart').innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No hydrogen production data to display</div>';
+            showChartMessage('hydrogenMixChart', 'No hydrogen production data to display');
         }
 
     } catch (error) {
@@ -583,7 +745,7 @@ function updateEmissionsCharts(yearlyResults, chartConfigData) {
         });
         drawPlotlyChart('ccsBySubsectorChart', ccsTraces, '', 'Captured Emissions (Mt CO2)', true);
     } else {
-        document.getElementById('ccsBySubsectorChart').innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No Captured Emissions (CCS) active</div>';
+        showChartMessage('ccsBySubsectorChart', 'No Captured Emissions (CCS) active');
     }
 }
 

@@ -166,8 +166,8 @@ class VisualSCurveEditor {
             const y = this.shareToY(val);
             ctx.moveTo(this.padding.left, y);
             ctx.lineTo(this.width - this.padding.right, y);
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '10px Poppins';
+            ctx.fillStyle = '#6a8b7f';
+            ctx.font = '10px Inter';
             ctx.fillText(val + '%', 5, y + 3);
         });
         // Vertical lines (Start, End)
@@ -196,7 +196,7 @@ class VisualSCurveEditor {
         // 3. Draw Midpoint Handle (Vertical Line)
         const midX = this.yearToX(this.params.midpointYear);
         ctx.beginPath();
-        ctx.strokeStyle = '#64748b'; // Dark Grey
+        ctx.strokeStyle = '#3f5f54'; // Muted green-grey
         ctx.setLineDash([5, 5]);
         ctx.moveTo(midX, this.padding.top);
         ctx.lineTo(midX, this.height - this.padding.bottom);
@@ -205,11 +205,11 @@ class VisualSCurveEditor {
 
         // Midpoint Handle Knob
         ctx.beginPath();
-        ctx.fillStyle = '#64748b';
+        ctx.fillStyle = '#3f5f54';
         ctx.arc(midX, this.height - this.padding.bottom + 5, 5, 0, Math.PI * 2);
         ctx.fill();
         // Label
-        ctx.fillStyle = '#64748b';
+        ctx.fillStyle = '#3f5f54';
         ctx.fillText(`t0: ${Math.round(this.params.midpointYear)}`, midX + 8, this.height - this.padding.bottom - 10);
 
 
@@ -226,8 +226,8 @@ class VisualSCurveEditor {
         ctx.stroke();
 
         // Label
-        ctx.fillStyle = '#1e293b';
-        ctx.font = 'bold 11px Poppins';
+        ctx.fillStyle = '#0a2416';
+        ctx.font = 'bold 11px Inter';
         ctx.fillText(`${Math.round(this.params.targetShare)}% @ ${Math.round(this.params.targetYear)}`, targetX - 40, targetY - 15);
     }
 

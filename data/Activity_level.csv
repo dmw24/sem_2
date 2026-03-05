@@ -18,7 +18,7 @@ Buildings,Residential heating,PJ_heat,29750
 Buildings,Residential cooking,PJ_heat,2000
 Buildings,Residential lighting,billion lumen,35000
 Buildings,Other residential,Unitless (2023=1),1
-Buildings,Building cooling,PJ_cooling,10575
+Buildings,Building cooling,PJ_cooling,22800
 Buildings,Commercial heating,PJ_heat,10200
 Buildings,Commercial lighting,billion lumen,18000
 Buildings,Other commercial,Unitless (2023=1),1

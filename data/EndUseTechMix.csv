@@ -14,8 +14,6 @@ Transport,Planes,Conventional plane,Stock,% mix,1.0
 Transport,Planes,Electric plane,Stock,% mix,0.0
 Transport,Trains,Diesel train,Stock,% mix,0.5
 Transport,Trains,Electric train,Stock,% mix,0.5
-Transport,Trains,Conventional,Stock,% mix,1.0
-Transport,Trains,Electrified,Stock,% mix,0.0
 Transport,Other transport,Conventional,Stock,% mix,1.0
 Transport,Other transport,Electrified,Stock,% mix,0.0
 Industry,Steel,BF-BOF,Stock,% mix,0.7

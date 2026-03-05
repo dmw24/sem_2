@@ -17,6 +17,13 @@ function getValue(obj, keys, defaultValue = 0) { /* ... (unchanged) ... */
     let current = obj; for (const key of keys) { if (current && typeof current === 'object' && key in current) { current = current[key]; } else { return defaultValue; } } return (current === null || current === undefined) ? defaultValue : current;
 }
 
+function firstFiniteNumber(values, fallback = 0) {
+    for (const value of values) {
+        if (typeof value === 'number' && Number.isFinite(value)) return value;
+    }
+    return fallback;
+}
+
 // Basic sigmoid function (Step 1)
 function sigma(t, k, t0) {
     // Handle k=0 case explicitly to avoid issues later
@@ -263,7 +270,15 @@ function runModelCalculation(structuredData, userInputParameters) {
                                     console.log(`DEBUG (modelLogic): Steel DRI-EAF (H2) Hydrogen: Activity=${techActivity}, UnitCons=${unitCons}, EnergyCons=${energyCons}`);
                                 }
 
-                                const efficiency = getValue(placeholderUsefulEfficiency, [s, b, t, f], getValue(placeholderUsefulEfficiency, [s, b, t], getValue(placeholderUsefulEfficiency, [s, b], getValue(placeholderUsefulEfficiency, '_default', 0.65)))); const usefulEnergy = energyCons * efficiency; currentUeDetailed[s][b][t][f] = usefulEnergy; currentUeByFuel[f] += usefulEnergy; currentUeBySubsector[b] += usefulEnergy;
+                                const efficiency = firstFiniteNumber([
+                                    getValue(placeholderUsefulEfficiency, [s, b, t, f], undefined),
+                                    getValue(placeholderUsefulEfficiency, [s, b, t], undefined),
+                                    getValue(placeholderUsefulEfficiency, [s, b], undefined),
+                                    getValue(placeholderUsefulEfficiency, ['_default'], 0.65)
+                                ], 0.65);
+                                const usefulEnergy = energyCons * efficiency;
+                                const safeUsefulEnergy = Number.isFinite(usefulEnergy) ? usefulEnergy : 0;
+                                currentUeDetailed[s][b][t][f] = safeUsefulEnergy; currentUeByFuel[f] += safeUsefulEnergy; currentUeBySubsector[b] += safeUsefulEnergy;
                             }
                         });
                     });
@@ -442,4 +457,3 @@ function runModelCalculation(structuredData, userInputParameters) {
     console.log("Model calculation complete.");
     return yearlyResults;
 }
-
